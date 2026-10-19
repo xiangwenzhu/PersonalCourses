@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>邓普顿的逆向投资方法 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+.check-list li{margin:6px 0}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>邓普顿的逆向投资方法</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章 ========== -->
+    <section class="chapter" data-level="1" data-title="为什么“别人绝望”是机会">
+      <h2>为什么“别人绝望”是机会</h2>
+      <p class="tldr">股价短期由情绪定价，长期由价值定价——逆向投资者赚的正是这两者之间的差价。</p>
+
+      <p>你已经知道市场是波动的，但波动为什么能被“利用”而不是只能“忍受”？邓普顿的答案是：大众情绪会让价格<span>系统性</span>地偏离价值，而这种偏离有方向性——<mark>在恐慌时向下偏离，在狂热时向上偏离</mark>。既然偏离有规律，就可以逆向布局。</p>
+      <p>约翰·邓普顿（John Templeton, 1912–2008）是 20 世纪最伟大的全球投资者之一：他在大萧条最黑暗的 1939 年逆势买入，在 1999 年互联网狂热顶峰做空，一生的回报都建立在同一个原则上——<strong>在别人最不想要的时候买，在别人最想要的时候卖</strong>。</p>
+
+      <div class="analogy">假设超市里的罐头平时卖 10 元，质量和成本都没变。某天门口贴了张“末日将至”的传单，所有人开始甩卖罐头，价格跌到 3 元。罐头还是那批罐头，价格却变了。邓普顿式的买家不问“为什么跌”，只问“它到底值多少”。（注意：这个类比在第 7 章会失效——股票不是罐头，背后的公司会变。）</div>
+
+      <div class="key">逆向投资的第一性原理：价格 ≠ 价值。情绪决定价格围绕价值摆动的幅度，价值决定摆动的中轴。你不需要预测中轴何时回归，只需要确认自己买得足够便宜。</div>
+
+      <!-- 互动：翻卡 -->
+      <div class="widget">
+        <div class="widget-title">三张卡片，建立直觉（点击翻面）</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">恐慌时<br>在发生什么？</div><div class="back">卖家在“不管价格、先跑为敬”。这种卖出与资产本身的价值无关，价格被情绪砸出折价。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">狂热时<br>在发生什么？</div><div class="back">买家在 FOMO（害怕错过），愿意为同样的资产支付越来越高的价格，价格透支未来多年的回报。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">逆向者<br>赚的是谁的钱？</div><div class="back">情绪交易者的钱。恐慌抛售者的损失与狂热追入者的溢价，共同构成逆向者的收益来源。</div></div></div>
+        </div>
+      </div>
+
+      <!-- 测验 -->
+      <div class="widget quiz" data-answer="2">
+        <p class="q">以下哪一情景最接近“逆向投资机会”？</p>
+        <button class="opt" data-fb="这是趋势投资（momentum）的逻辑——买入正在上涨、被大家追捧的资产，恰好与逆向相反。">行业景气、股价连创新高、人人都在讨论买入</button>
+        <button class="opt" data-fb="“公司没问题”不等于“价格便宜”。没有价值锚（估值比较），只是下跌就抄底，容易变成接飞刀。">股价跌了 30%，分析师仍然看好公司前景</button>
+        <button class="opt" data-fb="正确。坏消息已充分定价 + 价格远低于内在价值 = 恐慌造成的折价，这正是逆向买入的条件。">某公司因行业性恐慌被砸盘，但基本面稳固、价格远低于保守估计的内在价值</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章要点：逆向不是“跟别人对着干”，而是利用情绪造成的系统性定价错误。下一章我们给它装上精确的术语。</div>
+    </section>
+
+    <!-- ========== 第 2 章 ========== -->
+    <section class="chapter" data-level="2" data-title="核心概念：悲观点、价值锚与情绪周期">
+      <h2>核心概念：悲观点、价值锚与情绪周期</h2>
+      <p class="tldr">逆向投资不是情绪化的“反着来”，而是三个概念的精确组合：最大悲观点（时机）、内在价值（锚）、情绪周期（背景）。</p>
+
+      <p>邓普顿方法的专业表述可以拆成三个支柱：</p>
+      <table>
+        <tr><th>支柱</th><th>一句话定义</th><th>回答的问题</th></tr>
+        <tr><td><strong>最大悲观点</strong><br>(Point of Maximum Pessimism)</td><td>恐慌情绪达到顶峰、卖方力量衰竭的时刻——事后看往往是价格最低点</td><td>什么时候该动手？</td></tr>
+        <tr><td><strong>内在价值</strong><br>(Intrinsic Value)</td><td>在保守假设下，资产未来现金流的折现值</td><td>价格到底便宜不便宜？（对照什么？）</td></tr>
+        <tr><td><strong>情绪周期</strong><br>(Sentiment Cycle)</td><td>市场群体情绪沿“悲观→怀疑→乐观→狂热”往复摆动的过程</td><td>我们处在周期的哪个位置？</td></tr>
+      </table>
+
+      <p>三者缺一不可：只有悲观点没有价值锚，是赌博；只有价值锚不看情绪，可能买得太早（低估可以低估更久）；只看周期不估值，则是在读心。</p>
+
+      <div class="key">邓普顿原话：“牛市生于悲观，长于怀疑，成于乐观，死于狂热。”（Bull markets are born on pessimism, grow on skepticism, mature on optimism and die on euphoria.）这句话同时描述了两个决策：在“悲观/怀疑”阶段买入，在“乐观/狂热”阶段离场。</div>
+
+      <!-- 互动：翻卡 -->
+      <div class="widget">
+        <div class="widget-title">术语卡：四个必须精确掌握的概念（点击翻面）</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">安全边际<br>Margin of Safety</div><div class="back">内在价值与买入价之间的差额（百分比形式：(V−P)/V）。折价越厚，你犯错和等待的容忍度越高。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">价值陷阱<br>Value Trap</div><div class="back">看似便宜、实则基本面持续恶化的资产。“低估值”是它的伪装，便宜是它唯一真实的属性。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">均值回归<br>Mean Reversion</div><div class="back">价格围绕价值的长期引力。逆向投资的收益本质上是对均值回归的赌注——但回归的催化剂和时间都不保证。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">逆向 ≠ 反共识<br>Contrarian ≠ Contrary</div><div class="back">邓普顿：“只因为你与众不同并不意味着你就是对的。”逆向的依据是估值，不是“别人错所以我对”。</div></div></div>
+        </div>
+      </div>
+
+      <!-- 测验 -->
+      <div class="widget quiz" data-answer="1">
+        <p class="q">“最大悲观点”最准确的含义是：</p>
+        <button class="opt" data-fb="同比涨幅最低只说明过去跌得多，不代表恐慌出清。悲观点描述的是情绪与定价状态，而非统计低点。">某资产过去 12 个月跌幅最大的时点</button>
+        <button class="opt" data-fb="正确。它是情绪指标（卖方衰竭、无人愿意持有）与价值指标（深度折价）的交汇处。">恐慌情绪与悲观定价同时达到极致、卖方力量衰竭的时点</button>
+        <button class="opt" data-fb="人人看空往往还处在“怀疑”阶段，恐慌的极端形态是无人再谈论、无人再交易——悲观点无法精确计时，只能事后确认。">所有分析师一致看空的时点</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章要点：时机（悲观点）× 估值（价值锚）× 背景（情绪周期）是逆向方法的三角。下一章用邓普顿本人的三场战役看看这套三角如何实战。</div>
+    </section>
+
+    <!-- ========== 第 3 章 ========== -->
+    <section class="chapter" data-level="2" data-title="邓普顿的三场战役：从 1939 到 2000">
+      <h2>邓普顿的三场战役：从 1939 到 2000</h2>
+      <p class="tldr">他一生重复同一套剧本：找到恐慌 → 用估值确认便宜 → 在别人离场时进场。60 年不变。</p>
+
+      <p>理解方法最好的方式是看它的三次代表作。点击下面的卡片，查看每一场战役的详情。</p>
+
+      <!-- 互动：案例翻卡 -->
+      <div class="widget">
+        <div class="widget-title">三场战役（点击翻面）</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">1939<br>大萧条底部<br>“1 美元股票”</div><div class="back">二战爆发、市场极度恐慌之际，他借款 1 万美元，买入交易所里所有价格低于 1 美元的股票，共 104 只（多为濒临破产的公司）。约 4 年后，组合价值约 4 万美元。教训：极端恐慌期，系统性买入“没人要”的清单，赌的是幸存者的均值回归。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">1960s<br>“被忽视的日本”</div><div class="back">当时几乎所有美国投资者对日本市场不屑一顾，而日本股票市盈率约 4 倍、美国约 19 倍。邓普顿大规模买入日本资产。此后日本股市步入长期大牛市，成为他职业生涯回报最丰厚的一笔之一。教训：逆向的战场是全球的——哪里冷，去哪找。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">1999–2001<br>狂热顶峰做空</div><div class="back">在互联网泡沫顶点，他通过借券做空 84 只高估的日本科技/互联网股；2000–2001 年泡沫破裂，这笔交易大幅获利。教训：逆向在两个方向都有效——最大乐观点不只是“卖”，还可以是反向建仓。</div></div></div>
+        </div>
+      </div>
+
+      <h3>两场战役对照</h3>
+      <table>
+        <tr><th></th><th>1939 买入</th><th>1999 做空</th></tr>
+        <tr><td>情绪状态</td><td>极度悲观（战争恐慌 + 大萧条余悸）</td><td>极度狂热（互联网泡沫顶点）</td></tr>
+        <tr><td>估值状态</td><td>价格 << 清算价值与保守内在价值</td><td>价格 >> 任何合理增长假设下的内在价值</td></tr>
+        <tr><td>操作</td><td>分散买入 104 只低价股</td><td>分散做空 84 只高估日股</td></tr>
+        <tr><td>共同点</td><td colspan="2">都不是预测宏观经济，而是<strong>比较价格与价值，在情绪极端处行动</strong>；且都极度分散（单一个体判断错误被组合稀释）。</td></tr>
+      </table>
+
+      <div class="key">邓普顿投资准则（出自《The Templeton Touch》）中与本课直接相关的几条：① 在最大悲观点买入；② 买价值，不买市场趋势或经济预测；③ 分散投资；④ 投资，而不是交易或投机；⑤ 没有人能够一直正确——包括你自己。</div>
+
+      <!-- 测验 -->
+      <div class="widget quiz" data-answer="0">
+        <p class="q">对比 1939 与 1999 两次操作，它们共同的方法论内核是：</p>
+        <button class="opt" data-fb="正确。两次都不是宏观预测（他从不靠预测取胜），而是估值比较 + 情绪极端 + 高度分散的组合。">在情绪极端处做价格与价值的比较，并用分散承担个体不确定性</button>
+        <button class="opt" data-fb="1939 年的他对每家公司都谈不上深入研究——那批公司大多濒临破产。分散本身就是对研究不确定性的承认。">基于对每个标的的深入研究，精选少数重仓标的</button>
+        <button class="opt" data-fb="恰恰相反：1939 年赌的是幸存者会均值回归，1999 年赌的是高估者会均值回归。方向相反，内核相同。">长期持有优质公司，分享其成长</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章要点：逆向是一套可重复的操作系统，不是一次神来之笔。下一章把这套系统拆成可执行的流程。</div>
+    </section>
+
+    <!-- ========== 第 4 章 ========== -->
+    <section class="chapter" data-level="3" data-title="逆向选股五步流程">
+      <h2>逆向选股五步流程</h2>
+      <p class="tldr">把“逆向”翻译成动作：找恐慌 → 筛陷阱 → 估价值 → 算折价 → 分批建仓并监控。</p>
+
+      <p>理论只有变成流程才可执行。下面这套五步，是对邓普顿方法的工程化还原：</p>
+
+      <!-- 互动：分步揭示 -->
+      <div class="widget steps">
+        <div class="widget-title">一步步拆解（点“下一步”）</div>
+        <div class="step"><strong>第 1 步 · 找（扫描恐慌源）：</strong>列出处于恐慌/冷落的行业或市场——新闻头条、基金赎回、分析师集体下调、成交额萎缩都是信号源。输出：候选清单（如 20–100 只）。</div>
+        <div class="step"><strong>第 2 步 · 筛（初除价值陷阱）：</strong>剔除基本面永久性恶化的标的——债务无法滚续、商业模式被颠覆、治理造假。判断标准：问题是否“可修复”或“可出清”。这一步决定逆向与抬杠的分界线。</div>
+        <div class="step"><strong>第 3 步 · 估（保守内在价值）：</strong>用保守假设（低增长/低利润率/高折现率）估算 V。宁可低估成长，不可高估。写下一个数字，而不是一个感觉。</div>
+        <div class="step"><strong>第 4 步 · 算（折价与安全边际）：</strong>计算折价率与安全边际 (V−P)/V。邓普顿式的门槛通常是“显著低于”，比如 ≥30–50%，以补偿等待时间和判断误差。</div>
+        <div class="step"><strong>第 5 步 · 买（分批 + 触发器）：</strong>分批建仓平滑“买早”风险；预设监控触发器（基本面恶化信号卖出，价值回归或情绪狂热卖出）。纪律写在前，情绪留在场外。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="warn">顺序不能乱：先筛陷阱再估值。对价值陷阱做再精确的 DCF，也是在为一个错误的 V 努力工作。第 2 步是整个流程的否决项。</div>
+
+      <!-- 互动：排序题 -->
+      <div class="widget order" data-answer="scan,filter,value,margin,buy">
+        <div class="widget-title">排序题：把五步流程排回正确顺序</div>
+        <div class="item" data-id="buy">分批建仓，并预设监控与退出触发器</div>
+        <div class="item" data-id="value">用保守假设估算内在价值</div>
+        <div class="item" data-id="filter">剔除基本面永久性恶化的标的（价值陷阱初筛）</div>
+        <div class="item" data-id="scan">从恐慌/冷落的行业与市场中列出候选清单</div>
+        <div class="item" data-id="margin">计算折价率与安全边际，确认折价足够厚</div>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">流程的本质是把情绪决策改造成清单决策：每一步都有明确的输入、输出和否决条件，恐慌来临时照单执行。</div>
+
+      <div class="tip">本章要点：找 → 筛 → 估 → 算 → 买。其中“筛”是否决项，“买”必须伴随监控触发器。下一章给“算”装上数学。</div>
+    </section>
+
+    <!-- ========== 第 5 章 ========== -->
+    <section class="chapter" data-level="3" data-title="折价与安全边际的数学">
+      <h2>折价与安全边际的数学</h2>
+      <p class="tldr">安全边际 (V−P)/V 是你为“判断错误 + 回归迟到”支付的双重保险；保险越厚，你可以错得越离谱。</p>
+
+      <p>逆向买入的期望收益来自一个朴素恒等式：若价格最终回归价值，则</p>
+      <p>$$R_{\text{回归}}=\frac{V}{P}-1,\qquad MoS=\frac{V-P}{V}=1-\frac{P}{V}$$</p>
+      <p>两者可以互相换算：$R_{\text{回归}} = \frac{1}{1-MoS}-1$。例如 40% 的安全边际意味着价值回归后约 67% 的回报；但若回归需要 3 年，年化仅为 $(1.67)^{1/3}-1\approx 18.6\%$。<mark>安全边际买回的不是收益本身，而是时间与错误</mark>——这就是第 2 章“折价越厚、容忍度越高”的数学表达。</p>
+
+      <!-- 互动：定制演示 1 -->
+      <div class="widget demo" id="mosDemo">
+        <div class="widget-title">安全边际计算器：拖动滑块，看折价如何转化为回报</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls">
+          <label>内在价值 V <span class="val" data-for="v"></span><input type="range" name="v" min="50" max="200" step="5" value="100"></label>
+          <label>当前价格 P <span class="val" data-for="p"></span><input type="range" name="p" min="10" max="200" step="5" value="55"></label>
+          <label>回归所需年数 t <span class="val" data-for="t"></span><input type="range" name="t" min="1" max="10" step="1" value="3"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>用法解读：把 P 拖向 V，注意安全边际变薄时速报区（绿色）如何迅速缩水。现实中悲观资产的风险不是“赚少了”，而是 <strong>V 本身看错了</strong>——这把我们带回第 4 步的保守假设：估值时的悲观程度，应该与买入时市场的悲观程度相当。</p>
+
+      <!-- 测验 -->
+      <div class="widget quiz" data-answer="1">
+        <p class="q">某资产保守估计内在价值 V = 120 元，当前价格 P = 72 元。其安全边际与价值回归收益分别是：</p>
+        <button class="opt" data-fb="72/120=60% 是价格相对价值的比值（P/V），不是安全边际。MoS 要以 V 为分母。">MoS = 60%，回归收益 40%</button>
+        <button class="opt" data-fb="正确。MoS = (120−72)/120 = 40%；回归收益 = 120/72 − 1 ≈ 66.7%。两者由 R = 1/(1−MoS) − 1 换算。">MoS = 40%，回归收益 ≈ 66.7%</button>
+        <button class="opt" data-fb="(120−72)/72 = 66.7% 是以 P 为分母的“毛收益”，这正是回归收益的算法，但它不是安全边际。">MoS = 66.7%，回归收益 = 40%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章要点：MoS 与回归收益是一枚硬币的两面；厚的折价 + 保守的 V + 分批建仓 = 可犯错的权利。下一章解决“怎么知道现在够不够恐慌”。</div>
+    </section>
+
+    <!-- ========== 第 6 章 ========== -->
+    <section class="chapter" data-level="3" data-title="情绪温度计：测量恐慌程度">
+      <h2>情绪温度计：测量恐慌程度</h2>
+      <p class="tldr">最大悲观点无法被精确计时，但可以被近似测量——用一组情绪指标组成的“温度计”。</p>
+
+      <p>“在最大悲观点买入”最大的实操难题是：身处其中时你不知道自己是否在底部。邓普顿的解决办法是不追求精确，而是<strong>测量相对的恐慌程度</strong>。常用仪表：</p>
+      <table>
+        <tr><th>仪表</th><th>极度恐慌的读数</th><th>极度狂热的读数</th></tr>
+        <tr><td>波动率指数（如 VIX）</td><td>飙升且持续高位</td><td>长期低位钝化</td></tr>
+        <tr><td>股权风险溢价（盈利收益率 − 无风险利率）</td><td>显著走阔</td><td>转负或趋零</td></tr>
+        <tr><td>基金发行/申购行为</td><td>股票基金遭大额净赎回</td><td>新基金密集发行遭抢购</td></tr>
+        <tr><td>卖方与媒体情绪</td><td>集体下调、头条恐慌</td><td>“这次不一样”叙事泛滥</td></tr>
+        <tr><td>成交与换手</td><td>缩量阴跌后的绝望抛盘</td><td>天量换手、杠杆上升</td></tr>
+      </table>
+
+      <div class="key">仪表的用法是互相印证：单一指标会失真（VIX 高可能只是对冲需求），但五个仪表同时指向同一极端，基本就是“最大悲观点”的代理画像。</div>
+
+      <!-- 互动：定制演示 2 -->
+      <div class="widget demo" id="emoDemo">
+        <div class="widget-title">情绪周期模拟器：拖动滑块，看位置与建议行动</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>当前情绪位置（0 = 极度狂热，100 = 极度恐慌）<span class="val" data-for="pos"></span><input type="range" name="pos" min="0" max="100" step="1" value="15"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+      <p style="font-size:14px;color:var(--muted)">注：横轴是市场周而复始的情绪周期（对应“牛市生于悲观，长于怀疑，成于乐观，死于狂热”），绿色为逆向买入区、红色为逆向离场/反向区，中间为“什么都别做、只做功课”的观察区。</p>
+
+      <!-- 测验 -->
+      <div class="widget quiz" data-answer="2">
+        <p class="q">以下哪种市场状态组合最接近“买入区”信号？</p>
+        <button class="opt" data-fb="VIX 高位单独出现可能只是套保需求或事件冲击，价格未必便宜；需要估值印证（参考第 2 章的三角：时机 × 估值 × 背景）。">VIX 创历史新高，但标的估值分位仍在 90% 历史高位</button>
+        <button class="opt" data-fb="新基金密集发行遭抢购是狂热的典型读数——这是卖出/离场区，不是买入区。">股票新基金一周募满百亿，媒体讨论“十年长牛”</button>
+        <button class="opt" data-fb="正确。风险溢价走阔说明价格相对盈利足够便宜，赎回潮说明恐慌出清，两者叠加是“折价 × 悲观点”的近似。">股权风险溢价处于历史高位 + 股票基金持续大额净赎回 + 价格远低于保守内在价值</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章要点：恐慌可测而不可计时；多仪表互相印证 + 估值交叉验证，才能从“感觉便宜”升级为“可以动手”。下一章讲这套方法在哪里会失灵。</div>
+    </section>
+
+    <!-- ========== 第 7 章 ========== -->
+    <section class="chapter" data-level="4" data-title="逆向的边界：什么时候这套方法会失灵">
+      <h2>逆向的边界：什么时候这套方法会失灵</h2>
+      <p class="tldr">逆向不是无敌的：它输给价值陷阱、输给杠杆、输给“便宜可以更便宜”的时间，也输给把“反对共识”误当成方法本身。</p>
+
+      <h3>四类典型的失败模式</h3>
+      <table>
+        <tr><th>失败模式</th><th>机制</th><th>对策</th></tr>
+        <tr><td><strong>价值陷阱</strong></td><td>低估值源于基本面永久性恶化（技术颠覆、债务爆雷、治理造假），V 持续下修，折价永不收敛</td><td>流程第 2 步否决项：只买“可修复/可出清”的问题</td></tr>
+        <tr><td><strong>杠杆接飞刀</strong></td><td>逆向者常在半山腰重仓，若带杠杆，回归前的回撤即可致命</td><td>不用杠杆；分批建仓；单标的仓位设上限</td></tr>
+        <tr><td><strong>时间成本失控</strong></td><td>正确但太早：低估 5 年不回归，年化回报被拖垮，机会成本巨大</td><td>用安全边际补偿时间；设定“叙事证伪”退出条件而非无限期持有</td></tr>
+        <tr><td><strong>伪逆向（抬杠）</strong></td><td>为反而反，把“众人皆醉”当论据，实质是与市场对赌叙事</td><td>永远让估值说话：只有“价格 vs 价值”的差才是仓位依据</td></tr>
+      </table>
+
+      <div class="warn">回到第 1 章的超市类比——它现在正式失效：罐头不会变质，但公司会。股票打折的真实含义是“市场认为它会烂掉”，逆向者的全部工作是判断它会不会。判断错了，折价是陷阱；判断对了，折价才是礼物。</div>
+
+      <div class="warn">“便宜可以更便宜”。安全边际保护的是价值判断的错误幅度，不保护你免受账面浮亏。邓普顿 1939 年买入后，很多持仓在 1940 年还在跌——他用 104 只的分散扛过了这段路程，而不是用预测。</div>
+
+      <div class="key">逆向方法的适用边界：① 你算得出保守的 V；② 问题可修复或可出清；③ 你不用杠杆且等得起；④ 你能在组合层面分散。四条缺一条，仓位就该明显收缩。</div>
+
+      <!-- 测验 -->
+      <div class="widget quiz" data-answer="0">
+        <p class="q">你研究发现某传统零售股估值处于历史最低分位，但行业正被电商结构性替代、公司现金流持续为负。按本课流程，正确动作是：</p>
+        <button class="opt" data-fb="正确。这是教科书式价值陷阱：估值便宜是表象，V 在持续下修。流程第 2 步直接否决，不做 DCF 精算。">在“筛”这一步否决——基本面永久性恶化，不进入估值环节</button>
+        <button class="opt" data-fb="对陷阱做保守 DCF 仍是陷阱——你的“保守”现金流假设本身可能高估了这家公司的清算价值。">用更保守的现金流假设做 DCF，若仍有 30% 折价则分批买入</button>
+        <button class="opt" data-fb="情绪指标只能告诉你“有多恐慌”，不能告诉你“公司会不会死”。该标的的问题是不可出清的结构性替代，悲观是理性的。">恐慌总会过去，等情绪指标回落到正常水平再考虑买入</button>
+        <button class="opt" data-fb="仓位缩小不改变赌注的性质：V 持续下修时，任何仓位都会亏损，只是亏多亏少。">可以参与，但把仓位缩到正常的十分之一以控制风险</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章要点：逆向的敌人不是市场，而是自己的四个盲区。清单（下一章）的作用就是把你从盲区里拽出来。</div>
+    </section>
+
+    <!-- ========== 第 8 章 ========== -->
+    <section class="chapter" data-level="4" data-title="实战清单与综合测验">
+      <h2>实战清单与综合测验</h2>
+      <p class="tldr">把全课浓缩成一张可打印的检查清单和一场综合测验——过关的标准是：每一步都能说出“否决条件”。</p>
+
+      <h3>逆向买入检查清单</h3>
+      <div class="widget">
+        <div class="widget-title">动手前逐项打勾</div>
+        <ul class="check-list">
+          <li>☐ <strong>情绪</strong>：至少三个独立仪表指向恐慌/冷落（风险溢价、赎回、媒体情绪……）？</li>
+          <li>☐ <strong>估值</strong>：写下了保守内在价值 V 的具体数字与假设，而非区间感觉？</li>
+          <li>☐ <strong>折价</strong>：安全边际 ≥ 你预设的门槛（如 30–50%），足以补偿时间与错误？</li>
+          <li>☐ <strong>陷阱</strong>：基本面问题可修复或可出清？已排除造假、颠覆、债务爆雷？</li>
+          <li>☐ <strong>杠杆</strong>：未使用杠杆；即使再跌 30% 也不会被迫离场？</li>
+          <li>☐ <strong>分散</strong>：单标的不超过组合上限；相关标的合计不形成单一赌注？</li>
+          <li>☐ <strong>触发器</strong>：事前写下两类退出——“叙事证伪”与“价值回归/情绪狂热”？</li>
+          <li>☐ <strong>时间</strong>：这笔钱 3–5 年用不到？等待期年化回报（回归收益摊薄）仍达标？</li>
+        </ul>
+      </div>
+
+      <h3>案例复盘思考题</h3>
+      <details class="reveal"><summary>思考题：2000 年初，邓普顿为什么敢做空 84 只日本科技股？用本课框架拆解。</summary>
+        <p>参考答案：① <strong>情绪</strong>——“这次不一样”的新经济叙事泛滥，新基金遭抢购，典型的狂热区仪表组合；② <strong>估值</strong>——这些股票的价格远超任何合理增长假设下的 V（不少公司尚无盈利，P 与 V 完全脱锚）；③ <strong>陷阱排除</strong>——做空的是“定价错误”而非“公司会死”，所以不需要公司破产，只需要估值回归；④ <strong>分散</strong>——84 只分散承担个股层面的判断误差；⑤ <strong>触发器</strong>——泡沫破裂本身就是回归信号。注意结构对称性：这与 1939 年买入是同一套三角（情绪极端 × 价格价值差 × 分散），只是方向相反。</p>
+      </details>
+
+      <h3>综合测验</h3>
+      <div class="widget quiz" data-answer="1">
+        <p class="q">1. 逆向投资最准确的定义是：</p>
+        <button class="opt" data-fb="这是抬杠，不是逆向。与多数人对赌而不问估值，是把立场当论据。">与市场共识反向下注</button>
+        <button class="opt" data-fb="正确。共识只是背景音，估值差才是仓位依据。">在情绪极端导致价格显著偏离保守内在价值时，反向布局</button>
+        <button class="opt" data-fb="下跌是现象不是原因。恐慌才是可操作的信号，因为它标记着卖方衰竭。">买入所有正在下跌的资产</button>
+        <div class="feedback"></div>
+      </div>
+      <div class="widget quiz" data-answer="2">
+        <p class="q">2. 安全边际的首要功能是：</p>
+        <button class="opt" data-fb="回报来自 V 与 P 的差距，而非 MoS 本身；MoS 厚只是让回归收益更大，那是结果不是功能。">提高价值回归后的收益</button>
+        <button class="opt" data-fb="浮亏只与价格路径有关，MoS 无法阻止“便宜更便宜”，它补偿的是错误与时间。">避免账面浮亏</button>
+        <button class="opt" data-fb="正确。折价越厚，你对 V 的误判幅度和回归迟到时间的容忍度越高。">为估值错误和回归迟到提供缓冲</button>
+        <div class="feedback"></div>
+      </div>
+      <div class="widget quiz" data-answer="0">
+        <p class="q">3. 五步流程中，哪个环节是“否决项”？</p>
+        <button class="opt" data-fb="正确。价值陷阱筛不掉，后面所有精算都是为一个错误的 V 工作。">筛（剔除基本面永久性恶化的标的）</button>
+        <button class="opt" data-fb="估价值当然重要，但估值的质量问题会部分被厚折价与分散吸收；陷阱筛错则是方向性错误。">估（保守内在价值）</button>
+        <button class="opt" data-fb="分批建仓是风险管理手段，可以调节，不是否决项——很多好买点都只能靠分批获得。">买（分批建仓）</button>
+        <div class="feedback"></div>
+      </div>
+      <div class="widget quiz" data-answer="1">
+        <p class="q">4. 邓普顿 1939 年买入 104 只低价股、1999 年做空 84 只日股，两次操作共享的方法论不包括：</p>
+        <button class="opt" data-fb="两次都是情绪极端处行动，这是共享的。">在情绪极端处行动</button>
+        <button class="opt" data-fb="正确。正是共享的——不预测宏观，只比较价格与价值。">基于对宏观经济拐点的精确预测</button>
+        <button class="opt" data-fb="两次都极度分散，这是共享的。">用分散承担个体不确定性</button>
+        <div class="feedback"></div>
+      </div>
+      <div class="widget quiz" data-answer="0">
+        <p class="q">5. 你发现某优质公司因一次性行业恐慌大跌 40%，估值便宜、基本面无损、仪表显示恐慌极端。最合适的执行方式是：</p>
+        <button class="opt" data-fb="正确。一次性恐慌 + 基本面无损 = 情绪折价；分批对冲“买早”，触发器对冲“看错”，清单已逐项满足。">按清单确认各条件后，分批建仓并预设退出触发器</button>
+        <button class="opt" data-fb="“等更便宜”没有可执行的判据——恐慌的极端形态是不可计时的，等待本质是让情绪替你做决定。">再等等，恐慌通常还有第二波，等价格更低再全仓买入</button>
+        <button class="opt" data-fb="优质 + 深度折价正是逆向的典型猎物；把它让给趋势策略，等于放弃了方法的核心机会。">优质公司不碰，逆向只买“问题公司”的困境反转</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">全课回顾：直觉（价格≠价值）→ 概念（悲观点 × 价值锚 × 情绪周期）→ 机制（五步流程 + MoS 数学 + 情绪温度计）→ 深入（四类失败模式 + 检查清单）。延伸阅读（均为确定存在的经典）：《Investing the Templeton Way》（Lauren Templeton &amp; Scott Phillips）、《The Templeton Touch》（Robert Herrmann）。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示 ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空 ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序 ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用 ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+</script>
+
+<script>
+/* ================= 课程定制演示 ================= */
+
+// 演示 1：安全边际计算器
+demo('#mosDemo', ({ v, p, t }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cText = css.getPropertyValue('--text'), cMuted = css.getPropertyValue('--muted');
+  const cOk = css.getPropertyValue('--ok'), cBad = css.getPropertyValue('--bad');
+  const cPrimary = css.getPropertyValue('--primary'), cBorder = css.getPropertyValue('--border');
+  const mos = Math.max(0, (v - p) / v * 100);
+  const regain = p > 0 ? (v / p - 1) * 100 : 0;
+  const annual = p > 0 ? (Math.pow(Math.max(v / p, 0.0001), 1 / t) - 1) * 100 : 0;
+
+  const scale = W / 220;            // 按最大可能宽度缩放
+  const barH = 52, x0 = 130, y1 = 60, y2 = 160;
+  ctx.font = '15px sans-serif'; ctx.fillStyle = cMuted;
+  ctx.fillText('内在价值 V', 20, y1 + barH / 2 + 5);
+  ctx.fillText('当前价格 P', 20, y2 + barH / 2 + 5);
+
+  // 价值条
+  ctx.fillStyle = cPrimary; ctx.globalAlpha = .28;
+  ctx.fillRect(x0, y1, v * scale, barH); ctx.globalAlpha = 1;
+  ctx.strokeStyle = cPrimary; ctx.strokeRect(x0, y1, v * scale, barH);
+  // 安全边际区（斜纹）
+  ctx.save(); ctx.beginPath(); ctx.rect(x0 + p * scale, y1, Math.max(0, (v - p) * scale), barH); ctx.clip();
+  ctx.strokeStyle = cOk; ctx.lineWidth = 2;
+  for (let x = x0 - barH; x < x0 + v * scale + barH; x += 12) {
+    ctx.beginPath(); ctx.moveTo(x, y1 + barH); ctx.lineTo(x + barH, y1); ctx.stroke();
+  }
+  ctx.restore();
+  // 价格条
+  ctx.fillStyle = cPrimary; ctx.fillRect(x0, y2, p * scale, barH);
+  // 数值标签
+  ctx.fillStyle = cText; ctx.font = 'bold 15px sans-serif';
+  ctx.fillText('V = ' + v, x0 + v * scale + 8, y1 + barH / 2 + 5);
+  ctx.fillText('P = ' + p, x0 + p * scale + 8, y2 + barH / 2 + 5);
+  if (p < v) {
+    ctx.fillStyle = cOk; ctx.font = 'bold 13px sans-serif';
+    ctx.fillText('MoS 区', x0 + p * scale + 6, y1 + barH / 2 + 5);
+  }
+
+  root.querySelector('.readout').innerHTML =
+    `安全边际 MoS = <strong style="color:${cOk}">${mos.toFixed(1)}%</strong>　·　价值回归收益 = ` +
+    `<strong style="color:${cPrimary}">${regain.toFixed(1)}%</strong>　·　摊薄到 ${t} 年的年化 = ` +
+    `<strong>${annual.toFixed(1)}%</strong>${p >= v ? '　⚠️ P ≥ V：没有折价，不是逆向买点' : ''}`;
+});
+
+// 演示 2：情绪周期模拟器
+demo('#emoDemo', ({ pos }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cText = css.getPropertyValue('--text'), cMuted = css.getPropertyValue('--muted');
+  const cOk = css.getPropertyValue('--ok'), cBad = css.getPropertyValue('--bad');
+  const cPrimary = css.getPropertyValue('--primary'), cBorder = css.getPropertyValue('--border');
+  const pad = { l: 46, r: 20, t: 24, b: 40 };
+  const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+
+  // 曲线：一个完整情绪周期（悲观→怀疑→乐观→狂热→回落）
+  const f = x => Math.sin(x * Math.PI * 2);           // x∈[0,1]
+  const X = u => pad.l + u * iw;
+  const Y = s => pad.t + (1 - (s + 1) / 2) * ih;      // s∈[-1,1] 情绪值
+
+  // 区域带（底部买入区、顶部卖出区）
+  ctx.fillStyle = cOk; ctx.globalAlpha = .12;
+  ctx.fillRect(pad.l, Y(-0.55), iw, Y(-1) - Y(-0.55)); ctx.globalAlpha = 1;
+  ctx.fillStyle = cBad; ctx.globalAlpha = .12;
+  ctx.fillRect(pad.l, Y(1), iw, Y(0.55) - Y(1)); ctx.globalAlpha = 1;
+
+  // 坐标轴
+  ctx.strokeStyle = cBorder; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ih); ctx.lineTo(pad.l + iw, pad.t + ih); ctx.stroke();
+  ctx.fillStyle = cMuted; ctx.font = '12px sans-serif';
+  ['极度恐慌', '怀疑', '乐观', '极度狂热'].forEach((lab, i) => ctx.fillText(lab, pad.l + i * iw / 3 - (i ? 30 : 0), H - 12));
+
+  // 情绪曲线
+  ctx.strokeStyle = cPrimary; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let px = 0; px <= iw; px++) {
+    const y = Y(f(px / iw));
+    px ? ctx.lineTo(pad.l + px, y) : ctx.moveTo(pad.l + px, y);
+  }
+  ctx.stroke();
+
+  // 阶段标注
+  ctx.fillStyle = cMuted; ctx.font = '12px sans-serif';
+  ctx.fillText('买入区（逆向布局）', pad.l + 8, Y(-0.75) + 4);
+  ctx.fillText('卖出 / 反向区', pad.l + 8, Y(0.8) + 4);
+  ctx.fillText('观察区：做功课、不动手', pad.l + iw * .45, Y(0.05) + 4);
+
+  // 当前位置标记（pos: 0=狂热 100=恐慌 → 情绪值 s = 1 - 2*pos/100）
+  const s = 1 - 2 * pos / 100;
+  const mx = X(0.08 + 0.84 * pos / 100);
+  ctx.strokeStyle = s <= -0.55 ? cOk : (s >= 0.55 ? cBad : cPrimary);
+  ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(mx, pad.t); ctx.lineTo(mx, pad.t + ih); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.beginPath(); ctx.arc(mx, Y(s), 7, 0, Math.PI * 2); ctx.fill();
+
+  // 行动建议
+  let advice, color;
+  if (s <= -0.55) { advice = '恐慌极端：进入买入区——启动五步流程（清单 + 分批），此时“感觉”会拖住你，照单执行。'; color = cOk; }
+  else if (s >= 0.55) { advice = '狂热极端：进入卖出/反向区——收紧仓位、兑现收益，警惕“这次不一样”的叙事。'; color = cBad; }
+  else { advice = '情绪中性：既不够恐慌也不够狂热——正是做功课（第 4 步流程）的观察区，别出手。'; color = cPrimary; }
+  root.querySelector('.readout').innerHTML = `<strong style="color:${color}">${advice}</strong>`;
+});
+</script>
+</body>
+</html>

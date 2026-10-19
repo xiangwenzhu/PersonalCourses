@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>快速傅里叶变换（FFT）· 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>快速傅里叶变换（FFT）</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ===================== L1 · 直觉 ===================== -->
+    <section class="chapter" data-level="1" data-title="声音里的'配方'——什么是傅里叶变换">
+      <h2>声音里的"配方"——什么是傅里叶变换</h2>
+      <p class="tldr">傅里叶变换就是把一个混合在一起的信号，拆解成一个个纯净的"单音"成分，告诉你每种成分占多少比例。</p>
+
+      <p>想象你喝到一杯好喝的混合果汁，想知道配方：是不是苹果汁多一点、橙汁少一点、还加了一点点柠檬？如果能把这杯果汁"拆解"回原始的几种果汁，并量出各自的比例，你就得到了这杯果汁的"配方"。</p>
+      <div class="analogy">一段声音（比如一个和弦）其实是很多"纯音"叠加在一起的。<b>傅里叶变换</b>做的事情，就是把这个"混合声音"拆解成"哪些纯音、各自多响"的配方表——这张配方表就叫<b>频谱</b>，而"响度随纯音种类变化"的描述方式就是<b>频域</b>视角（相对地，原始的"声音随时间变化"的波形叫<b>时域</b>视角）。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，认识几个关键词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">傅里叶变换</div><div class="back">一种数学方法：把一个随时间变化的信号，改写成"由多少种不同频率的纯波叠加而成"的描述。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">频率</div><div class="back">纯波每秒钟振动的次数，决定了声音听起来是低沉还是尖锐。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">频谱</div><div class="back">把"各个频率成分有多强"画成一张图或列成一张表，就是频谱——相当于果汁的配方表。</div></div></div>
+        </div>
+      </div>
+
+      <div class="tip">傅里叶变换 = 把混合信号拆成"频率配方表"；这张配方表就是频谱。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="为什么还需要'快速'">
+      <h2>为什么还需要"快速"</h2>
+      <p class="tldr">直接按定义拆解信号，计算量会随数据量的平方增长；FFT 是同一个答案的"抄近道"算法，又快又准。</p>
+
+      <p>直接按傅里叶变换的定义去计算（这种直接计算的版本叫 <b>DFT，离散傅里叶变换</b>），对于 N 个采样点，大约需要做 N×N 次运算——因为要分别检验每一个可能的频率，而检验每个频率又要扫一遍全部 N 个点。</p>
+      <div class="analogy">这就像体检时，为了检查每两个人之间"谁认识谁"，你让每个人都和其他所有人握一次手确认——N 个人大概要握 N×N 次手。而<b>快速傅里叶变换（FFT）</b>的思路是：先把人分成两组，组内已经知道的关系可以直接复用，不需要每次都从头两两核对。数据量越大，这种"分组复用"省下的功夫就越多。</div>
+
+      <p>FFT 不是一种新的变换，它和 DFT 的<b>结果完全一样</b>，只是用了更聪明的计算顺序，把计算量从 $O(N^2)$ 降到了 $O(N\log N)$。当 N 是几百万时，这个差异可能是几小时和几毫秒的区别。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">按定义直接计算 N 个点的离散傅里叶变换（DFT），大致需要多少次运算？</p>
+        <button class="opt" data-fb="这个量级太小了，连扫一遍所有点都不够。">O(N)</button>
+        <button class="opt" data-fb="O(N log N) 正是 FFT 优化之后的复杂度，不是朴素 DFT 的。">O(N log N)</button>
+        <button class="opt" data-fb="对每一个频率都要扫一遍全部 N 个点，一共 N 种频率，所以是 N×N。">O(N²)</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">FFT 和 DFT 算出的结果完全相同，FFT 只是用分治的方式把 O(N²) 的计算量降到了 O(N log N)。</div>
+    </section>
+
+    <!-- ===================== L2 · 概念 ===================== -->
+    <section class="chapter" data-level="2" data-title="时域与频域：两种看波形的视角">
+      <h2>时域与频域：两种看波形的视角</h2>
+      <p class="tldr">同一个信号，既可以画成"随时间变化的波形"（时域），也可以画成"各频率成分有多强"的柱状图（频域）——它们是同一件事的两种描述。</p>
+
+      <p>下面这个演示里，一个复杂的波形其实是三个简单正弦波叠加出来的。拖动滑块改变每个频率成分的"振幅"（强弱），观察上方的时域波形如何变化，同时下方的频域柱状图会实时显示出每个频率成分当前有多强。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">拖动滑块，观察"时域波形"与"频域频谱"的对应关系</div>
+        <canvas width="800" height="180"></canvas>
+        <canvas width="800" height="140" style="margin-top:10px"></canvas>
+        <div class="controls">
+          <label>低频成分振幅 <span class="val" data-for="a1"></span><input type="range" name="a1" min="0" max="1" step="0.05" value="0.8"></label>
+          <label>中频成分振幅 <span class="val" data-for="a2"></span><input type="range" name="a2" min="0" max="1" step="0.05" value="0.4"></label>
+          <label>高频成分振幅 <span class="val" data-for="a3"></span><input type="range" name="a3" min="0" max="1" step="0.05" value="0.2"></label>
+        </div>
+      </div>
+
+      <div class="key">时域图告诉你"信号随时间怎么变化"；频域图（频谱）告诉你"信号由哪些频率、各多强的成分组成"。傅里叶变换就是从时域走到频域的那座桥；而<b>逆</b>傅里叶变换则是从频域走回时域。</div>
+
+      <div class="tip">时域和频域是同一个信号的两种等价描述，傅里叶变换负责在两者之间转换。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="复数与旋转：用欧拉公式描述频率">
+      <h2>复数与旋转：用欧拉公式描述频率</h2>
+      <p class="tldr">傅里叶变换内部用"复数旋转"来表示频率和相位；欧拉公式 $e^{i\theta}=\cos\theta+i\sin\theta$ 是理解这一切的钥匙。</p>
+
+      <p>为什么傅里叶变换的公式里总有一个 $e^{-i2\pi kn/N}$ 这样奇怪的东西？因为用"复数"来表示波，比单独用正弦、余弦函数更方便——一个复数 $e^{i\theta}$ 在复平面的单位圆上，就是"从角度 0 旋转了 $\theta$"。</p>
+
+      <div class="key">欧拉公式：$e^{i\theta}=\cos\theta+i\sin\theta$。<br>把 $\theta$ 看成"转过的角度"，$e^{i\theta}$ 就是单位圆上转到对应角度的那个点。角度每增加一点，就相当于时间往前走了一点，而"转得快慢"正对应着"频率高低"。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，认识这几个符号</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">虚数单位 i</div><div class="back">满足 $i^2=-1$ 的符号。复数 $a+bi$ 可以看作平面上的一个点 $(a,b)$。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">欧拉公式</div><div class="back">$e^{i\theta}=\cos\theta+i\sin\theta$，把"旋转角度"和"复数"联系起来。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">旋转因子 / 相位</div><div class="back">乘以 $e^{i\theta}$ 相当于把一个复数逆时针旋转 $\theta$ 角，这个旋转角就是"相位"。</div></div></div>
+        </div>
+      </div>
+
+      <p>DFT 公式里的 $e^{-i2\pi kn/N}$，就是在问："如果有一个以频率 k 匀速旋转的参照波，我的信号在第 n 个采样点上，跟这个参照波对得上多少？"把所有点对出来的结果加起来，就是这个频率 k 上的强度，也就是频谱里第 k 根柱子的高度。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">在复平面上，把一个复数乘以 $e^{i\theta}$，几何上相当于做了什么？</p>
+        <button class="opt" data-fb="乘以 e^{iθ} 时模长不变（|e^{iθ}|=1），不会缩放。">把它放大或缩小</button>
+        <button class="opt" data-fb="没错，e^{iθ} 的模长恒为1，乘上它只会让原来的复数绕原点转过 θ 角，这就是“旋转因子”名字的来源。">把它绕原点旋转 θ 角</button>
+        <button class="opt" data-fb="乘法不是平移，平移对应的是加法而不是乘法。">把它平移一段距离</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">傅里叶变换用"旋转的参照波"去逐个比对信号，比对结果的强弱就是频谱；理解这一点的关键就是欧拉公式。</div>
+    </section>
+
+    <!-- ===================== L3 · 机制 ===================== -->
+    <section class="chapter" data-level="3" data-title="DFT 的定义与朴素计算">
+      <h2>DFT 的定义与朴素计算</h2>
+      <p class="tldr">离散傅里叶变换（DFT）的公式看起来复杂，但拆开看，每一项都有清楚的含义。</p>
+
+      <p>对于 N 个采样点 $x_0, x_1, \dots, x_{N-1}$，第 k 个频率成分定义为：</p>
+      <p>$$X_k = \sum_{n=0}^{N-1} x_n \, e^{-i 2\pi k n / N}$$</p>
+      <p>其中：$x_n$ 是第 n 个采样点的值；$k$ 代表你正在检验的"第 k 种频率"；$e^{-i2\pi kn/N}$ 就是上一章说的"旋转参照波"在第 n 个点上转到的位置。把所有点的"信号值 × 参照波"加起来，就得到了这个频率上的强度 $X_k$。</p>
+
+      <div class="widget steps">
+        <div class="widget-title">以 N=4、信号 x=[1, 2, 3, 4] 为例，一步步算出 X₀ 和 X₁</div>
+        <div class="step">第 1 步：计算 X₀（k=0）。此时 $e^{-i2\pi \cdot 0 \cdot n/4}=1$ 对所有 n 都成立，所以 $X_0 = 1+2+3+4 = 10$。X₀ 其实就是"直流分量"——所有采样点的总和（平均值的 N 倍）。</div>
+        <div class="step">第 2 步：计算 X₁（k=1）。需要分别算出 n=0,1,2,3 时的 $e^{-i2\pi n/4}$：依次是 $1,\,-i,\,-1,\,i$。</div>
+        <div class="step">第 3 步：把信号值乘上对应的旋转因子再相加：$X_1 = 1\cdot1 + 2\cdot(-i) + 3\cdot(-1) + 4\cdot i = (1-3) + (-2+4)i = -2+2i$。</div>
+        <div class="step">第 4 步：对每个 k（k=0,1,2,3）都重复这个过程，就得到了完整的频谱 $X_0, X_1, X_2, X_3$。可以看到：每算一个 $X_k$ 都要扫一遍全部 N 个点，一共 N 个 k，所以总运算量是 $N\times N = N^2$。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="widget fill">
+        <p>小测试：对于信号 x = [1, 2, 3, 4]，直流分量 X₀（即所有采样点之和）等于 <input data-answer="10"> 。</p>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <div class="tip">DFT 公式本身不难，难的是它的朴素计算方式——N 种频率、每种都要扫 N 个点，共 O(N²) 次运算。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="分治的魔法：把大问题拆成小问题">
+      <h2>分治的魔法：把大问题拆成小问题</h2>
+      <p class="tldr">Cooley-Tukey FFT 算法的核心想法：把 N 个点按"下标的奇偶"分成两半，分别递归求解，再合并结果——这样省下了大量重复计算。</p>
+
+      <p>假设 N 是 2 的整数次幂。把信号按下标奇偶分成两组：偶数下标 $x_0, x_2, x_4,\dots$ 和奇数下标 $x_1, x_3, x_5,\dots$。神奇的是：N 点的 DFT，可以用这两组各 N/2 点的 DFT 结果拼出来，而不需要重新从头计算。</p>
+
+      <div class="analogy">这就像拼图：与其每次都把一整幅 1000 片的拼图从零开始拼，不如先把它分成两堆 500 片，分别拼好，再把两幅"半成品"拼到一起——而这两堆 500 片，又可以继续各自分成两堆 250 片……一直分下去，直到每堆只剩 1 片（最简单情形）。</div>
+
+      <p>在真正做"蝶形运算"合并之前，Cooley-Tukey 算法通常会先把输入按"下标的二进制位反转"重新排列顺序，这样后续的分治合并才能原地、整齐地进行。下面的演示展示了 N=8 时，位反转前后下标顺序的变化：</p>
+
+      <div class="widget" id="bitrev">
+        <div class="widget-title">点击按钮，观察下标如何按"二进制位反转"重新排列</div>
+        <div id="bitrevRow" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0;"></div>
+        <button class="btn primary" id="bitrevBtn">切换为位反转顺序</button>
+        <p id="bitrevCaption" style="text-align:center;color:var(--muted);margin-top:10px;font-size:14px"></p>
+      </div>
+
+      <div class="widget order" data-answer="split,recurse,combine">
+        <div class="widget-title">把 Cooley-Tukey 算法的三个步骤拖/点到正确顺序</div>
+        <div class="item" data-id="combine">用蝶形运算把两份 N/2 点结果合并成 N 点结果</div>
+        <div class="item" data-id="split">把 N 个点按下标奇偶分成两组，各 N/2 个点</div>
+        <div class="item" data-id="recurse">对两组各自递归地做同样的 FFT（直到剩 1 个点）</div>
+        <button class="btn check">检查顺序</button><div class="feedback"></div>
+      </div>
+
+      <div class="tip">分治三步：拆分（按奇偶）→ 递归（对半求解）→ 合并（蝶形运算）。这是 FFT 能加速的根本原因。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="蝶形运算：加一下，减一下，再转个圈">
+      <h2>蝶形运算：加一下，减一下，再转个圈</h2>
+      <p class="tldr">合并两组子结果时，FFT 只需要一次"旋转 + 一次加法 + 一次减法"，这个基本操作因为图形像蝴蝶而被称为"蝶形运算"。</p>
+
+      <p>设偶数组的第 k 个结果是 $E_k$，奇数组的第 k 个结果是 $O_k$。合并时要用到"旋转因子"（twiddle factor）$W_N^k = e^{-i2\pi k/N}$，合并公式是：</p>
+      <p>$$X_k = E_k + W_N^k O_k \qquad\qquad X_{k+N/2} = E_k - W_N^k O_k$$</p>
+      <p>也就是说：先把 $O_k$ 旋转一个角度（乘以 $W_N^k$），再分别和 $E_k$ 做一次加法、一次减法，就同时得到了两个新的频率分量——这正是"一次计算，两份收获"，省下的功夫就是 FFT 比 DFT 快的来源。</p>
+
+      <div class="widget demo" id="demo3">
+        <div class="widget-title">拖动滑块，观察蝶形运算中向量的旋转、相加与相减</div>
+        <canvas width="800" height="320"></canvas>
+        <div class="controls">
+          <label>旋转因子角度 k/N <span class="val" data-for="kn"></span><input type="range" name="kn" min="0" max="1" step="0.02" value="0.2"></label>
+          <label>奇数部分 Oₖ 的长度 <span class="val" data-for="omag"></span><input type="range" name="omag" min="0" max="1.4" step="0.05" value="0.9"></label>
+          <label>奇数部分 Oₖ 自身的相位 <span class="val" data-for="ophase"></span><input type="range" name="ophase" min="0" max="1" step="0.02" value="0.1"></label>
+        </div>
+        <p class="readout" style="text-align:center;margin-top:8px;color:var(--muted);font-size:14px"></p>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">蝶形运算中，下方输出 $X_{k+N/2}$ 是用哪种方式算出来的？</p>
+        <button class="opt" data-fb="相加得到的是上方输出 X_k，不是 X_{k+N/2}。">E_k + W_N^k O_k</button>
+        <button class="opt" data-fb="正确：上方用加法，下方用减法，这一对加减正是“蝶形”名字的由来（画出来两条线像蝴蝶的翅膀）。">E_k − W_N^k O_k</button>
+        <button class="opt" data-fb="蝶形运算里不需要把两部分相乘，只需要旋转后再加减。">E_k × W_N^k O_k</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">蝶形运算 = 旋转一下 Oₖ，再分别加、减 Eₖ，一次运算同时得到两个频率分量的结果。</div>
+    </section>
+
+    <!-- ===================== L4 · 深入 ===================== -->
+    <section class="chapter" data-level="4" data-title="复杂度为什么是 O(N log N)">
+      <h2>复杂度为什么是 O(N log N)</h2>
+      <p class="tldr">每一层"拆分再合并"大约要做 O(N) 次运算，而数据能被对半拆分 $\log_2 N$ 层，所以总运算量是 $N \times \log_2 N$。</p>
+
+      <p>把 N 个点对半拆、再对半拆……直到每组只剩 1 个点，一共能拆 $\log_2 N$ 层（比如 N=8=2³，正好拆 3 层）。而每一层，不论分成了多少组，蝶形运算合并起来的总工作量都是 O(N)（每个点只参与一次加法和一次减法）。层数 × 每层的工作量，就是总复杂度：</p>
+      <p>$$O(N) \times \log_2 N = O(N\log N)$$</p>
+
+      <div class="widget demo" id="demo4">
+        <div class="widget-title">拖动滑块选择 N，比较朴素 DFT 与 FFT 的运算次数（对数坐标高度）</div>
+        <canvas width="800" height="260"></canvas>
+        <div class="controls">
+          <label>N = 2^<span class="val" data-for="p"></span><input type="range" name="p" min="1" max="12" step="1" value="6"></label>
+        </div>
+        <p class="readout" style="text-align:center;margin-top:8px;font-weight:600"></p>
+      </div>
+
+      <details class="reveal">
+        <summary>为什么必须要求 N 是 2 的幂才能这样对半拆？</summary>
+        这里讲的"基 2（radix-2）Cooley-Tukey"算法要求 N 是 2 的幂，这样才能不断对半拆分、拆到剩 1 个点为止。如果 N 不是 2 的幂，还有其他变体（比如混合基 FFT、Bluestein 算法）可以处理任意长度的 N，只是实现更复杂一些，核心的分治思想是一致的。
+      </details>
+
+      <div class="tip">FFT 之所以快，是因为用 $\log_2 N$ 层、每层 O(N) 的蝶形运算，替代了朴素算法里扫 N 遍、每遍 O(N) 的暴力比对。</div>
+    </section>
+
+    <section class="chapter" data-level="4" data-title="FFT 在现实中的应用与边界">
+      <h2>FFT 在现实中的应用与边界</h2>
+      <p class="tldr">FFT 几乎无处不在：音频频谱分析、音视频与图像压缩、信号滤波、甚至大数乘法，都离不开它。</p>
+
+      <table>
+        <tr><th>应用场景</th><th>FFT 的作用</th></tr>
+        <tr><td>音乐软件 / 均衡器</td><td>把声音拆成频谱，实时显示或调整各频段强弱</td></tr>
+        <tr><td>MP3 / JPEG 等压缩格式</td><td>把信号变换到频域后，丢弃人耳/人眼不敏感的高频细节来压缩体积</td></tr>
+        <tr><td>数字滤波 / 降噪</td><td>在频域里直接"削掉"不想要的频率成分，再变换回时域</td></tr>
+        <tr><td>大整数乘法 / 多项式乘法</td><td>利用卷积定理，把原本 O(N²) 的乘法加速到 O(N log N)</td></tr>
+      </table>
+
+      <div class="warn">常见误区：很多人以为"FFT 和 DFT 算出来的结果不一样，FFT 是近似算法"。这是<b>错误</b>的——FFT 只是 DFT 的一种快速<b>计算方法</b>，在理想精度下两者结果完全相同，FFT 并没有牺牲准确性来换取速度。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">下列关于 FFT 的说法，哪一项是正确的？</p>
+        <button class="opt" data-fb="这是常见的误解。原始的基2 Cooley-Tukey 确实要求 N 是2的幂，但混合基 FFT、Bluestein 算法等变体可以处理任意长度的 N。">FFT 只能处理长度 N 恰好是 2 的幂的信号，没有其他办法</button>
+        <button class="opt" data-fb="正确：FFT 只是更快的算法，数学结果和朴素 DFT 完全一致，并没有牺牲精度。">FFT 和 DFT 的数学结果完全相同，FFT 只是算得更快</button>
+        <button class="opt" data-fb="恰恰相反，FFT 的意义正在于它比朴素 DFT 快得多，是实践中必不可少的加速算法。">在现代计算机上，FFT 的速度优势已经不重要了，可以直接用朴素 DFT</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">FFT 是傅里叶分析能大规模落地的关键：它让"从时域到频域"的转换快到可以实时完成，几乎支撑了现代所有的数字音视频技术。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+
+// 演示 1：时域波形由多个正弦成分叠加而成，下方同步显示频域柱状图
+demo('#demo1', ({ a1, a2, a3 }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, mid = H / 2;
+  const css = getComputedStyle(document.documentElement);
+  const freqs = [1, 3, 5], amps = [a1, a2, a3];
+
+  ctx.strokeStyle = css.getPropertyValue('--border'); ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
+  ctx.strokeStyle = css.getPropertyValue('--primary'); ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let x = 0; x <= W; x++) {
+    let y = 0;
+    freqs.forEach((f, i) => y += amps[i] * Math.sin(2 * Math.PI * f * x / W * 4));
+    const yy = mid - y * (H / 2 - 14) / 3;
+    x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy);
+  }
+  ctx.stroke();
+
+  const cv2 = $$('canvas', root)[1], ctx2 = cv2.getContext('2d');
+  const W2 = cv2.width, H2 = cv2.height;
+  ctx2.clearRect(0, 0, W2, H2);
+  const barW = W2 / (freqs.length * 2);
+  freqs.forEach((f, i) => {
+    const h = amps[i] * (H2 - 36);
+    const x = (i * 2 + 0.5) * barW;
+    ctx2.fillStyle = css.getPropertyValue('--l3');
+    ctx2.fillRect(x, H2 - h - 20, barW, h);
+    ctx2.fillStyle = css.getPropertyValue('--text');
+    ctx2.font = '13px sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.fillText(f + ' Hz', x + barW / 2, H2 - 5);
+  });
+  function $$(s, r) { return [...r.querySelectorAll(s)]; }
+});
+
+// 演示 2：位反转顺序可视化（固定 N=8，独立于通用 demo() 辅助函数）
+(() => {
+  const N = 8, bits = Math.log2(N);
+  const row = document.getElementById('bitrevRow');
+  const caption = document.getElementById('bitrevCaption');
+  const btn = document.getElementById('bitrevBtn');
+  if (!row) return;
+  const reverseBits = x => { let r = 0; for (let i = 0; i < bits; i++) { r = (r << 1) | (x & 1); x >>= 1; } return r; };
+  let reversed = false;
+  function render() {
+    row.innerHTML = '';
+    const indices = [...Array(N).keys()];
+    const order = reversed ? indices.map(reverseBits) : indices;
+    order.forEach(val => {
+      const d = document.createElement('div');
+      d.style.cssText = 'width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--primary-soft);border:1px solid var(--primary);transition:all .4s;color:var(--primary)';
+      d.textContent = 'x' + val;
+      row.appendChild(d);
+    });
+    caption.textContent = reversed
+      ? '当前顺序：按下标的二进制位反转重新排列（蝶形运算从这个顺序开始原地计算）'
+      : '当前顺序：原始输入顺序 x₀ x₁ x₂ … x₇';
+    btn.textContent = reversed ? '恢复原始顺序' : '切换为位反转顺序';
+  }
+  btn.onclick = () => { reversed = !reversed; render(); };
+  render();
+})();
+
+// 演示 3：蝶形运算的向量图——旋转 + 加减
+demo('#demo3', ({ kn, omag, ophase }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, cx = W / 2, cy = H / 2 + 10, scale = 95;
+  const css = getComputedStyle(document.documentElement);
+  const axis = css.getPropertyValue('--border'), text = css.getPropertyValue('--text');
+
+  ctx.strokeStyle = axis; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+  ctx.beginPath(); ctx.setLineDash([3, 4]); ctx.strokeStyle = axis;
+  ctx.arc(cx, cy, scale, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+
+  function arrow(x0, y0, x1, y1, color, label) {
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    const ang = Math.atan2(y1 - y0, x1 - x0);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 - 10 * Math.cos(ang - 0.3), y1 - 10 * Math.sin(ang - 0.3));
+    ctx.lineTo(x1 - 10 * Math.cos(ang + 0.3), y1 - 10 * Math.sin(ang + 0.3));
+    ctx.closePath(); ctx.fill();
+    ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(label, x1 + 8, y1);
+  }
+
+  // E_k：固定长度1，相位0（沿x轴）
+  const Ex = cx + scale * 1, Ey = cy - 0;
+  // O_k 自身相位 ophase（0~1 代表 0~2π），再被旋转因子 W_N^k（角度 -2π·kn）旋转
+  const theta = -2 * Math.PI * kn + 2 * Math.PI * ophase;
+  const Ox = cx + scale * omag * Math.cos(theta);
+  const Oy = cy - scale * omag * Math.sin(theta);
+
+  arrow(cx, cy, Ex, Ey, css.getPropertyValue('--l3'), 'Eₖ');
+  arrow(cx, cy, Ox, Oy, css.getPropertyValue('--l2'), 'W·Oₖ');
+
+  const Sx = cx + (Ex - cx) + (Ox - cx), Sy = cy + (Ey - cy) + (Oy - cy);
+  const Dx = cx + (Ex - cx) - (Ox - cx), Dy = cy + (Ey - cy) - (Oy - cy);
+  arrow(cx, cy, Sx, Sy, css.getPropertyValue('--primary'), 'Xₖ = Eₖ+W·Oₖ');
+  arrow(cx, cy, Dx, Dy, css.getPropertyValue('--bad'), 'Xₖ₊N/2 = Eₖ−W·Oₖ');
+
+  root.querySelector('.readout').textContent =
+    `旋转角 θ=2π×(${ophase.toFixed(2)}-${kn.toFixed(2)})，|Oₖ|=${omag.toFixed(2)} —— 蓝色与青色向量相加得紫色，相减得红色`;
+});
+
+// 演示 4：复杂度对比（对数高度柱状图）
+demo('#demo4', ({ p }, ctx, cv, root) => {
+  const N = 2 ** p;
+  const dft = N * N, fft = N * Math.log2(N);
+  const W = cv.width, H = cv.height, base = H - 40;
+  const css = getComputedStyle(document.documentElement);
+  const maxLog = Math.log10(dft) || 1;
+  const s = (base - 20) / maxLog;
+
+  function bar(x, val, color, label) {
+    const h = Math.log10(val) * s;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, base - h, 160, h);
+    ctx.fillStyle = css.getPropertyValue('--text');
+    ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(label, x + 80, base + 20);
+    ctx.fillText(Math.round(val).toLocaleString(), x + 80, base - h - 8);
+  }
+  ctx.strokeStyle = css.getPropertyValue('--border');
+  ctx.beginPath(); ctx.moveTo(0, base); ctx.lineTo(W, base); ctx.stroke();
+  bar(150, dft, css.getPropertyValue('--bad'), 'DFT：O(N²)');
+  bar(480, fft, css.getPropertyValue('--ok'), 'FFT：O(N log N)');
+
+  root.querySelector('.readout').textContent = `N=${N} 时，FFT 比朴素 DFT 理论上快约 ${(dft / fft).toFixed(1)} 倍`;
+});
+</script>
+</body>
+</html>
