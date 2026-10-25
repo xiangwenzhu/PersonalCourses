@@ -11,6 +11,8 @@
 | 快速傅里叶变换（FFT） | 信号处理 · 数学 | [fft-course.html](./fft-course.html) |
 | Pi Agent 入门到进阶 | AI Agent · 工程实践 | [pi-agent-course.html](./pi-agent-course.html) |
 | 邓普顿的逆向投资方法 | 投资 · 金融 | [templeton-course.html](./templeton-course.html) |
+| 读懂高赔率逆向评估报告（宁德时代案例） | 投资 · 金融 | [catl-report-course.html](./catl-report-course.html) |
+| 股票估值指标互动实验室 | 投资 · 金融工具 | [stock-valuation-lab.html](./stock-valuation-lab.html) |
 
 ## 使用方式
 
@@ -20,4 +22,4 @@
 
 ## 新增课程
 
-按同样的方式新增一个单文件 `.html` 课程，并在上面的课程列表里补一行记录即可。
+按同样的方式新增一个单文件 `.html` 课程，并**必须**同时在 [index.html](./index.html) 补一张卡片、在上面的课程列表里补一行记录。详细规则见 [AGENTS.md](./AGENTS.md)。

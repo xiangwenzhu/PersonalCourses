@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>读懂高赔率逆向评估报告 · 宁德时代案例 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* ---- 本课程自定义 ---- */
+.ref{display:inline-block;font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:2px 10px;margin:0 0 8px}
+.big-num{font-size:22px;font-weight:700;color:var(--primary)}
+.readout{font-size:15px;margin-top:10px;line-height:1.9}
+.numtab{font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.kpis .kpi{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--card)}
+.kpis .kpi b{display:block;font-size:19px;color:var(--primary)}
+.kpis .kpi small{color:var(--muted)}
+@media(max-width:700px){.kpis{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>读懂「高赔率逆向评估」报告 · 宁德时代案例</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ============ 第 1 章 ============ -->
+    <section class="chapter" data-level="1" data-title="报告地图：这份报告在算什么">
+      <h2>报告地图：这份报告在算什么</h2>
+      <p class="tldr">一句话：股价五个月腰斩之后，报告用一套统一的「赔率 − 时间 − 门槛」算法回答一个问题——现在是<b>错杀</b>，还是<b>市场就认为它只值这个价</b>。结论是「观察、现价不参与」，但推理过程比结论更值得学。</p>
+      <span class="ref">📄 对应报告：首页摘要 + 第 01 节</span>
+
+      <h3>发生了什么</h3>
+      <p>宁德时代（300750.SZ）的股价从 2026 年 5 月的 <b>467.06 元</b> 跌到 10 月的 <b>216.51 元</b>，市值蒸发 53.6%。它的市盈率（PE，第 2 章细讲）跌到 <b>12.54 倍</b>，是<b>过去五年最便宜</b>的时刻（0.17% 分位）。</p>
+      <p>大部分人看到「历史最低 PE」会想：抄底！这份报告偏不。它先问了「为什么跌」，发现是三件事<b>同时</b>发生：</p>
+      <ol>
+        <li><b>低价储能长协集中交付</b>——「长协」就是签好的长期供货合同，早年低价签的储能订单现在集中交货，把每个单位产品的利润打穿了；</li>
+        <li><b>两项政策成本落地</b>——消费税上调、出口退税取消，2027 年起每年多交一笔刚性成本；</li>
+        <li><b>定价框架切换（核心）</b>——市场不再把它当「每年高增长」的成长股（值 20–30 倍 PE），而开始把它当「有周期起伏的制造业公司」（只值 10–14 倍 PE）。</li>
+      </ol>
+
+      <div class="analogy">逆向投资像在商场打折季买名牌包：包打 5 折（股价腰斩、PE 历史最低）很诱人，但你得先问「它为什么打折」——是柜姐失误标错价（错杀），还是这款过时要停产了（价值中枢下移）？报告的结论是：可能两者都有一点，但更接近后者，所以不急着下手。</div>
+
+      <h3>报告怎么回答这个问题</h3>
+      <p>它不靠感觉，而是把「便宜不便宜」拆成几个<b>可计算的数字</b>，先算出来再下结论：</p>
+      <div class="kpis">
+        <div class="kpi"><b>13.1%</b><small>年化期望收益（门槛 ≥18%，✗）</small></div>
+        <div class="kpi"><b>3.62 : 1</b><small>赔率 R：乐观涨幅 ÷ 悲观跌幅（门槛 ≥3.0，✓）</small></div>
+        <div class="kpi"><b>+36.0%</b><small>期望收益 E（门槛 ≥+30%，✓）</small></div>
+        <div class="kpi"><b>2.5 年</b><small>兑现年限 T（预算上限 18 个月，✗）</small></div>
+        <div class="kpi"><b>63 分</b><small>评分卡（≥75 才能建仓 → 落入观察池）</small></div>
+        <div class="kpi"><b>0.0%</b><small>最终建议仓位</small></div>
+      </div>
+      <p>注意这个反直觉的结果：<b>三项核心指标里有两项达标，结论却是「不买」</b>。为什么？因为「兑现要等 30 个月」这一项把前面的优势全拖垮了——时间会把收益摊薄（第 5 章详讲）。</p>
+
+      <p>整份报告的计算，其实就沿着下面这条流水线走。请动手把它排成正确顺序——排完你就掌握了全报告的骨架：</p>
+      <div class="widget order" data-answer="a,b,c,d,e,f,g">
+        <div class="widget-title">把报告的计算流水线按正确顺序排列（点 ↑↓ 调整）</div>
+        <div class="item" data-id="d"><span>④ 乐观涨幅 ÷ 悲观跌幅 = 赔率 R</span></div>
+        <div class="item" data-id="a"><span>① 给悲观 / 中性 / 乐观三个情景各定一个目标价</span></div>
+        <div class="item" data-id="f"><span>⑥ 七道门槛判定 + 十项否决清单</span></div>
+        <div class="item" data-id="b"><span>② 拿目标价对现价算出三档涨跌幅</span></div>
+        <div class="item" data-id="e"><span>⑤ 用兑现年限 T 把 E 折算成年化收益</span></div>
+        <div class="item" data-id="c"><span>③ 按主观概率加权，得期望收益 E</span></div>
+        <div class="item" data-id="g"><span>⑦ 全部门槛通过后，才轮到计算仓位</span></div>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">小测：报告的最终结论是什么？</p>
+        <button class="opt" data-fb="报告仓位是 0.0%，且明确「现价不参与」，只给出两个重新评估的条件（价格回到 214 元以下，或两项基本面证据出现）。">跌破 214 元就立刻建仓满仓</button>
+        <button class="opt" data-fb="恰恰相反：股价腰斩、PE 历史最低，报告仍给出 0% 仓位——因为按它的算法，赔率不够、时间不够。">建议立即抄底买入 10%</button>
+        <button class="opt" data-fb="对。三项门槛里两项未过（年化 13.1%<18%、兑现期 30 个月>18 个月），评分 63 分落入 60–74 的观察池，所以只观察、不动手，并写下重新评估的条件。">进入观察池：现价不参与，条件触发再谈</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">这份报告 = 把「贵不便宜、值不值得买」翻译成 6 个算得出的数字。接下来 11 章，就是把每个数字怎么来的讲透。</div>
+    </section>
+
+    <!-- ============ 第 2 章 ============ -->
+    <section class="chapter" data-level="1" data-title="五个高频词：市值、PE、PB、ROE、分位">
+      <h2>五个高频词：市值、PE、PB、ROE、分位</h2>
+      <p class="tldr">报告里反复出现的五个词，全部可以用「买房」来类比。先吃透它们，后面所有公式都不再吓人。</p>
+      <span class="ref">📄 对应报告：首页指标区 + 第 02 节估值表</span>
+
+      <div class="analogy">把买股票想象成买一间用来收租的房子——<br>
+      <b>股价 × 面积</b> = 你付的总价（市值）；<br>
+      <b>每年租金</b> = 公司一年赚的净利润；<br>
+      <b>总价 ÷ 年租金</b> = 多少年靠租金回本（PE，市盈率）；<br>
+      <b>房子本身的砖瓦价值</b> = 净资产（PB 的分母）；<br>
+      <b>租金 ÷ 房价</b> = 你的本金生钱效率（ROE）。</div>
+
+      <p>对到宁德时代身上（数据时点 2026-10-23）：</p>
+      <table>
+        <tr><th>概念</th><th>公式</th><th>宁德时代的数</th><th>怎么读</th></tr>
+        <tr><td><b>市值</b></td><td>股价 × 总股本</td><td class="numtab">237.60 元 × 46.9 亿股 ≈ 11,142.7 亿元</td><td>买下整家公司要花一万一千多亿</td></tr>
+        <tr><td><b>PE 市盈率</b></td><td>市值 ÷ 年净利润</td><td class="numtab">12.54 倍</td><td>按当前盈利水平，约 12.5 年「回本」</td></tr>
+        <tr><td><b>PB 市净率</b></td><td>市值 ÷ 净资产</td><td class="numtab">2.84 倍</td><td>你花 2.84 元买它账上 1 元的净资产</td></tr>
+        <tr><td><b>ROE</b></td><td>净利润 ÷ 净资产</td><td class="numtab">21.4%</td><td>股东的钱一年能生 21.4% 的利润——相当优秀</td></tr>
+        <tr><td><b>分位</b></td><td>当前值在历史区间里的排位</td><td class="numtab">0.17%</td><td>比近五年里 99.83% 的时间都便宜</td></tr>
+      </table>
+
+      <div class="widget"><div class="widget-title">点击卡片翻面：先自测，再核对</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">PE 12.54x</div><div class="back">市值 ÷ 年净利 = 12.54，即按现在的盈利，约 12 年半「赚回」整个市值。也常直接叫「12.5 倍」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">PB 2.84x</div><div class="back">市值 ÷ 净资产 = 2.84。净资产是「清算价值」的粗略底线，PB 越接近 1 越接近地板价。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">ROE 21.4%</div><div class="back">净利 ÷ 净资产。它衡量「股东本金的生息效率」。ROE 高的公司，市场通常愿意给更高的 PB。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">分位 0.17%</div><div class="back">把近五年每天的 PE 从低到高排队，今天的 PE 排在第 0.17% 的位置——即比 99.83% 的时间都便宜。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">净现金 1,799 亿</div><div class="back">货币资金 3,698 亿 − 带息债务 1,899 亿 = 1,799 亿。账上「真金白银」比欠银行的多出的部分。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget fill">
+        <p>动手填一填：</p>
+        <p>市盈率 PE = 市值 ÷ <input data-answer="净利润|净利|年净利润" style="width:90px"> ；市净率 PB = 市值 ÷ <input data-answer="净资产|账面价值" style="width:90px"> 。</p>
+        <p>宁德时代 PE 分位 0.17%，意味着它比近五年 <input data-answer="99.83|99.8" style="width:70px">% 的时间都便宜。</p>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">小测：「PE 12.54 倍」最贴近的含义是？</p>
+        <button class="opt" data-fb="12.54 是倍数不是价格，股价是 237.60 元。">股价是 12.54 元</button>
+        <button class="opt" data-fb="那是股息率概念。PE 与分红无关，它衡量的是「市值 ÷ 盈利」。">每年分红 12.54%</button>
+        <button class="opt" data-fb="对。PE = 市值 ÷ 年净利，等价于「按当前盈利几年回本」。注意它依赖「当前的盈利」——如果盈利本身要下滑，「回本」就比字面更久，这正是本报告反复强调的。">按当前盈利水平，约 12.5 年回本</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn"><b>分位低 ≠ 便宜。</b>0.17% 分位只说明「比自己的历史便宜」，不说明「比合理价值便宜」。就像一件衣服从 1000 元降到 500 元，是历史最低价，但如果它本来就只值 300 元呢？报告第 02、03 节用四个「绝对锚」正面回答这个问题（第 10 章）。</div>
+
+      <div class="tip">市值是「总价」，PE 是「回本年数」，ROE 是「本金的生息效率」，分位是「和自己历史比」。记住买房类比，后面的公式全是这五个词的排列组合。</div>
+    </section>
+
+    <!-- ============ 第 3 章 ============ -->
+    <section class="chapter" data-level="2" data-title="目标价是怎么算出来的">
+      <h2>目标价是怎么算出来的</h2>
+      <p class="tldr">报告三档目标价（168 / 336 / 486 元）全部来自同一个公式：<b>目标价 = 归母净利 × 退出 PE ÷ 总股本</b>。先猜未来的利润，再猜那天市场愿意给的倍数，除以股票张数。</p>
+      <span class="ref">📄 对应报告：第 01 节情景表</span>
+
+      <p>「归母净利」= 归属于母公司股东的净利润（公司一年净赚、属于股东的钱）。报告对三档情景的取值：</p>
+      $$\text{目标价}=\frac{\text{归母净利}\times\text{退出 PE}}{\text{总股本}}$$
+      <table>
+        <tr><th>情景</th><th class="numtab">净利假设</th><th class="numtab">退出 PE</th><th>计算</th><th class="numtab">目标价</th><th class="numtab">vs 现价 237.60</th></tr>
+        <tr><td><b>悲观 30%</b></td><td class="numtab">750 亿（2027）</td><td class="numtab">10.5x</td><td class="numtab">750×10.5÷46.9</td><td class="numtab">168 元</td><td class="numtab">−29.3%</td></tr>
+        <tr><td><b>中性 45%</b></td><td class="numtab">1,050 亿（2028）</td><td class="numtab">15x</td><td class="numtab">1050×15÷46.9</td><td class="numtab">336 元</td><td class="numtab">+41.4%</td></tr>
+        <tr><td><b>乐观 25%</b></td><td class="numtab">1,200 亿（2028）</td><td class="numtab">19x</td><td class="numtab">1200×19÷46.9</td><td class="numtab">486 元</td><td class="numtab">+104.6%</td></tr>
+      </table>
+      <p>自己按一遍计算器：750 × 10.5 = 7,875 亿市值，除以 46.9 亿股 = 167.9 ≈ <b>168 元</b>。三档都是这么来的。</p>
+
+      <div class="key">两个术语拆开看：<br>① <b>退出 PE</b>——不是今天的 PE，而是「兑现那一天」市场愿意给的倍数。悲观档只给 10.5 倍，因为如果税费传导失败，市场会把它当「过剩制造业」（报告称之为「光伏化」，即像光伏行业那样陷入产能过剩、估值长期被压）；中性 15 倍仍低于 2024 年行业最差时的 15–16 倍，并不激进。<br>② <b>46.9 亿股</b>——总股本，用总市值 11,142.7 亿 ÷ 237.60 元反推（与分红基准股本 45.98 亿略有差异，因注销式回购未完成，报告已注明）。</div>
+
+      <p>下面自己当一回分析师：拖动「净利」和「PE」两个滑块，看目标价怎么变、离现价多远。</p>
+      <div class="widget demo" id="demoTarget">
+        <div class="widget-title">目标价计算器：净利 × PE ÷ 46.9 亿股</div>
+        <canvas width="800" height="240"></canvas>
+        <div class="controls">
+          <label>归母净利（亿元） <span class="val" data-for="np"></span><input type="range" name="np" min="500" max="1400" step="10" value="1050"></label>
+          <label>退出 PE（倍） <span class="val" data-for="pe"></span><input type="range" name="pe" min="8" max="25" step="0.5" value="15"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>试着复现三个关键点：① 悲观档：净利 750、PE 10.5 → 168 元；② 中性档：1050、15 → 336 元；③ 再试试卖方一致预期的组合（净利 1,104 亿 × 15 倍 ≈ 353 元）——比报告的中性还高一点，说明<b>报告的假设比市场共识更保守</b>。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">小测：悲观情景为什么只给 10.5 倍退出 PE，而不是和今天一样的 12.5 倍？</p>
+        <button class="opt" data-fb="PE 不会被「算错」，它是分析师对「市场届时愿意给多少倍」的判断。10.5 倍是一个情景假设，不是笔误。">因为计算器只能算出 10.5</button>
+        <button class="opt" data-fb="对。若悲观情景成立（税费无法传导、单位利润继续下滑），市场会把宁德从「成长股」重新归类为「过剩制造业周期股」，参考光伏行业的定价，只给 10 倍上下的 PE。净利下滑 + 估值降档，双重打击。">若基本面恶化被证实，市场会给它「过剩制造业」的估值（估值降档）</button>
+        <button class="opt" data-fb="退出 PE 和股本是两个独立变量；46.9 亿股是三档共用的分母。悲观档低是因为对「市场定价方式」的判断，不是因为股本。">因为股本会变大稀释股价</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">整条链上<b>最「软」的一环就是退出 PE</b>。净利还可以拿销量、单价去推算，但「2028 年市场愿意给 15 倍还是 19 倍」纯属判断。这就是为什么第 8 章要做敏感性测试：把中性目标价从 336 元改到 270 元，整个结论就变了。</div>
+
+      <div class="tip">目标价 = 净利 × PE ÷ 股本。它由两个「猜出来的数」相乘：利润（基本面的赌注）× 倍数（市场情绪的赌注）。</div>
+    </section>
+
+    <!-- ============ 第 4 章 ============ -->
+    <section class="chapter" data-level="2" data-title="期望收益 E：给三个未来开概率">
+      <h2>期望收益 E：给三个未来开概率</h2>
+      <p class="tldr">未来不止一种。把三个情景各自的可能性乘以各自的涨跌幅再加总，就得到<b>期望收益 E = +36.0%</b>。它是「把不确定性压缩成一个数」的标准方法。</p>
+      <span class="ref">📄 对应报告：第 01 节 E 卡片</span>
+
+      <div class="analogy">想象三个平行宇宙，一年后同时揭晓：宇宙 A（30% 概率）股价跌 29.3%；宇宙 B（45% 概率）涨 41.4%；宇宙 C（25% 概率）涨 104.6%。你买一股，等于同时持有三个宇宙的「平均值」——按概率加权：</div>
+
+      $$E = \sum_i p_i \times r_i = 0.30\times(-29.3\%) + 0.45\times(+41.4\%) + 0.25\times(+104.6\%) = +36.0\%$$
+
+      <p>逐步验算：第一项 = −8.79%，第二项 = +18.63%，第三项 = +26.15%，加总 = <b>+35.99% ≈ +36.0%</b>。报告的门槛是 <b>E ≥ +30%</b>，+36.0% 过线，但只超了 6 个百分点——安全垫很薄。</p>
+
+      <p><b>E 有多脆弱？</b>概率是主观的，挪一挪就变样。把中性概率从 45% 挪 5 个点给悲观（变成 悲观 35% / 中性 40% / 乐观 25%），重新算：</p>
+      <p class="numtab">0.35×(−29.3%) + 0.40×(+41.4%) + 0.25×(+104.6%) = −10.26% + 16.56% + 26.15% = <b>+32.5%</b>——还在 +30% 之上，但缓冲更薄了。<br><small>（报告卡片中写「降到 29.6%」，与其描述的调法直接计算略有出入；无论 29.6% 还是 32.5%，结论一致：E 高度依赖主观概率。学会自己重算，正是读懂这类报告的关键。）</small></p>
+
+      <p>自己动手摇一摇概率，感受 E 的敏感度（滑块会自动归一化为 100%）：</p>
+      <div class="widget demo" id="demoEV">
+        <div class="widget-title">期望收益 E 模拟器：调三档概率，看 E 变化</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls">
+          <label>悲观权重 <span class="val" data-for="pb"></span><input type="range" name="pb" min="5" max="70" step="1" value="30"></label>
+          <label>中性权重 <span class="val" data-for="pm"></span><input type="range" name="pm" min="10" max="80" step="1" value="45"></label>
+          <label>乐观权重 <span class="val" data-for="pg"></span><input type="range" name="pg" min="5" max="60" step="1" value="25"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+      <p>试两件事：① 恢复默认（30/45/25），确认 E=+36.0%；② 把悲观拉到 50、中性降到 25，看 E 还剩多少、是否还在门槛之上。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">小测：关于期望收益 E，下面哪句最准确？</p>
+        <button class="opt" data-fb="E 是概率加权平均，不是保证值。悲观情景真的发生时你面对的是 −29.3%，不是 +36%。">E = +36% 意味着大概率能赚到 36%</button>
+        <button class="opt" data-fb="对。E 的公式本身是客观的，但输入的概率 30/45/25 完全是主观判断。这就是报告强调「刚越过辅助线、安全垫很薄」的原因——换一组同样合理的概率，结论就翻面。">E 对主观概率高度敏感：概率挪几个点，结论可能翻转</button>
+        <button class="opt" data-fb="E 只由「概率 × 涨跌幅」决定，和市值大小无关。">只要 E 为正，就值得买入</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">E = Σ（概率 × 涨跌幅）。它回答「平均而言值多少」，但不回答「最坏会怎样」（那是赔率 R 的事）也不回答「要等多久」（那是年化的事）——三个数缺一不可。</div>
+    </section>
+
+    <!-- ============ 第 5 章 ============ -->
+    <section class="chapter" data-level="2" data-title="赔率 R 与年化：时间是除数">
+      <h2>赔率 R 与年化：时间是除数</h2>
+      <p class="tldr">赔率 R=3.62 告诉你「赢了赚多少 vs 输了亏多少」；年化 13.1% 告诉你「摊到每年值多少」。<b>同一笔收益，等得越久，年化越低——时间是赔率的除数。</b></p>
+      <span class="ref">📄 对应报告：第 01 节 + 第 08 节红队「时间专项拷问」</span>
+
+      <h3>先看赔率 R</h3>
+      $$R=\frac{\text{乐观涨幅}}{\text{悲观跌幅}}=\frac{+104.6\%}{29.3\%}\approx 3.6\;(\text{报告口径 } 3.62:1)$$
+      <p>含义：赢了最多赚 104.6%，输了最多亏 29.3%，赚亏比约 3.6 比 1，门槛是 3.0，通过。<br>
+      <small>小注：用四舍五入后的涨跌幅直接相除得 3.57，用未取整的原始价差计算 (486−237.6)÷(237.6−168) = 248.4÷69.6 ≈ 3.57；报告写 3.62，差异来自中间过程的取整口径——两种算法都稳过 3.0 门槛，不影响结论。</small></p>
+      <div class="warn">赔率只回答「<b>如果兑现</b>，赚得够不够多」。它不回答「能不能兑现」，更不回答「要等多久」。报告原话：它单独不构成买入理由。</div>
+
+      <h3>再看年化：把时间除进去</h3>
+      $$\text{年化}=(1+E)^{1/T}-1=(1+36.0\%)^{1/2.5}-1=13.1\%$$
+      <p>T 是兑现年限，取 2.5 年（依据：上一轮下行周期约 8 个季度，本轮从 2026Q3 起算，底部约在 2028Q3，加上两个政策节点只会更慢）。同样的 +36%，折算成「每年的复利速度」只剩 13.1%，低于 18% 的一票否决线。<b>这就是为什么两项达标、结论仍是不买。</b></p>
+
+      <div class="widget demo" id="demoAnn">
+        <div class="widget-title">年化折算器：同样的 E，拖长 T 会怎样</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>期望收益 E（%） <span class="val" data-for="E"></span><input type="range" name="E" min="-20" max="80" step="1" value="36"></label>
+          <label>兑现年限 T（年） <span class="val" data-for="T"></span><input type="range" name="T" min="0.5" max="4" step="0.1" value="2.5"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+      <p>三个必试实验：① E 固定 36%，把 T 从 1.0 拖到 3.5——亲眼看年化从 36% 掉到 9.2%；② 把 E 拉高到 60%，再看 T 的杀伤力是否依然存在；③ 反过来，T=1 时 E 只要多大就能过 18%？（答案：E ≥ 18% 即可。）</p>
+
+      <div class="analogy">两份兼职：一份本月立刻给你 3,600 元；另一份同样 3,600 元但要等两年半才发。「总金额」一样，「值得去吗」完全不同。年化就是那个把「等」折算成成本的除法。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">小测：红队测算，若兑现期拖到 3.5 年，年化期望收益变成多少？</p>
+        <button class="opt" data-fb="对。(1.36)^(1/3.5) − 1 ≈ 9.2%。相对 10 年期国债 1.64% 只有约 7.6 个百分点的风险补偿，报告认为不足以覆盖单一制造业个股永久亏损的风险。">约 9.2%，比国债利率高不了多少</button>
+        <button class="opt" data-fb="年化一定会随 T 变长而下降（只要 E 为正）。E 是分子上的「总收入」，T 是「年数」，时间不可能不摊薄它。">还是 13.1%，年化与 T 无关</button>
+        <button class="opt" data-fb="方向反了：T 越长年化越低，不会越高。">约 18%，反而更容易达标</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">R = 乐观 ÷ 悲观（赚亏比）；年化 = (1+E)^(1/T) − 1（时间摊薄）。<b>「赔率够」只是必要条件，「时间也够」才是充分条件。</b></div>
+    </section>
+
+    <!-- ============ 第 6 章 ============ -->
+    <section class="chapter" data-level="3" data-title="完整流水线：从 887 亿利润到 13.1%">
+      <h2>完整流水线：从 887 亿利润到 13.1%</h2>
+      <p class="tldr">现在把前五章串成一条完整流水线，从「一个利润假设」一路算到「年化 13.1%、不达标」。走通这一遍，报告第 01 节对你就是透明的。</p>
+      <span class="ref">📄 对应报告：第 01 节全部表格与门槛判定</span>
+
+      <div class="widget steps">
+        <div class="widget-title">点「下一步」，一步步走完全流程</div>
+        <div class="step"><b>第 1 步 · 三情景定价。</b>悲观 750 亿×10.5x÷46.9 = <b>168 元</b>；中性 1050×15÷46.9 = <b>336 元</b>；乐观 1200×19÷46.9 = <b>486 元</b>。（第 3 章）</div>
+        <div class="step"><b>第 2 步 · 对现价算涨跌幅。</b>现价 237.60 元：168/237.60−1 = <b>−29.3%</b>；336/237.60−1 = <b>+41.4%</b>；486/237.60−1 = <b>+104.5%</b>。</div>
+        <div class="step"><b>第 3 步 · 概率加权得 E。</b>0.30×(−29.3) + 0.45×(+41.4) + 0.25×(+104.6) = <b>+36.0%</b> ≥ +30% ✓（第 4 章）</div>
+        <div class="step"><b>第 4 步 · 算赔率 R。</b>104.6 ÷ 29.3 ≈ <b>3.6:1</b> ≥ 3.0 ✓（第 5 章）</div>
+        <div class="step"><b>第 5 步 · 用 T 折算年化。</b>T=2.5 年：(1+36%)^(1/2.5) − 1 = <b>13.1%</b> &lt; 18% ✗（第 5 章）</div>
+        <div class="step"><b>第 6 步 · 七道门槛判定。</b>通过 4 项（赔率、E、悲观跌幅 −29.3%≤40%、否决清单 0 项一票否决）；未过 3 项（年化 13.1%&lt;18%、兑现期 30 个月&gt;18 个月预算、绝对估值锚 2/4 不支持便宜）。</div>
+        <div class="step"><b>第 7 步 · 结论。</b>门槛未全部通过 → 基准仓位直接为 0 → <b>评分 63 分、观察池、现价不参与</b>（第 11 章细讲仓位）。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="widget fill">
+        <p>合上上面的步骤，填空验收：</p>
+        <p>概率加权后期望收益 E = <input data-answer="36|36.0|+36|+36.0" style="width:80px">%；按 T=2.5 年折算，年化 = <input data-answer="13.1|13" style="width:80px">%，低于 18% 的门槛。</p>
+        <p>七道门槛中，报告认为最致命、且属于「结构问题」的是<input data-answer="兑现年限|时间|30个月|兑现期" style="width:130px">不达标。</p>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <details class="reveal"><summary>为什么偏偏是「兑现年限」最致命？（报告第 01 节的原话逻辑）</summary>
+        <p>年化不够，本质是时间问题：(1+36%)^(1/2.5)−1=13.1%，但如果 T 能缩短到 1.5 年，年化就是 (1.36)^(1/1.5)−1 = 22.7%，轻松达标。而 T 短不了，因为修复必须跨过两个<b>写死在日历上的政策节点</b>：2027 年 1 月出口退税归零、2027 年 9 月消费税升到 4%。这不是情绪能提前的，是结构性的等待。估值可以跌出来，时间跌不出来。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">小测：门槛判定后，如果有人问「那再等它跌到 216.51 元（10 月低点）够不够？」——报告的敏感性表怎么回答？</p>
+        <button class="opt" data-fb="216.51 元对应年化 17.4%，差 0.6 个百分点，仍不达标。这也是为什么第一批建仓触发价定在更低的 214 元。">够了，低点就是黄金坑</button>
+        <button class="opt" data-fb="敏感性表只变动买入价、三档目标价与概率保持不变来计算，不是拍脑袋。可以自己验算：买入 216.51 元时 E=+49.2%，年化 17.4%。">敏感性表是随机估算的，没有统一口径</button>
+        <button class="opt" data-fb="对。固定目标价 168/336/486 与概率 30/45/25，只改买入价：216.51 元 → E=+49.2%、年化 17.4%，差 0.6pp；要到 213.6 元年化才恰好 18%。所以报告说「价格比现在再低 10% 才有讨论价值」。">还差一点：216.51 元对应年化 17.4%，要 213.6 元才够 18%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">这条流水线只有五步算术：定目标价 → 算涨跌幅 → 加权得 E → 除以时间得年化 → 对照门槛。任何一份同类报告，你都可以用这五步去拆它。</div>
+    </section>
+
+    <!-- ============ 第 7 章 ============ -->
+    <section class="chapter" data-level="3" data-title="反推市场的心里话：隐含增长 g">
+      <h2>反推市场的心里话：隐含增长 g</h2>
+      <p class="tldr">报告第 03 节换了个思路：不预测未来，而是<b>反推</b>——今天的股价，等价于市场相信「宁德以后每年增长多少」？答案令人吃惊：约 +0.5%，基本零增长。</p>
+      <span class="ref">📄 对应报告：第 03 节公式框</span>
+
+      <h3>第一步：先从市值里剥掉现金</h3>
+      <p>买股票，你买到的是「主营业务 + 账上的钱」。做估值只该给主营业务出价，所以：</p>
+      $$EV = \text{总市值} - \text{净现金} = 11{,}142.7 - 1{,}799 = 9{,}343.7 \text{ 亿元}$$
+      <p>其中净现金 = 货币资金 3,698 亿 − 带息债务 1,899 亿 = 1,799 亿。EV（企业价值）就是市场为主业出的价。</p>
+
+      <h3>第二步：用戈登模型反解 g</h3>
+      <p>戈登增长模型说：一家公司若每年产生永续现金流 NP、要求回报率 r、永续增长率 g，则它的价值是：</p>
+      $$EV=\frac{NP}{r-g}\quad\Rightarrow\quad g = r - \frac{NP}{EV}$$
+      <p>把市场的实际出价代进去，反解出 g——这就是「价格里隐含的增长预期」。报告取 NP = 887 亿（2026 年预期净利），r = 10%：</p>
+      <p class="numtab">g = 10% − 887 ÷ 9,343.7 = 10% − 9.49% = <b>+0.5%</b></p>
+      <p>（报告用的公式 g = (EV×r−NP)÷(EV+NP) 是下一期现金流起算的等价变体，算出来同样是 +0.5%、−0.5%、+1.4%，不影响结论。）</p>
+
+      <div class="key">读数：+0.5% 的隐含增长，意味着市场当前的定价等价于——「<b>2026 年的 887 亿利润就是永久峰值，之后基本零增长甚至微缩</b>」。而这家公司当年收入还增 56%、全球份额 39.4%、ROE 21.4%、账上躺着一千八百亿净现金。定价之悲观，超过 2024 年行业最差时（当年市场还给 15–16 倍，隐含正增长）。</div>
+
+      <p>拖动要求回报率 r 和利润假设 NP，看隐含增长怎么变：</p>
+      <div class="widget demo" id="demoG">
+        <div class="widget-title">隐含增长反推器：g = r − NP ÷ EV</div>
+        <canvas width="800" height="220"></canvas>
+        <div class="controls">
+          <label>要求回报率 r（%） <span class="val" data-for="r"></span><input type="range" name="r" min="7" max="13" step="0.25" value="10"></label>
+          <label>永续利润 NP（亿元） <span class="val" data-for="np"></span><input type="range" name="np" min="700" max="1200" step="5" value="887"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+      <p>注意一个反直觉细节：把 NP 拉到 1,104 亿（卖方一致预期）再算，隐含 g 反而变成约 −1.8%——<b>你假设公司赚得越多，市场显得越悲观</b>，因为 9,343.7 亿的出价没变。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">小测：反推出 g ≈ +0.5% 之后，正确的态度是什么？</p>
+        <button class="opt" data-fb="反推结果不是买入信号，它只是描述市场当前的定价。如果 887 亿真的是永久峰值，那零增长定价就是合理甚至偏贵的。报告原话：「赔率的关键不在跌得多悲观，而在悲观得是否错」。">市场错得离谱，立刻买入</button>
+        <button class="opt" data-fb="对。反推只回答「价格里装了什么预期」，不回答「预期对不对」。它的价值是让你明白：买它 = 赌「市场把永久峰值定价错了」，然后去检验这个赌注的证据（第 9、10 章的单位盈利与估值锚）。">它说明市场在定价「永久峰值」，但这是否错误需要额外证据，不自动构成买入理由</button>
+        <button class="opt" data-fb="g≈+0.5% 是描述性结论，不是预测。报告并没有预测未来增长只有 0.5%，中性情景假设的是 2028 年净利 1,050 亿。">报告预测宁德未来增长只有 0.5%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">反推隐含预期 = 「不猜未来，只读现在」。公式两步：EV = 市值 − 净现金；g = r − NP/EV。任何股票都能这样「透视」一次，看看价格里到底装了什么故事。</div>
+    </section>
+
+    <!-- ============ 第 8 章 ============ -->
+    <section class="chapter" data-level="3" data-title="临界价：多便宜才够格">
+      <h2>临界价：多便宜才够格</h2>
+      <p class="tldr">把三档目标价和概率固定，只动买入价，年化收益就是买入价的一条曲线。<b>年化恰好 18% 的那个买入价 = 临界价 213.6 元</b>——这就是「再低 10% 才有讨论价值」的数学来源。</p>
+      <span class="ref">📄 对应报告：第 01 节临界价表 + 中性目标价敏感性表</span>
+
+      <h3>口径一：只动买入价</h3>
+      <p>目标价固定 168/336/486，概率固定 30/45/25，换不同价格买入，重算 E 和年化：</p>
+      <table>
+        <tr><th class="numtab">买入价</th><th class="numtab">相对现价</th><th class="numtab">E</th><th class="numtab">年化（T=2.5）</th><th>判定</th></tr>
+        <tr><td class="numtab">237.60（现价）</td><td class="numtab">—</td><td class="numtab">+36.0%</td><td class="numtab">13.1%</td><td>不达标</td></tr>
+        <tr><td class="numtab">216.51（10 月低点）</td><td class="numtab">−8.9%</td><td class="numtab">+49.2%</td><td class="numtab">17.4%</td><td>差 0.6pp</td></tr>
+        <tr><td class="numtab"><b>213.6（临界价）</b></td><td class="numtab">−10.1%</td><td class="numtab">+51.3%</td><td class="numtab"><b>18.0%</b></td><td><b>刚好达标</b></td></tr>
+        <tr><td class="numtab">204.8</td><td class="numtab">−13.8%</td><td class="numtab">+57.6%</td><td class="numtab">20.0%</td><td>可谈建仓</td></tr>
+        <tr><td class="numtab">185.0</td><td class="numtab">−22.1%</td><td class="numtab">+74.6%</td><td class="numtab">25.0%</td><td>赔率充足</td></tr>
+      </table>
+      <p>这里有个漂亮的捷径：买入价为 b 时，E = (0.30×168 + 0.45×336 + 0.25×486)÷b − 1 = <b>323.1÷b − 1</b>。分子 323.1 是固定的（概率加权后的「目标价」），所以 E 和年化都只随 b 变——一条可以画出来的曲线：</p>
+
+      <div class="widget demo" id="demoCrit">
+        <div class="widget-title">临界价求解器：拖动买入价，看年化能不能够到 18%</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>买入价（元） <span class="val" data-for="b"></span><input type="range" name="b" min="165" max="260" step="0.5" value="237.6"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>口径二：只动中性目标价（更要命）</h3>
+      <p>换个问法：价格不动，如果我对「中性情景」的判断变了呢？</p>
+      <table>
+        <tr><th class="numtab">中性目标价</th><th>背后假设</th><th class="numtab">E</th><th class="numtab">年化</th></tr>
+        <tr><td class="numtab">270 元</td><td class="numtab">2028 净利 900 亿 × 14x</td><td class="numtab">+23.5%</td><td class="numtab">8.8%</td></tr>
+        <tr><td class="numtab">336 元（本报告）</td><td class="numtab">1,050 亿 × 15x</td><td class="numtab">+36.0%</td><td class="numtab">13.1%</td></tr>
+        <tr><td class="numtab">400 元</td><td class="numtab">1,250 亿 × 15x</td><td class="numtab">+48.1%</td><td class="numtab">17.0%</td></tr>
+        <tr><td class="numtab">420 元</td><td class="numtab">1,100 亿 × 19x</td><td class="numtab">+51.9%</td><td class="numtab">18.2%</td></tr>
+      </table>
+
+      <div class="key">要年化达标，中性目标价得涨到约 420 元——那要求「2028 年净利回到 1,100 亿」且「市场愿意给回 19 倍」<b>两件事同时成立</b>。换句话说：现价隐含的不是「稳健修复」，而是「修复 + 估值中枢回升」的双重赌注。这就是报告按住不买的核心算术。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">小测：报告为什么把第一批建仓触发价定在 214 元，而不是 10 月低点 216.51 元？</p>
+        <button class="opt" data-fb="对。216.51 元对应年化 17.4%，还差 0.6pp；只有 ≤213.6 元（临界价）年化才到 18%。214 元是四舍五入后的执行价，留了小缓冲。">因为 216.51 元对应的年化只有 17.4%，未过 18% 门槛</button>
+        <button class="opt" data-fb="触发价与成交成本无关，它由「年化 ≥18%」反解得出。">因为 214 元是整数，好记</button>
+        <button class="opt" data-fb="方向反了：买入价越低，年化越高。214 比 216.51 更低，年化略高于 17.4%、贴近 18%。">因为越低风险越大，要设止损</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">敏感性分析 = 「固定其他、只动一个」。它把「我觉得够便宜了」变成「差 0.6 个百分点」。报告第 06 节的分批建仓价 214/190/205 元，全部是这么反解出来的。</div>
+    </section>
+
+    <!-- ============ 第 9 章 ============ -->
+    <section class="chapter" data-level="3" data-title="单位经济学：每一瓦时赚多少钱">
+      <h2>单位经济学：每一瓦时赚多少钱</h2>
+      <p class="tldr">电池按「瓦时（Wh）」卖。报告里最重要的微观变量是<b>单位净利 0.082 元/Wh</b>：2027 年两档税费要吃掉约 0.04 元/Wh——接近利润的一半。能不能把这笔税转嫁给客户，决定中性情景的生死。</p>
+      <span class="ref">📄 对应报告：第 02 节供给出清表、第 03 节叙事表、第 04 节诊断</span>
+
+      <h3>先读懂这些数</h3>
+      <table>
+        <tr><th>指标</th><th class="numtab">数值</th><th>怎么理解</th></tr>
+        <tr><td>动力电池均价</td><td class="numtab">0.68 元/Wh</td><td>卖价。一度电（kWh）= 1000 Wh，即一度电卖 680 元</td></tr>
+        <tr><td>储能电池均价</td><td class="numtab">0.55 元/Wh</td><td>储能更便宜，Q3 环比持平</td></tr>
+        <tr><td>单位净利</td><td class="numtab">0.082 元/Wh</td><td>每卖 1 瓦时净赚 8.2 分钱；同比约 −20%</td></tr>
+        <tr><td>毛利率</td><td class="numtab">20.7%（Q3）</td><td>连续四季下滑：28.2% → 24.8% → 23.2% → 20.7%</td></tr>
+        <tr><td>消费税影响</td><td class="numtab">+0.016 元/Wh</td><td>税率 2%→4%，按 0.4 元/Wh 电芯价计</td></tr>
+        <tr><td>出口退税归零</td><td class="numtab">+0.024 元/Wh</td><td>9%→6%→2027 年 1 月归零</td></tr>
+      </table>
+      <p>两笔税费合计约 <b>0.04 元/Wh</b>，相当于当前单位净利 0.082 元的<b>近一半</b>。若一分钱都传导不出去（2026Q3 售价环比持平，说明现阶段确实一分没传出去），单位净利将从 0.082 掉向 0.042。</p>
+
+      <p>拖动「客户分担比例」，看中性情景的生死线：</p>
+      <div class="widget demo" id="demoTax">
+        <div class="widget-title">税费传导模拟器（简化：其他条件不变）</div>
+        <canvas width="800" height="260"></canvas>
+        <div class="controls">
+          <label>税费向客户传导比例 <span class="val" data-for="x"></span>%<input type="range" name="x" min="0" max="100" step="5" value="0"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+      <p>（注意这是<b>简化演示</b>：只体现税费传导这一件事，忽略销量增长、原材料等其他变量。报告的中性情景是「传导一部分 + 销量年增 20–25%」共同作用的结果。）</p>
+
+      <h3>「越卖越不赚」的怪象</h3>
+      <p>2026Q3 收入环比 +11.8%，毛利却只 +0.1%——增量收入几乎全被毛利率下滑吃掉。另外股价跌、利润降，但报告在第 05 节专门澄清：Q3 单季经营现金流仅 14.1 亿（同比 −93.6%）主因是主动缩短对供应商的付款账期（应付账款单季减少 221 亿），不是收入造假——前三季现金流/净利仍有 0.96。</p>
+
+      <div class="analogy">你在夜市卖柠檬茶：以前每杯赚 8 块。现在房东涨租（消费税）+ 外卖平台抽成提高（退税取消），每杯成本多了 4 块。你想涨价 4 块，但隔壁摊不涨，你一涨客人就走——于是先自己扛着，利润从 8 块掉到 4 块。转机只有两种：要么客户慢慢接受涨价（传导），要么等到隔壁摊熬不住关门（供给出清，第 10 章的「黄灯」）。报告赌的是前者，但 Q3 的数据还没给出证据。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">小测：Q3 收入环比 +11.8%、毛利却几乎零增长，原因是？</p>
+        <button class="opt" data-fb="恰恰相反，销量和收入都在涨。问题不在「卖不动」，在「卖了不赚」。">销量下滑，卖得少了</button>
+        <button class="opt" data-fb="Q3 售价环比是持平的（动力 0.68、储能 0.55 元/Wh），跌的是毛利率而非售价。">当季降价促销，售价大跌</button>
+        <button class="opt" data-fb="对。收入涨 11.8% 的同时毛利率继续下滑，一涨一跌相互抵消。这也是「盈利底部尚未确认」的直接证据——报告第 04 节「恶化是否已停止」的回答是「否」。">毛利率下滑抵消了收入增量</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">把视野缩到「每一瓦时」：卖价 0.68、净赚 0.082、要交的税 0.04。宏观叙事再复杂，最终都落到这组数上。盯住单位净利环比，就盯住了中性行情景的命门。</div>
+    </section>
+
+    <!-- ============ 第 10 章 ============ -->
+    <section class="chapter" data-level="4" data-title="四个估值锚与「中枢漂移」">
+      <h2>四个估值锚与「中枢漂移」</h2>
+      <p class="tldr">「PE 分位 0.17%」只说明比自己历史便宜。报告改用四个<b>不依赖历史的绝对锚</b>来验货：2 票便宜、2 票中性，没有一个说「贵」，但也没有「明确便宜」的硬证据——真正的动态是<b>估值中枢本身在下移</b>。</p>
+      <span class="ref">📄 对应报告：第 02 节「估值中枢漂移校验」表 + 2.4 判定</span>
+
+      <div class="widget"><div class="widget-title">点击翻面：四个绝对锚各自怎么说</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">锚 1<br>DCF 反推</div><div class="back">PE 12.54x 隐含永续增长仅 +0.5%（r=10%），远低于 3–4% 的名义 GDP 增速 → 指向便宜（就是第 7 章那套算法）</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">锚 2<br>股息率 − 国债</div><div class="back">3.50% − 1.64% = +186bp；2023–24 年是 −130bp。买它比买国债多赚 1.86 个百分点/年 → 四个锚里最强的便宜信号</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">锚 3<br>PB × ROE</div><div class="back">零增长下合理 PB = ROE ÷ r = 21.4% ÷ 10% = 2.14x；实际 2.84x 贵 33%。但若含 5% 长期增长，合理值约 3.3x 又显得便宜 → 中性</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">锚 4<br>EV/EBITDA</div><div class="back">约 6.2x，低于全球同业 8–10x → 便宜；但已处于中国过剩制造业 4–6x 区间的上沿 → 中性偏宜</div></div></div>
+        </div>
+      </div>
+
+      <h3>「中枢漂移」：为什么分位会骗人</h3>
+      <p>过去三年，宁德 PE 的「底部」依次是 <b>20 倍 → 15 倍 → 12.5 倍</b>——每一次都刷新「历史最低」，每一次「历史最低」又成了下一轮下跌的起点。这说明问题不在「当前价格 vs 历史价格」，而在<b>市场给它定价的框架本身在迁移</b>：从成长股（20–30 倍）迁往制造业周期股（10–14 倍），而且切换尚未完成（卖方 1,104 亿的盈利预期还没下修）。</p>
+
+      <div class="analogy">一只股票的分位好比一个人的「班级排名」。排名 0.17% 说明他比自己以前考得好——但如果整个考试的评分标准变了（从「看潜力」改成「看现有技能」），旧排名就没了参照意义。绝对锚就是「不看排名、直接测能力」的四项测验。</div>
+
+      <h3>顺手学一个公式：PB 的零增长底线</h3>
+      $$PB_{\text{零增长}}=\frac{ROE}{r}=\frac{21.4\%}{10\%}=2.14\text{x}$$
+      <p>逻辑：若公司把每年 21.4% 的 ROE 全部分给你、不再增长，那它的合理 PB 就是「收益率倒数」——正如一套永远租 21.4%/年的房子值 4.7 倍年租。实际 PB 2.84x 比这个底线贵 33%，但比「含 5% 增长」的 3.3x 便宜——所以判「中性」。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">小测：四个绝对锚中，最强烈指向「便宜」的是哪一个？</p>
+        <button class="opt" data-fb="分位恰恰不是绝对锚——它只跟自己的历史比，会被「中枢漂移」骗。报告把「估值分位 ≤20% 且绝对锚便宜」列为一道门槛，两个条件要同时成立。">PE 分位 0.17%</button>
+        <button class="opt" data-fb="对。股息率 3.50% 减 10 年国债 1.64% = +186bp，而 2023–24 年这个利差是 −130bp。这是四个锚里唯一「跨期可比、不含盈利假设」的硬指标，报告称其为四个锚里最强的一个。">股息率 − 10 年国债 = +186bp</button>
+        <button class="opt" data-fb="EV/EBITDA 6.2x 只是「中性偏宜」：比海外同业便宜，但已在中国过剩制造业区间的上沿。">EV/EBITDA 6.2x</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">这节最容易误读的地方：四个锚没有一票说「贵」，<b>但这不等于「便宜到可以买」</b>。报告的判定是「估值中枢下移的中间态」——门槛要求「绝对锚明确便宜」，而它只有两票中性、一票偏宜、一票便宜，凑不出「明确」。</div>
+
+      <div class="tip">看估值先问两层：① 和历史比（分位）——容易被中枢漂移骗；② 和内在收益比（DCF 反推、股息利差、PB×ROE、EV/EBITDA）——四个锚投票。两层都过关，才轮到赔率计算。</div>
+    </section>
+
+    <!-- ============ 第 11 章 ============ -->
+    <section class="chapter" data-level="4" data-title="仓位公式：为什么最终是 0%">
+      <h2>仓位公式：为什么最终是 0%</h2>
+      <p class="tldr">就算所有指标看完，报告还不让你「凭感觉决定买多少」。仓位由三道校验取最小值、再乘可等待性系数得出。宁德时代评分 63 &lt; 75，第一道校验直接归零——后面算得再好也是 0。</p>
+      <span class="ref">📄 对应报告：第 02 节可等待性 + 第 06 节仓位方案</span>
+
+      <h3>三道校验，取最小值</h3>
+      <div class="widget steps">
+        <div class="widget-title">三道校验怎么算</div>
+        <div class="step"><b>① 基准仓位（评分卡）。</b>评分 63 分 &lt; 75 分的建仓线 → 基准仓位 = <b>0.0%</b>。评分卡把可等待性、赔率、基本面质量等折成一个分数；60–74 分只配进「观察池」。</div>
+        <div class="step"><b>② 风险预算。</b>假设你愿意在这笔交易上最多亏组合的 4%：仓位 = 4% ÷ 悲观跌幅 29.3% = <b>13.7%</b>。逻辑：仓位 × 悲观跌幅 = 最坏亏损，13.7% × 29.3% ≈ 4%。</div>
+        <div class="step"><b>③ 可等待性系数。</b>按 D1–D5 五个维度打分得 6/10，对应系数 <b>0.75</b>、最长埋伏期 18 个月。</div>
+        <div class="step"><b>合成。</b>min(0.0%, 13.7%) × 0.75 = <b>0.0%</b>。即使评分过关，13.7% × 0.75 ≈ 10.2% 也会被「单标的硬上限 10%」卡住。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="key"><b>min() 的含义：一票否决制。</b>三道校验取最小值，意味着任何一道不过，整体就归零。这模仿的是木桶原理——仓位由最短板决定，而不是平均分。风险预算那道除法也值得记：它把「我最多亏多少」翻译成「我能买多少」。</div>
+
+      <h3>可等待性：18 个月 vs 30 个月</h3>
+      <p>可等待性得分 6/10 由五个维度构成：D1 修复依赖外力（1 分）、D2 供给出清（1 分）、D3 底部信号（2 分）、D4 催化时点（1 分）、D5 历史周期（1 分）。6 分档对应「最长埋伏 18 个月」。但测算的兑现期是 30 个月——<b>时间预算与兑现期结构性错配，这是「不参与」的第一位原因，排在估值之前</b>。若把评分两项按最乐观口径重打，三道校验也只给出 1.9%：一个配 2% 仓位却要等 30 个月的交易，报告认为「对组合无意义，对注意力是纯消耗」。</p>
+
+      <div class="widget demo" id="demoPos">
+        <div class="widget-title">风险预算仓位模拟器：亏得起多少 ÷ 可能亏多少</div>
+        <div class="controls">
+          <label>单笔最大可亏（组合的 %） <span class="val" data-for="risk"></span><input type="range" name="risk" min="1" max="6" step="0.5" value="4"></label>
+          <label>悲观跌幅（%） <span class="val" data-for="dd"></span><input type="range" name="dd" min="10" max="60" step="0.5" value="29.3"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">小测：三道校验取 min() 的设计意图是什么？</p>
+        <button class="opt" data-fb="方向反了：取 min 恰恰是保守的设计，任何一道短板都会压低仓位。">让仓位尽量大，别浪费机会</button>
+        <button class="opt" data-fb="不是平均——平均会掩盖短板。木桶能装多少水由最短的板决定。">三道校验取平均，更平滑</button>
+        <button class="opt" data-fb="对。取最小值意味着任何一道校验不过，仓位就被那道校验压死。宁德时代是基准仓位直接为 0，所以无论风险预算算出 13.7% 多漂亮，结果都是 0.0%。">仓位由最严的那道校验决定：任何一道不过，整体归零</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">仓位 = min(评分基准, 风险预算) × 可等待性系数，再受单标的上限约束。它把「怕踏空 / 想赌一把」全部排除在系统外——报告第 06 节那句话值得抄下来：「它让『看起来便宜』变成『算出来不值得』。」</div>
+    </section>
+
+    <!-- ============ 第 12 章 ============ -->
+    <section class="chapter" data-level="4" data-title="像红队一样思考 + 结业">
+      <h2>像红队一样思考 + 结业</h2>
+      <p class="tldr">报告的最后一节请「最看空的人」来攻击自己的结论。学会这一招，你读任何研报都不会被单一叙事带走：先分清<b>事实与推测</b>，再找<b>最脆弱的假设</b>，最后算<b>什么情况下我错了</b>。</p>
+      <span class="ref">📄 对应报告：第 08 节红队反驳 + 第 07 节证伪信号</span>
+
+      <h3>第一刀：切分事实与推测</h3>
+      <table>
+        <tr><th>事实（可核验）</th><th>推测（报告的判断）</th></tr>
+        <tr><td>现价 237.60 元、市值 11,142.7 亿、PE 12.54 / PB 2.84、净现金 1,799 亿、全球份额 39.4%、回购 46.07 亿、税费生效日期、国债 1.64%</td><td>2026 年 887 亿 / 2028 年 1,050 亿的盈利、三档退出 PE、「传导 50%」假设、T=2.5 年、红队的亏损概率</td></tr>
+      </table>
+      <p>报告自己承认：<b>所有让你决定「买不买」的东西，几乎全部落在推测一侧。</b>所以结论不是「贵 / 便宜」这种断言，而是「赔率不够、时间不够」这种不依赖精确预测的判断。</p>
+
+      <h3>第二刀：三大脆弱假设</h3>
+      <ol>
+        <li><b>「低价长协交付高峰已过」</b>——管理层口径，无量化披露；若 Q4 还有存量单，中性情景的 0.075 元/Wh 就不成立。</li>
+        <li><b>「消费税可向客户传导 50%」</b>——Q3 售价环比持平已证明现阶段一分未传出；客户自己也在承受购置税退坡。</li>
+        <li><b>「2028 年净利回到 1,050 亿」</b>——需销量年增 20% 且单位净利不再下滑同时成立。</li>
+      </ol>
+      <p>任一假设破，中性目标价 336 → 270 元，年化 13.1% → 8.8%（第 8 章敏感性表第一行）。</p>
+
+      <h3>第三刀：如果我是空头</h3>
+      <p>红队给出三条亏损路径与概率：估值中枢继续下移（「光伏化」，PE 降到 8–10x，35%）、双档税费无法传导（30%）、技术路线被固态电池/车企自研颠覆（15%）。空头甚至不需要新利空——只需要「什么都不发生」，让 8 个季度的下行周期自然走完。</p>
+
+      <h3>带走这张「框架随身卡」</h3>
+      <details class="reveal"><summary>点开：下次自己评估任何「暴跌的白马股」，按这 8 步走</summary>
+        <ol>
+          <li><b>三情景定价</b>：净利 × 退出 PE ÷ 股本，悲观 / 中性 / 乐观各一个价；</li>
+          <li><b>期望收益 E</b> = Σ 概率 × 涨跌幅，门槛 ≥ +30%；</li>
+          <li><b>赔率 R</b> = 乐观 ÷ 悲观，门槛 ≥ 3；</li>
+          <li><b>年化</b> = (1+E)^(1/T) − 1，门槛 ≥ 18%，T 诚实取值；</li>
+          <li><b>反推隐含 g</b> = r − NP/EV：看清价格里装了什么预期，但不把「悲观」当「错误」；</li>
+          <li><b>绝对锚投票</b>：DCF 反推 / 股息利差 / PB×ROE / EV/EBITDA，警惕中枢漂移让分位失真；</li>
+          <li><b>否决清单</b>：现金流、治理、偿债、单位经济……一票否决优先于一切赔率；</li>
+          <li><b>仓位</b> = min(评分基准, 风险预算) × 可等待性系数，并写下证伪信号与检查点。</li>
+        </ol>
+      </details>
+
+      <details class="reveal"><summary>点开：报告给宁德时代留下的两个「重新评估条件」</summary>
+        <p>① 价格回到 <b>214 元以下</b>（年化达标）；② 「单位盈利环比回升」+「消费税客户分担落地」<b>两项证据同时出现</b>。注意：三个进度检查点（2027-01 / 2027-04 / 2027-08）全部是「验证」性质——在价格条件满足之前，即使基本面全达标也只记录、不动手。这就是纪律。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">结业第一题：以下哪项属于报告中的「推测」而非「事实」？</p>
+        <button class="opt" data-fb="这是 2026-10-23 收盘的行情数据，属于可核验的事实。">现价 237.60 元</button>
+        <button class="opt" data-fb="货币资金与带息债务都在三季报里，可核验。">净现金 1,799 亿元</button>
+        <button class="opt" data-fb="对。1,050 亿是报告自建模型对 2028 年的盈利预测（且低于卖方一致预期），属于推测。事实与推测的分界，正是读报告时最该画的那条线。">2028 年净利 1,050 亿元</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">结业第二题：「时间是赔率的除数」指的是？</p>
+        <button class="opt" data-fb="对。年化 = (1+E)^(1/T) − 1，T 在指数的分母上：同样的总收益，兑现期越长年化越低。宁德时代赔率 3.62 看着漂亮，除以 3.5 年只剩 9.2%。等待本身，就是成本。">同样的总涨幅，等得越久年化越低——等待本身是成本</button>
+        <button class="opt" data-fb="报告没有这种保证，红队反而列出了三条亏损路径。">持有时间越长，股价必然越高</button>
+        <button class="opt" data-fb="时间当然影响收益——它就在年化公式的分母上。">时间长短与投资决策无关</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">学完这 12 章，你拿到的不只是「看懂一份宁德时代报告」的能力，而是一套可复用的算法：<b>三情景定价 → E/R/年化三关卡 → 反推预期 → 绝对锚验货 → 否决清单 → 仓位公式 → 红队拷问</b>。下次再看到「历史最低 PE」，先别激动，把这条流水线跑一遍。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示 ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空 ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序 ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！这就是整份报告的计算骨架。' : '❌ 顺序不对。提示：先有目标价，才能算涨跌幅；先有 E，才能折年化；全过关才算仓位。';
+    };
+  });
+
+  // ---- 演示通用 ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示 1（第 3 章）：目标价计算器
+demo('#demoTarget', ({ np, pe }, ctx, cv, root) => {
+  const price = np * pe / 46.9;
+  const gain = (price / 237.6 - 1) * 100;
+  root.querySelector('.readout').innerHTML =
+    `目标价 = ${np} 亿 × ${pe}x ÷ 46.9 亿股 = <span class="big-num">${price.toFixed(1)} 元</span>　相对现价 237.60 元：<b style="color:${gain >= 0 ? 'var(--ok)' : 'var(--bad)'}">${gain >= 0 ? '+' : ''}${gain.toFixed(1)}%</b>`;
+  const W = cv.width, H = cv.height, padL = 30, padR = 30, y = H - 56;
+  const min = 120, max = 560;
+  const X = v => padL + (v - min) / (max - min) * (W - padL - padR);
+  ctx.strokeStyle = cssv('--border');
+  ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+  ctx.fillStyle = cssv('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  for (let v = 150; v <= 550; v += 50) {
+    ctx.beginPath(); ctx.moveTo(X(v), y); ctx.lineTo(X(v), y + 6); ctx.stroke();
+    ctx.fillText(v, X(v), y + 20);
+  }
+  const mark = (v, label, color, up) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X(v), y - (up ? 30 : 6)); ctx.lineTo(X(v), y); ctx.stroke();
+    ctx.fillStyle = color; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(label, X(v), y - (up ? 38 : 14));
+  };
+  mark(168, '悲观 168', cssv('--muted'), false);
+  mark(237.6, '现价 237.6', '#6b7280', true);
+  mark(336, '中性 336', cssv('--muted'), false);
+  mark(486, '乐观 486', cssv('--muted'), true);
+  mark(Math.min(price, 558), '你的假设 ' + price.toFixed(0), cssv('--primary'), false);
+});
+
+// 演示 2（第 4 章）：期望收益 E 模拟器
+demo('#demoEV', ({ pb, pm, pg }, ctx, cv, root) => {
+  const s = pb + pm + pg, w = [pb / s, pm / s, pg / s];
+  const rets = [-29.3, 41.4, 104.6], names = ['悲观', '中性', '乐观'];
+  const E = w.reduce((a, p, i) => a + p * rets[i], 0);
+  const ok = E >= 30;
+  root.querySelector('.readout').innerHTML =
+    `归一化概率：悲观 ${(w[0] * 100).toFixed(0)}% · 中性 ${(w[1] * 100).toFixed(0)}% · 乐观 ${(w[2] * 100).toFixed(0)}%　→　E = <span class="big-num">${E >= 0 ? '+' : ''}${E.toFixed(1)}%</span>　${ok ? '✅ 达标（≥+30%）' : '❌ 不达标（<+30%）'}`;
+  const W = cv.width, H = cv.height, base = H - 64, scale = (H - 120) / 105;
+  const bw = 90, gap = 55; let cx = (W - (4 * bw + 3 * gap)) / 2;
+  ctx.strokeStyle = cssv('--border'); ctx.beginPath(); ctx.moveTo(20, base); ctx.lineTo(W - 20, base); ctx.stroke();
+  const cols = [cssv('--bad'), cssv('--primary'), cssv('--ok')];
+  w.forEach((p, i) => {
+    const h = p * rets[i] * scale;
+    ctx.fillStyle = cols[i];
+    ctx.fillRect(cx, h >= 0 ? base - h : base, bw, Math.abs(h));
+    ctx.fillStyle = cssv('--text'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(`${names[i]} ${(p * 100).toFixed(0)}% × ${rets[i] > 0 ? '+' : ''}${rets[i]}%`, cx + bw / 2, h >= 0 ? base - h - 8 : base + Math.abs(h) + 18);
+    cx += bw + gap;
+  });
+  const hT = E * scale;
+  ctx.globalAlpha = 0.3; ctx.fillStyle = cssv('--primary');
+  ctx.fillRect(cx, hT >= 0 ? base - hT : base, bw, Math.abs(hT)); ctx.globalAlpha = 1;
+  ctx.fillStyle = cssv('--text'); ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(`合计 E ${E >= 0 ? '+' : ''}${E.toFixed(1)}%`, cx + bw / 2, hT >= 0 ? base - hT - 8 : base + Math.abs(hT) + 18);
+  const y30 = base - 30 * scale;
+  ctx.strokeStyle = cssv('--warn'); ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(20, y30); ctx.lineTo(W - 20, y30); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = cssv('--warn'); ctx.font = '12px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('门槛 +30%', 24, y30 - 6);
+});
+
+// 演示 3（第 5 章）：年化折算器
+demo('#demoAnn', ({ E, T }, ctx, cv, root) => {
+  const ann = t => (Math.pow(1 + E / 100, 1 / t) - 1) * 100;
+  const a = ann(T);
+  root.querySelector('.readout').innerHTML =
+    `年化 = (1 + ${E}%)^(1/${T}) − 1 = <span class="big-num">${a.toFixed(1)}%</span>　${a >= 18 ? '✅ 达 18% 门槛' : '❌ 未达 18% 门槛'}；同样 E：T=1 年 → ${ann(1).toFixed(1)}%，T=3.5 年 → ${ann(3.5).toFixed(1)}%`;
+  const W = cv.width, H = cv.height, padL = 50, padR = 20, padT = 20, padB = 36;
+  const t0 = 0.5, t1 = 4;
+  const yMax = Math.max(45, ann(0.5) + 5), yMin = Math.min(-6, ann(4) - 2);
+  const X = t => padL + (t - t0) / (t1 - t0) * (W - padL - padR);
+  const Y = v => padT + (yMax - v) / (yMax - yMin) * (H - padT - padB);
+  ctx.strokeStyle = cssv('--border');
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+  if (18 > yMin && 18 < yMax) {
+    ctx.strokeStyle = cssv('--warn'); ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, Y(18)); ctx.lineTo(W - padR, Y(18)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = cssv('--warn'); ctx.font = '12px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('18% 门槛', padL + 6, Y(18) - 6);
+  }
+  ctx.strokeStyle = cssv('--primary'); ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let t = t0; t <= t1 + 1e-9; t += 0.05) { const v = ann(t); t <= t0 + 1e-9 ? ctx.moveTo(X(t), Y(v)) : ctx.lineTo(X(t), Y(v)); }
+  ctx.stroke();
+  ctx.fillStyle = cssv('--primary');
+  ctx.beginPath(); ctx.arc(X(T), Y(a), 6, 0, 7); ctx.fill();
+  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = X(T) > W - 160 ? 'right' : 'left';
+  ctx.fillText(`T=${T} → ${a.toFixed(1)}%`, X(T) + (X(T) > W - 160 ? -10 : 10), Y(a) - 8);
+  ctx.fillStyle = cssv('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  [1, 2, 2.5, 3, 4].forEach(t => ctx.fillText(t + ' 年', X(t), H - padB + 18));
+});
+
+// 演示 4（第 7 章）：隐含增长反推器
+demo('#demoG', ({ r, np }, ctx, cv, root) => {
+  const EV = 9343.7;
+  const g = (r / 100 - np / EV) * 100;
+  let txt;
+  if (g < 0) txt = `市场定价 = 「利润从此每年永久下滑 ${Math.abs(g).toFixed(1)}%」`;
+  else if (g < 2) txt = `市场定价 = 「${np} 亿基本就是永久峰值，之后几乎不再增长」`;
+  else if (g <= 4) txt = `市场定价 ≈ 「利润按名义 GDP（3–4%）长期正常增长」`;
+  else txt = `市场定价 = 「长期高增长」——成长股口径`;
+  root.querySelector('.readout').innerHTML =
+    `g = ${r}% − ${np} ÷ 9,343.7 × 100% = <span class="big-num">${g >= 0 ? '+' : ''}${g.toFixed(1)}%</span>　${txt}`;
+  const W = cv.width, H = cv.height, padL = 30, y = H / 2 - 6;
+  const gMin = -4, gMax = 6;
+  const X = v => padL + (v - gMin) / (gMax - gMin) * (W - 2 * padL);
+  const zone = (a, b, c) => { ctx.fillStyle = c; ctx.fillRect(X(a), y - 16, X(b) - X(a), 32); };
+  zone(gMin, 0, 'rgba(220,38,38,.15)'); zone(0, 3.5, 'rgba(245,158,11,.18)'); zone(3.5, gMax, 'rgba(22,163,74,.15)');
+  ctx.strokeStyle = cssv('--border'); ctx.strokeRect(X(gMin), y - 16, X(gMax) - X(gMin), 32);
+  ctx.fillStyle = cssv('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  [[0, '零增长'], [3.5, '名义GDP 3–4%']].forEach(([v, l]) => {
+    ctx.strokeStyle = cssv('--border');
+    ctx.beginPath(); ctx.moveTo(X(v), y + 16); ctx.lineTo(X(v), y + 22); ctx.stroke();
+    ctx.fillText(l, X(v), y + 38);
+  });
+  const xm = Math.max(X(gMin) + 6, Math.min(X(gMax) - 6, X(g)));
+  ctx.fillStyle = cssv('--primary');
+  ctx.beginPath(); ctx.moveTo(xm, y - 24); ctx.lineTo(xm - 8, y - 40); ctx.lineTo(xm + 8, y - 40); ctx.closePath(); ctx.fill();
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillText(`g = ${g >= 0 ? '+' : ''}${g.toFixed(1)}%`, xm, y - 48);
+});
+
+// 演示 5（第 8 章）：临界价求解器
+demo('#demoCrit', ({ b }, ctx, cv, root) => {
+  const E = 323.1 / b - 1;
+  const a = (Math.pow(1 + E, 0.4) - 1) * 100;
+  const crit = 213.6;
+  const gapPct = Math.max(0, (b - crit) / b * 100);
+  root.querySelector('.readout').innerHTML =
+    `买入价 ${b} 元 → E = 323.1 ÷ ${b} − 1 = <b>${(E * 100).toFixed(1)}%</b>，年化 = <span class="big-num">${a.toFixed(1)}%</span>　${a >= 18 ? '✅ 达标' : '❌ 不达标'}；距临界价 213.6 元还需再跌 ${gapPct.toFixed(1)}%`;
+  const W = cv.width, H = cv.height, padL = 50, padR = 20, padT = 20, padB = 36;
+  const b0 = 165, b1 = 260, yMax = 32, yMin = 5;
+  const X = v => padL + (v - b0) / (b1 - b0) * (W - padL - padR);
+  const Y = v => padT + (yMax - v) / (yMax - yMin) * (H - padT - padB);
+  ctx.strokeStyle = cssv('--border');
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+  ctx.strokeStyle = cssv('--warn'); ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(padL, Y(18)); ctx.lineTo(W - padR, Y(18)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = cssv('--warn'); ctx.font = '12px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('年化 18%', padL + 6, Y(18) - 6);
+  ctx.strokeStyle = cssv('--ok'); ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(X(crit), padT); ctx.lineTo(X(crit), H - padB); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = cssv('--ok'); ctx.textAlign = 'center'; ctx.font = '12px sans-serif';
+  ctx.fillText('临界价 213.6', X(crit), padT + 10);
+  ctx.strokeStyle = cssv('--primary'); ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let x = b0; x <= b1 + 1e-9; x += 1) { const v = (Math.pow(323.1 / x, 0.4) - 1) * 100; x <= b0 + 1e-9 ? ctx.moveTo(X(x), Y(v)) : ctx.lineTo(X(x), Y(v)); }
+  ctx.stroke();
+  ctx.fillStyle = cssv('--primary');
+  ctx.beginPath(); ctx.arc(X(b), Y(a), 6, 0, 7); ctx.fill();
+  ctx.font = 'bold 12px sans-serif'; ctx.textAlign = b > 235 ? 'right' : 'left';
+  ctx.fillText(`${b} 元 → ${a.toFixed(1)}%`, X(b) + (b > 235 ? -10 : 10), Y(a) - 9);
+  ctx.fillStyle = cssv('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  [180, 200, 220, 240, 260].forEach(v => ctx.fillText(v, X(v), H - padB + 18));
+});
+
+// 演示 6（第 9 章）：税费传导模拟器
+demo('#demoTax', ({ x }, ctx, cv, root) => {
+  const net = 0.082 - 0.04 * (1 - x / 100);
+  const drop = (1 - net / 0.082) * 100;
+  let v = net >= 0.075 ? '✅ 守住中性情景下限（≥0.075）' : net >= 0.070 ? '🟡 踩线：仅满足 2027 中报达标线（0.070）' : '❌ 中性情景失守（<0.070）';
+  root.querySelector('.readout').innerHTML =
+    `单位净利 = 0.082 − 0.04×(1 − ${x}%) = <span class="big-num">${net.toFixed(3)} 元/Wh</span>（较当前 −${drop.toFixed(0)}%）　${v}<br><small>简化演示：只体现税费传导这一件事，忽略销量增长等其他变量。</small>`;
+  const W = cv.width, H = cv.height, padL = 60, padR = 30, base = H - 54;
+  const scale = (H - 110) / 0.09;
+  const Y = v0 => base - v0 * scale;
+  ctx.strokeStyle = cssv('--border'); ctx.beginPath(); ctx.moveTo(padL, base); ctx.lineTo(W - padR, base); ctx.stroke();
+  const bar = (x0, val, color, label) => {
+    ctx.fillStyle = color; ctx.fillRect(x0, Y(val), 100, base - Y(val));
+    ctx.fillStyle = cssv('--text'); ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(label, x0 + 50, Y(val) - 8);
+  };
+  bar(140, 0.082, cssv('--primary'), '当前 0.082');
+  bar(330, net, cssv('--warn'), net.toFixed(3) + ' 元/Wh');
+  [[0.075, '0.075 中性下限'], [0.070, '0.070 达标线']].forEach(([v0, l]) => {
+    ctx.strokeStyle = cssv('--muted'); ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, Y(v0)); ctx.lineTo(W - padR, Y(v0)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = cssv('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(l, W - padR - 6, Y(v0) - 5);
+  });
+});
+
+// 演示 7（第 11 章）：风险预算仓位模拟器
+demo('#demoPos', ({ dd, risk }, ctx, cv, root) => {
+  const raw = risk / dd * 100, mid = raw * 0.75, fin = Math.min(mid, 10);
+  root.querySelector('.readout').innerHTML =
+    `② 风险预算 = ${risk}% ÷ ${dd}% = <b>${raw.toFixed(1)}%</b>　× 可等待性系数 0.75 = ${mid.toFixed(1)}%　再与单标的硬上限 10% 取小 → <span class="big-num">${fin.toFixed(1)}%</span><br>⚠️ 别忘了：还要与 ① 基准仓位取 min——评分 63 &lt; 75 → 基准仓位 0.0%，所以本例最终仓位 = <b>0.0%</b>。调低悲观跌幅或调高风险预算，只是练习②③两道的算术。`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股票估值指标互动实验室 · PE / PB / EPS / ROE / 目标价预测</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#121724; --card:#161c2b; --line:#232b3f;
+    --txt:#dde3ee; --mut:#8b95a9; --acc:#4f8cff; --gold:#e8b84b;
+    --up:#e04a54; --down:#2bb465;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding-bottom:40px}
+  header{position:sticky;top:0;z-index:9;background:rgba(11,14,20,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+  .hwrap{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  h1{font-size:16px;font-weight:600}
+  h1 b{color:var(--gold)}
+  .tabs{display:flex;gap:6px;margin-left:auto}
+  .tab{padding:6px 14px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--mut);cursor:pointer;font-size:13px}
+  .tab.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  main{max-width:1280px;margin:0 auto;padding:14px 16px}
+  section{display:none}
+  section.on{display:block}
+  h2{font-size:15px;margin:4px 0 10px;color:var(--gold);font-weight:600}
+  h4{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+  .hint{color:var(--mut);font-size:12.5px;margin-bottom:12px}
+
+  /* 布局 */
+  .cols{display:grid;grid-template-columns:320px 1fr;gap:14px}
+  @media(max-width:900px){.cols{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .ingrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+  .inp .ilab{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:2px}
+  .iwrap{display:flex;align-items:center;gap:4px;color:var(--mut);font-size:12px}
+  input[type=number]{width:74px;background:#0d1220;border:1px solid var(--line);color:var(--txt);border-radius:5px;padding:3px 6px;font-size:12.5px;text-align:right}
+  input[type=number]:focus{outline:1px solid var(--acc)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:#2a3348;border-radius:2px;margin:8px 0 2px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--acc);cursor:pointer;border:2px solid var(--bg)}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--acc);cursor:pointer;border:2px solid var(--bg)}
+
+  /* 指标卡片 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .card.wide{grid-column:span 2}
+  @media(max-width:700px){.card.wide{grid-column:span 1}}
+  .chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .cname{font-size:13px;font-weight:600}
+  .ctag{font-size:10.5px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--mut)}
+  .t-val{color:#7fb0ff;border-color:#2c4a7c}.t-profit{color:var(--gold);border-color:#5c4a1e}
+  .t-ret{color:#4fd0a5;border-color:#1f5c46}.t-struct{color:#c79bff;border-color:#4a3170}.t-scale{color:var(--mut)}
+  .cval{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.25}
+  .cval .cunit{font-size:12px;color:var(--mut);font-weight:400;margin-left:3px}
+  .cformula{font-size:11.5px;color:var(--mut);background:#0d1220;border-radius:5px;padding:4px 8px;margin:6px 0;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cformula b{color:var(--txt)}
+  .cdesc{font-size:12px;color:#aab3c5}
+  details.cdet{margin-top:7px;font-size:12px}
+  details.cdet summary{cursor:pointer;color:var(--acc);font-size:11.5px;user-select:none}
+  details.cdet div{margin-top:5px;color:#9aa4b8;border-top:1px dashed var(--line);padding-top:5px}
+  details.cdet p{margin:2px 0}
+
+  /* 按钮 */
+  .btn{background:var(--acc);border:none;color:#fff;border-radius:6px;padding:6px 14px;font-size:12.5px;cursor:pointer}
+  .btn:hover{filter:brightness(1.15)}
+  .btn.ghost{background:transparent;border:1px solid var(--acc);color:var(--acc)}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+  /* 预测区 */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .stat .sk{font-size:11px;color:var(--mut)}
+  .stat .sv{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat .sv small{font-size:11px;color:var(--mut);font-weight:400}
+  .verdict{border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:10px;border:1px solid var(--line);background:#10151f}
+  .verdict.good{border-color:#5c2a30;background:rgba(224,74,84,.08)}
+  .verdict.bad{border-color:#1f5c46;background:rgba(43,180,101,.07)}
+  .decomp{font-size:12px;color:var(--mut);margin-bottom:12px;font-variant-numeric:tabular-nums}
+  .decomp b{color:var(--gold)}
+  #chart svg{width:100%;height:auto;display:block}
+  .legend{display:flex;gap:16px;font-size:11.5px;color:var(--mut);margin:6px 2px 0;flex-wrap:wrap}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  table.sens{border-collapse:collapse;width:100%;font-size:12px;margin-top:6px;font-variant-numeric:tabular-nums}
+  table.sens th,table.sens td{border:1px solid var(--line);padding:5px 8px;text-align:center}
+  table.sens th{background:#0d1220;color:var(--mut);font-weight:500}
+  table.sens td.cur{outline:2px solid var(--gold);outline-offset:-2px}
+  .trylist{font-size:12px;color:#9aa4b8;padding-left:18px}
+  .trylist li{margin:3px 0}
+  .trylist b{color:var(--gold)}
+
+  /* 速查表 */
+  table.ref{border-collapse:collapse;width:100%;font-size:12.5px;background:var(--panel);border-radius:8px;overflow:hidden}
+  table.ref th,table.ref td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  table.ref th{background:#0d1220;color:var(--mut);font-size:12px;position:sticky;top:44px}
+  table.ref td:first-child{white-space:nowrap;font-weight:600}
+  table.ref td:nth-child(2){font-family:Consolas,monospace;color:#7fb0ff;font-size:12px}
+  .mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:10px 0}
+  .mcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px}
+  .mcard b{color:var(--gold);display:block;margin-bottom:4px}
+  .mcard p{color:#aab3c5;margin:2px 0}
+  footer{max-width:1280px;margin:20px auto 0;padding:0 16px;color:#5c6577;font-size:11.5px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <h1>📈 股票估值指标互动实验室 <b>· 调参数 · 看公式 · 算目标价</b></h1>
+    <nav class="tabs">
+      <button class="tab on" data-tab="sandbox">① 指标沙盘</button>
+      <button class="tab" data-tab="forecast">② 业绩预测 · 目标价</button>
+      <button class="tab" data-tab="ref">③ 指标速查表</button>
+    </nav>
+  </div>
+</header>
+<main>
+  <!-- ========== Tab 1 指标沙盘 ========== -->
+  <section id="sec-sandbox" class="on">
+    <div class="cols">
+      <div class="panel">
+        <h2>假设输入（一家虚构公司）</h2>
+        <div class="hint">拖动滑块或直接输入数字，右侧所有指标实时联动。单位：元 / 亿股 / 亿元。</div>
+        <div id="sb-inputs"></div>
+        <h4>试一试</h4>
+        <ul class="trylist">
+          <li>净利润 60 → <b>120</b>：PE 从 12.5 瞬间降到 6.3，"低 PE" 可能只是盈利倍增</li>
+          <li>股价 25 → <b>50</b>（盈利不变）：PE、PB 翻倍，ROE 不变 —— 估值≠基本面</li>
+          <li>净资产 480 → <b>200</b>：ROE 冲到 30%，但资产负债率升到 78%，杠杆换来的</li>
+          <li>增速 g 调到 <b>0 或负数</b>：PEG 失效</li>
+          <li>分红拉到 <b>60</b>：派息率 100%，股息率 8%，能持续吗？</li>
+        </ul>
+        <div class="btnrow">
+          <button class="btn ghost" id="btn-reset">恢复默认</button>
+          <button class="btn" id="btn-to-fc">把当前假设带入预测 →</button>
+        </div>
+      </div>
+      <div>
+        <h2>核心指标 · 概念 / 公式 / 实时计算</h2>
+        <div class="cards" id="metric-cards"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Tab 2 业绩预测 ========== -->
+  <section id="sec-forecast">
+    <div class="cols">
+      <div class="panel">
+        <h2>未来业绩预测假设</h2>
+        <div class="hint">思路：<b>目标价 = 第 N 年每股收益 × 那年市场愿意给的 PE</b>。两段增速：先高增长 n₁ 年，之后进入稳态。</div>
+        <div id="fc-inputs"></div>
+        <div class="btnrow">
+          <button class="btn ghost" id="btn-from-sb">← 从沙盘带入当前数据</button>
+          <button class="btn ghost" id="btn-pe-sug">按稳态 PEG≈1 建议目标 PE</button>
+        </div>
+        <h4>怎么用</h4>
+        <ul class="trylist">
+          <li>先调 <b>g₁ / n₁ / g₂</b>（盈利预测），再调 <b>目标 PE</b>（估值假设），两者互相独立</li>
+          <li>看右侧<b>敏感性表</b>：悲观 / 中性 / 乐观三档都扫一遍再下结论</li>
+          <li><b>合理现价</b> = 目标价按折现率折回今天；现价低于它才有安全边际</li>
+          <li>年化收益可拆成：<b>盈利增长 × 估值变化</b>——靠估值抬升的钱不可靠</li>
+        </ul>
+      </div>
+      <div>
+        <div class="stats" id="fc-stats"></div>
+        <div class="verdict" id="fc-verdict">—</div>
+        <div class="decomp" id="fc-decomp"></div>
+        <div class="panel" style="padding:10px">
+          <div id="chart"></div>
+          <div class="legend">
+            <span><i style="background:var(--acc)"></i>各年 EPS（左轴）</span>
+            <span><i style="background:var(--gold);border-radius:50%"></i>若估值维持当前 PE 的股价路径（右轴）</span>
+            <span><i style="background:var(--up);border-radius:50%"></i>第 N 年按目标 PE 的目标价</span>
+          </div>
+        </div>
+        <h4 style="margin-top:14px">敏感性：隐含年化收益率（行 g₁ × 列 目标PE，红正绿负）</h4>
+        <div id="sens"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Tab 3 速查表 ========== -->
+  <section id="sec-ref">
+    <h2>估值方法论：三种姿势</h2>
+    <div class="mcards">
+      <div class="mcard"><b>① 相对估值（PE / PB / PS / PEG）</b><p>和同行、和历史比。快、直观，本页沙盘就是这类。</p><p>缺陷：市场整体贵的时候，"相对便宜"也会跌。</p></div>
+      <div class="mcard"><b>② 绝对估值（DCF / DDM）</b><p>把未来现金流/股利折现到今天，理论最严谨。</p><p>缺陷：对增速和折现率极其敏感，"精确的错误"。</p></div>
+      <div class="mcard"><b>③ 两步简化法（本页预测）</b><p>目标价 = 未来 EPS × 目标 PE。介于两者之间的实用方法。</p><p>关键假设只有两个：盈利增速、期末估值，都可在左侧调节。</p></div>
+    </div>
+
+    <h2 style="margin-top:16px">PE 的三种口径</h2>
+    <div class="mcards">
+      <div class="mcard"><b>静态 PE</b><p>现价 ÷ 上一年度 EPS。数据最"旧"，年报公布后才有意义。</p></div>
+      <div class="mcard"><b>滚动 PE（TTM）</b><p>现价 ÷ 最近四个季度 EPS。最常用，季节性被抹平，行情软件默认显示的一般就是它。</p></div>
+      <div class="mcard"><b>动态 / 预测 PE</b><p>现价 ÷ 本年预测 EPS。前瞻，但依赖预测质量——本页预测功能算的就是这种。</p></div>
+    </div>
+
+    <h2 style="margin-top:16px">指标速查表</h2>
+    <table class="ref" id="ref-table"></table>
+  </section>
+</main>
+<footer>本页面为教学演示，所有数据均为虚构假设，不构成任何投资建议。市场有风险，投资需谨慎。</footer>
+
+<script>
+/* ---------------- 工具 ---------------- */
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id + '-n').value);
+const isN = x => typeof x === 'number' && isFinite(x);
+function f(x, d = 2) { return isN(x) ? x.toLocaleString('zh-CN', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—'; }
+function pct(x, d = 1) { return isN(x) ? (x * 100).toFixed(d) + '%' : '—'; }
+function div(a, b) { return b ? a / b : NaN; }
+
+/* ---------------- 输入项定义 ---------------- */
+const SB_INPUTS = [
+  ['price', '股价', 1, 300, 0.5, 25, '元'],
+  ['shares', '总股本', 1, 200, 1, 30, '亿股'],
+  ['rev', '营业收入', 10, 5000, 10, 600, '亿'],
+  ['cost', '营业成本', 0, 5000, 10, 420, '亿'],
+  ['ni', '净利润(年)', -50, 1000, 1, 60, '亿'],
+  ['g', '净利润增速 g', -20, 60, 1, 15, '%'],
+  ['div', '年度分红总额', 0, 500, 1, 18, '亿'],
+  ['ta', '总资产', 10, 10000, 10, 900, '亿'],
+  ['eq', '净资产(股东权益)', 1, 10000, 10, 480, '亿'],
+];
+const FC_INPUTS = [
+  ['f_price', '当前股价 P₀', 1, 500, 0.5, 25, '元'],
+  ['f_shares', '总股本', 1, 200, 1, 30, '亿股'],
+  ['f_ni0', '当前年净利润 NI₀', -20, 1000, 1, 60, '亿'],
+  ['f_g1', '高增长期增速 g₁', -20, 80, 1, 15, '%'],
+  ['f_n1', '高增长持续 n₁', 0, 15, 1, 5, '年'],
+  ['f_g2', '稳态增速 g₂', -10, 30, 1, 5, '%'],
+  ['f_N', '预测总年限 N', 3, 20, 1, 10, '年'],
+  ['f_peT', '预测期末目标 PE', 3, 80, 1, 15, '倍'],
+  ['f_r', '折现率(要求回报) r', 0, 30, 0.5, 10, '%'],
+];
+
+function buildInputs(containerId, defs) {
+  const el = $(containerId);
+  defs.forEach(([id, label, min, max, step, def, unit]) => {
+    el.insertAdjacentHTML('beforeend', `
+      <div class="inp">
+        <div class="ilab"><span>${label}</span>
+          <span class="iwrap"><input type="number" id="${id}-n" value="${def}" step="${step}">${unit}</span>
+        </div>
+        <input type="range" id="${id}-r" min="${min}" max="${max}" step="${step}" value="${def}">
+      </div>`);
+    const r = $(id + '-r'), n = $(id + '-n');
+    r.addEventListener('input', () => { n.value = r.value; updateAll(); });
+    n.addEventListener('input', () => { r.value = n.value; updateAll(); });
+  });
+}
+
+/* ---------------- 指标卡片定义 ---------------- */
+const CARDS = [
+  { id: 'mcap', tag: ['规模', 't-scale'], name: '总市值 Market Cap', unit: '亿',
+    desc: '市场给整个公司股权的总标价。比较公司大小看它，而不是股价。',
+    det: '<p>市值 = 单价 × 数量，和买菜一个道理。股价高低本身无意义——一股 1000 元的公司未必比一股 5 元的贵，取决于股本拆分。</p><p>市值大 → 大盘股，波动通常更小；小市值公司弹性大、风险也大。</p>' },
+  { id: 'eps', tag: ['盈利', 't-profit'], name: '每股收益 EPS', unit: '元/股',
+    desc: '每一股一年为股东赚到的净利润。一切估值指标的分母基础。',
+    det: '<p>EPS = 净利润 ÷ 总股本。注意区分：扣非 EPS（剔除一次性损益，更能代表主业）与摊薄 EPS（考虑可转债、股权激励等潜在稀释）。</p><p>股本扩张（增发、送股）会摊薄 EPS，看 EPS 要连同股本变化一起看。</p>' },
+  { id: 'pe', tag: ['估值', 't-val'], name: '市盈率 PE', unit: '倍',
+    desc: '为 1 元年利润支付的价格，粗略理解为"按当前盈利多少年回本"。',
+    det: '<p><b>PE = 股价 ÷ EPS = 市值 ÷ 净利润</b>。口径分静态（上年）、TTM（近四季）、动态（本年预测），比较时必须统一口径。</p><p>怎么用：同行业比较才有意义；成长股享受高 PE，银行地产通常低 PE。</p><p>陷阱：① 周期股在利润顶点 PE 最低，反而是卖点（"周期股要买高 PE 卖低 PE"）；② 亏损股 PE 无意义；③ 看利润质量——经营现金流是否与净利润匹配。</p>' },
+  { id: 'pb', tag: ['估值', 't-val'], name: '市净率 PB', unit: '倍',
+    desc: '股价相对每股净资产的溢价或折价。破净 = 股价低于账面家底。',
+    det: '<p><b>PB = 股价 ÷ 每股净资产 = 市值 ÷ 净资产</b>。适合银行、保险、钢铁、地产等重资产/金融行业。</p><p>与 ROE 搭配：长期 ROE 15% 的公司给 2 倍 PB 不算贵；ROE 3% 的公司 1 倍 PB 也未必便宜。可用 PB÷ROE 在同行间粗略比较。</p><p>陷阱：账面净资产可能失真——商誉、隐性负债、资产减值；轻资产公司（互联网、品牌消费）PB 参考价值低。</p>' },
+  { id: 'ps', tag: ['估值', 't-val'], name: '市销率 PS', unit: '倍',
+    desc: '为 1 元营收支付的价格。适用于尚未盈利的成长公司。',
+    det: '<p><b>PS = 市值 ÷ 营业收入</b>。SaaS、创新药等还没盈利的公司看不了 PE，先看 PS。</p><p>陷阱：营收不包含利润率信息——1 元收入在毛利率 90% 和 10% 的公司里价值天差地别，必须结合毛利率、费用率一起看。警惕"有收入没利润"的伪成长。</p>' },
+  { id: 'peg', tag: ['估值', 't-val'], name: 'PEG', unit: '',
+    desc: 'PE ÷ 净利润增速(%)。彼得·林奇推广的"增长性价比"。',
+    det: '<p><b>PEG = PE ÷ 未来 3–5 年净利润复合增速(%)</b>。经验：<1 可能低估，≈1 合理，>2 偏贵。</p><p>陷阱：增速取值极其敏感，别用单一年份增速；对低速增长（<10%）和周期股基本失效。PEG 低≠一定便宜，可能市场认为增速不可持续。</p>' },
+  { id: 'roe', tag: ['盈利', 't-profit'], name: '净资产收益率 ROE', unit: '',
+    desc: '股东投入的净资产一年能赚多少。巴菲特最看重的指标。',
+    det: '<p><b>ROE = 净利润 ÷ 净资产</b>。长期 ROE > 15% 且不靠高杠杆的公司，通常有护城河。</p><p>一定要用杜邦拆开看来源（见下方分解卡）：靠净利率是本事，靠周转是效率，靠加杠杆要打折。</p><p>陷阱：大量回购/分红会减少净资产从而"美化" ROE；一次性收益也会推高当期 ROE。</p>' },
+  { id: 'roa', tag: ['盈利', 't-profit'], name: '总资产收益率 ROA', unit: '',
+    desc: '全部资产（不区分谁出钱）的赚钱效率。剔除杠杆看资产质量。',
+    det: '<p><b>ROA = 净利润 ÷ 总资产</b>。同样 15% 的 ROE，一个靠高杠杆、一个靠高 ROA，后者质量更高。</p><p>银行业天然高杠杆，跨国比较银行时看 ROA 比 ROE 更公平。</p>' },
+  { id: 'gm', tag: ['盈利', 't-profit'], name: '毛利率', unit: '',
+    desc: '产品直接赚钱的能力，体现定价权与竞争格局。',
+    det: '<p><b>毛利率 = (营收 − 营业成本) ÷ 营收</b>。高毛利说明产品有差异化、有定价权（白酒、创新药、软件）。</p><p>高毛利 + 低净利率 = 费用吞噬利润，去看销售费用率；毛利率持续下滑通常意味着竞争加剧或产品老化。</p>' },
+  { id: 'npm', tag: ['盈利', 't-profit'], name: '净利率', unit: '',
+    desc: '1 元收入最终落袋多少。商业模式的"含金量"。',
+    det: '<p><b>净利率 = 净利润 ÷ 营收</b>。看趋势和同行差距比看绝对值更重要。</p><p>突然飙升多为一时许价、补贴退坡或一次性损益，不可线性外推。</p>' },
+  { id: 'dar', tag: ['结构', 't-struct'], name: '资产负债率', unit: '',
+    desc: '资产中靠负债支撑的比例，衡量财务杠杆与风险。',
+    det: '<p><b>资产负债率 = (总资产 − 净资产) ÷ 总资产</b>。金融、地产、基建天然高（70%+），消费制造业 > 60% 要警惕。</p><p>关键区分：有息负债（银行借款、债券——真压力）与经营性负债（占用上游货款、预收款——反而是产业链话语权）。同样 60% 负债率，含金量完全不同。</p>' },
+  { id: 'dy', tag: ['回报', 't-ret'], name: '股息率', unit: '',
+    desc: '仅靠分红现金获得的年回报率，类债券属性。',
+    det: '<p><b>股息率 = 每股分红 ÷ 股价 = 分红总额 ÷ 市值</b>。成熟行业（银行、煤炭、公用事业）常见 4%+。</p><p>陷阱：一次性特别分红会虚高当期股息率；股价大跌也会推高股息率——可能不是便宜而是价值陷阱，需结合派息率与盈利稳定性判断可持续性。</p>' },
+  { id: 'payout', tag: ['回报', 't-ret'], name: '派息率(分红率)', unit: '',
+    desc: '利润中拿出来分红的比例，衡量分红的可持续性。',
+    det: '<p><b>派息率 = 分红总额 ÷ 净利润</b>。A 股常见 30%–60%。</p><p>过高（>80%）难以持续；过低要看留存利润的再投资回报——若公司 ROE 高，留在体内再投资比分红更划算。</p>' },
+  { id: 'bps', tag: ['盈利', 't-profit'], name: '每股净资产 BPS', unit: '元/股',
+    desc: '清算视角下每股对应的家底（历史成本口径）。',
+    det: '<p><b>BPS = 净资产 ÷ 总股本</b>，是 PB 的分母。</p><p>注意净资产中商誉占比：商誉是并购溢价，不是可变现资产，剔除商誉后的 BPS 更实在。</p>' },
+];
+
+const DUPONT = {
+  name: '杜邦分解：ROE 从哪来', tag: ['结构', 't-struct'],
+  desc: 'ROE = 净利率 × 资产周转率 × 权益乘数，把赚钱能力拆成"本事 × 效率 × 杠杆"。',
+  det: '<p>同样 15% 的 ROE：靠净利率（高端白酒）质量最高；靠周转（零售、快消）是效率；靠杠杆（银行、地产）风险最大。杜邦分解告诉你这家公司的赚钱模式。</p>'
+};
+
+function buildCards() {
+  const wrap = $('metric-cards');
+  const card = (c, inner) => `
+    <div class="card${c.wide ? ' wide' : ''}">
+      <div class="chead"><span class="cname">${c.name}</span><span class="ctag ${c.tag[1]}">${c.tag[0]}</span></div>
+      ${inner}
+      <div class="cdesc">${c.desc}</div>
+      <details class="cdet"><summary>详解与陷阱 ▾</summary><div>${c.det}</div></details>
+    </div>`;
+  CARDS.forEach(c => {
+    wrap.insertAdjacentHTML('beforeend', card(c,
+      `<div class="cval"><span id="v-${c.id}">–</span><span class="cunit">${c.unit}</span></div>
+       <div class="cformula" id="c-${c.id}">–</div>`));
+  });
+  wrap.insertAdjacentHTML('beforeend', card(DUPONT, `
+    <div class="cval" style="font-size:15px;font-weight:600;line-height:1.7" id="v-dupont">–</div>
+    <div class="cformula" id="c-dupont">–</div>`));
+}
+
+/* ---------------- 沙盘计算 ---------------- */
+function sandboxCompute() {
+  const s = {
+    price: num('price'), shares: num('shares'), rev: num('rev'), cost: num('cost'),
+    ni: num('ni'), g: num('g'), div: num('div'), ta: num('ta'), eq: num('eq'),
+  };
+  s.mc = s.price * s.shares;
+  s.eps = div(s.ni, s.shares);
+  s.bps = div(s.eq, s.shares);
+  s.pe = div(s.price, s.eps);
+  s.pb = div(s.price, s.bps);
+  s.ps = div(s.mc, s.rev);
+  s.peg = (s.g > 0 && isN(s.pe)) ? s.pe / s.g : NaN;
+  s.roe = div(s.ni, s.eq);
+  s.roa = div(s.ni, s.ta);
+  s.gm = s.rev ? (s.rev - s.cost) / s.rev : NaN;
+  s.npm = div(s.ni, s.rev);
+  s.dar = s.ta ? (s.ta - s.eq) / s.ta : NaN;
+  s.dps = div(s.div, s.shares);
+  s.dy = div(s.div, s.mc);
+  s.payout = div(s.div, s.ni);
+  s.turn = div(s.rev, s.ta);      // 资产周转率
+  s.em = div(s.ta, s.eq);         // 权益乘数
+  return s;
+}
+
+function renderSandbox() {
+  const s = sandboxCompute();
+  const set = (id, h) => { $(id).innerHTML = h; };
+  set('v-mcap', f(s.mc, 0)); set('c-mcap', `股价 × 总股本 = ${f(s.price)} × ${f(s.shares, 1)} = <b>${f(s.mc, 0)} 亿</b>`);
+  set('v-eps', f(s.eps)); set('c-eps', `净利润 ÷ 总股本 = ${f(s.ni, 0)} ÷ ${f(s.shares, 1)} = <b>${f(s.eps)} 元</b>`);
+  set('v-pe', f(s.pe, 1)); set('c-pe', `股价 ÷ EPS = ${f(s.price)} ÷ ${f(s.eps)} = <b>${f(s.pe, 1)} 倍</b>`);
+  set('v-pb', f(s.pb, 2)); set('c-pb', `股价 ÷ BPS = ${f(s.price)} ÷ ${f(s.bps)} = <b>${f(s.pb, 2)} 倍</b>`);
+  set('v-ps', f(s.ps, 2)); set('c-ps', `市值 ÷ 营收 = ${f(s.mc, 0)} ÷ ${f(s.rev, 0)} = <b>${f(s.ps, 2)} 倍</b>`);
+  set('v-peg', f(s.peg, 2)); set('c-peg', s.g > 0 ? `PE ÷ 增速g = ${f(s.pe, 1)} ÷ ${f(s.g, 1)} = <b>${f(s.peg, 2)}</b>` : '增速 g ≤ 0 时 PEG <b>无意义</b>');
+  set('v-roe', pct(s.roe)); set('c-roe', `净利润 ÷ 净资产 = ${f(s.ni, 0)} ÷ ${f(s.eq, 0)} = <b>${pct(s.roe)}</b>`);
+  set('v-roa', pct(s.roa)); set('c-roa', `净利润 ÷ 总资产 = ${f(s.ni, 0)} ÷ ${f(s.ta, 0)} = <b>${pct(s.roa)}</b>`);
+  set('v-gm', pct(s.gm)); set('c-gm', `(营收−成本) ÷ 营收 = (${f(s.rev, 0)}−${f(s.cost, 0)}) ÷ ${f(s.rev, 0)} = <b>${pct(s.gm)}</b>`);
+  set('v-npm', pct(s.npm)); set('c-npm', `净利润 ÷ 营收 = ${f(s.ni, 0)} ÷ ${f(s.rev, 0)} = <b>${pct(s.npm)}</b>`);
+  set('v-dar', pct(s.dar)); set('c-dar', `(总资产−净资产) ÷ 总资产 = (${f(s.ta, 0)}−${f(s.eq, 0)}) ÷ ${f(s.ta, 0)} = <b>${pct(s.dar)}</b>`);
+  set('v-dy', pct(s.dy)); set('c-dy', `每股分红 ÷ 股价 = ${f(s.dps)} ÷ ${f(s.price)} = <b>${pct(s.dy)}</b>`);
+  set('v-payout', pct(s.payout)); set('c-payout', `分红 ÷ 净利润 = ${f(s.div, 0)} ÷ ${f(s.ni, 0)} = <b>${pct(s.payout)}</b>`);
+  set('v-bps', f(s.bps)); set('c-bps', `净资产 ÷ 总股本 = ${f(s.eq, 0)} ÷ ${f(s.shares, 1)} = <b>${f(s.bps)} 元</b>`);
+  set('v-dupont', `ROE ${pct(s.roe)} = 净利率 ${pct(s.npm)} × 周转率 ${f(s.turn, 2)} × 权益乘数 ${f(s.em, 2)}`);
+  set('c-dupont', `${pct(s.npm)} × ${f(s.turn, 2)} × ${f(s.em, 2)} = <b>${pct(s.roe)}</b>　<span style="color:#5c6577">（恒等式：利润率三因子相乘必然还原 ROE）</span>`);
+}
+
+/* ---------------- 预测计算 ---------------- */
+function forecastData() {
+  const d = {
+    p0: num('f_price'), shares: num('f_shares'), ni0: num('f_ni0'),
+    g1: num('f_g1') / 100, n1raw: num('f_n1'), g2: num('f_g2') / 100,
+    N: num('f_N'), peT: num('f_peT'), r: num('f_r') / 100,
+  };
+  d.n1 = Math.min(d.n1raw, d.N);
+  d.eps0 = div(d.ni0, d.shares);
+  d.pe0 = div(d.p0, d.eps0);
+  // 净利润路径
+  d.niPath = [d.ni0];
+  let v = d.ni0;
+  for (let t = 1; t <= d.N; t++) { v *= (t <= d.n1 ? 1 + d.g1 : 1 + d.g2); d.niPath.push(v); }
+  d.epsPath = d.niPath.map(x => div(x, d.shares));
+  d.epsN = d.epsPath[d.N];
+  d.target = d.epsN * d.peT;
+  d.cagr = (d.target / d.p0) > 0 ? Math.pow(d.target / d.p0, 1 / d.N) - 1 : NaN;
+  d.fair = d.target / Math.pow(1 + d.r, d.N);
+  d.margin = d.p0 ? d.fair / d.p0 - 1 : NaN;
+  d.gCagr = d.eps0 > 0 && d.epsN > 0 ? Math.pow(d.epsN / d.eps0, 1 / d.N) - 1 : NaN;
+  d.peCagr = d.pe0 > 0 ? Math.pow(d.peT / d.pe0, 1 / d.N) - 1 : NaN;
+  return d;
+}
+
+function impliedCagr(d, g1, peT) { // 供敏感性表用
+  let v = d.ni0;
+  for (let t = 1; t <= d.N; t++) v *= (t <= d.n1 ? 1 + g1 : 1 + d.g2);
+  const target = v / d.shares * peT;
+  return (target / d.p0) > 0 ? Math.pow(target / d.p0, 1 / d.N) - 1 : NaN;
+}
+
+function statBox(k, v, unit) {
+  return `<div class="stat"><div class="sk">${k}</div><div class="sv">${v}${unit ? ` <small>${unit}</small>` : ''}</div></div>`;
+}
+
+function renderForecast() {
+  const d = forecastData();
+  // 统计卡
+  $('fc-stats').innerHTML =
+    statBox(`当前 EPS（PE₀ ${f(d.pe0, 1)}倍）`, f(d.eps0), '元') +
+    statBox(`第 ${d.N} 年 EPS`, f(d.epsN), '元') +
+    statBox(`目标价（第 ${d.N} 年）`, f(d.target), '元') +
+    statBox('隐含年化收益率', `<span style="color:${d.cagr >= 0 ? 'var(--up)' : 'var(--down)'}">${pct(d.cagr)}</span>`) +
+    statBox(`合理现价（r=${pct(d.r, 0)} 折现）`, f(d.fair), '元') +
+    statBox('安全边际（合理现价/现价−1）', `<span style="color:${d.margin >= 0 ? 'var(--up)' : 'var(--down)'}">${pct(d.margin)}</span>`);
+  // 结论
+  const vd = $('fc-verdict');
+  if (isN(d.cagr)) {
+    if (d.cagr >= d.r) {
+      vd.className = 'verdict good';
+      vd.innerHTML = `✔ 以 <b>${f(d.p0)} 元</b>买入，若第 ${d.N} 年兑现 EPS <b>${f(d.epsN)} 元</b> 且估值回落至 <b>${f(d.peT, 0)} 倍</b>，目标价 <b>${f(d.target)} 元</b>，隐含年化 <b>${pct(d.cagr)}</b>，高于要求回报 ${pct(d.r, 0)}，具备安全边际。72 法则：年化 ${pct(d.cagr, 0)} 约每 ${(72 / (d.cagr * 100)).toFixed(1)} 年翻一倍。`;
+    } else {
+      vd.className = 'verdict bad';
+      vd.innerHTML = `✘ 该假设下隐含年化仅 <b>${pct(d.cagr)}</b>，低于要求回报 ${pct(d.r, 0)}。要么等更低的买价（≤ ${f(d.fair)} 元），要么修正假设——增速是不是估低了？期末估值是不是给低了？`;
+    }
+  } else { vd.className = 'verdict'; vd.textContent = '假设无效（净利润为负等），请调整输入。'; }
+  // 收益拆解
+  $('fc-decomp').innerHTML = isN(d.gCagr) && isN(d.peCagr)
+    ? `收益拆解：股价年化 = (1 + 盈利年化 ${pct(d.gCagr)}) × (1 + 估值年化 ${pct(d.peCagr)}) − 1 = <b>${pct(d.cagr)}</b>　|　PE 从 ${f(d.pe0, 1)} 倍 → ${f(d.peT, 0)} 倍${d.peCagr >= 0 ? '（估值抬升贡献的部分不可靠）' : '（估值回落拖累的部分是风险）'}`
+    : '';
+  renderChart(d);
+  renderSens(d);
+}
+
+function renderChart(d) {
+  const W = 760, H = 300, L = 46, R = 58, T = 18, B = 32;
+  const pw = W - L - R, ph = H - T - B;
+  const x = t => L + pw * t / d.N;
+  const maxE = Math.max(...d.epsPath) * 1.15 || 1;
+  const pricePath = d.epsPath.map((e, i) => e * (i === d.N ? d.peT : d.pe0));
+  const maxP = Math.max(d.target, ...pricePath) * 1.15 || 1;
+  const yL = v => T + ph * (1 - v / maxE);
+  const yR = v => T + ph * (1 - v / maxP);
+  const bw = Math.min(30, pw / (d.N + 1) * 0.55);
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  // 网格 + 轴标签
+  for (let i = 0; i <= 4; i++) {
+    const yy = T + ph * i / 4;
+    s += `<line x1="${L}" y1="${yy}" x2="${L + pw}" y2="${yy}" stroke="#232b3f" stroke-width="1"/>`;
+    s += `<text x="${L - 6}" y="${yy + 3.5}" fill="#8b95a9" font-size="10" text-anchor="end">${(maxE * (1 - i / 4)).toFixed(1)}</text>`;
+    s += `<text x="${L + pw + 6}" y="${yy + 3.5}" fill="#8b95a9" font-size="10">${(maxP * (1 - i / 4)).toFixed(0)}</text>`;
+  }
+  // 柱：EPS
+  const lab = d.N <= 12;
+  d.epsPath.forEach((e, t) => {
+    const bx = x(t) - bw / 2, by = yL(e);
+    s += `<rect x="${bx}" y="${by}" width="${bw}" height="${Math.max(0, T + ph - by)}" rx="2" fill="#4f8cff" opacity="${t === 0 ? .45 : .8}"/>`;
+    if (lab) s += `<text x="${x(t)}" y="${by - 4}" fill="#7fb0ff" font-size="9.5" text-anchor="middle">${e.toFixed(2)}</text>`;
+    const every = Math.ceil((d.N + 1) / 11);
+    if (t % every === 0) s += `<text x="${x(t)}" y="${H - 12}" fill="#8b95a9" font-size="10" text-anchor="middle">第${t}年</text>`;
+  });
+  // 线：股价路径（估值维持 pe0，最后一点切换 peT）
+  const pts = pricePath.map((p, t) => `${x(t)},${yR(p)}`).join(' ');
+  s += `<polyline points="${pts}" fill="none" stroke="#e8b84b" stroke-width="2"/>`;
+  s += `<circle cx="${x(d.N)}" cy="${yR(d.target)}" r="5" fill="#e04a54" stroke="#fff" stroke-width="1.5"/>`;
+  s += `<text x="${x(d.N)}" y="${yR(d.target) - 10}" fill="#e04a54" font-size="11" font-weight="bold" text-anchor="end">目标价 ${f(d.target, 0)}</text>`;
+  s += `<text x="${x(0) + 4}" y="${yR(pricePath[0]) - 8}" fill="#e8b84b" font-size="10">现价 ${f(d.p0, 0)}</text>`;
+  s += `<text x="${L}" y="${T - 6}" fill="#5c6577" font-size="10">左轴 EPS(元)</text>`;
+  s += `<text x="${L + pw}" y="${T - 6}" fill="#5c6577" font-size="10" text-anchor="end">右轴 股价(元)</text>`;
+  s += '</svg>';
+  $('chart').innerHTML = s;
+}
+
+function renderSens(d) {
+  const base = num('f_g1');
+  const gs = [base - 4, base - 2, base, base + 2, base + 4].map(x => Math.round(x));
+  const pes = [10, 12, 15, 18, 22, 28];
+  let h = '<table class="sens"><tr><th>g₁ \\ 目标PE</th>' + pes.map(p => `<th>${p}倍</th>`).join('') + '</tr>';
+  gs.forEach(g1 => {
+    h += `<tr><th>${g1}%</th>`;
+    pes.forEach(pe => {
+      const v = impliedCagr(d, g1 / 100, pe);
+      const cur = Math.round(num('f_g1')) === g1 && Math.round(num('f_peT')) === pe;
+      const bg = isN(v)
+        ? (v >= 0 ? `rgba(224,74,84,${Math.min(.6, .1 + v * 2.2)})` : `rgba(43,180,101,${Math.min(.6, .1 + (-v) * 2.2)})`)
+        : 'transparent';
+      h += `<td class="${cur ? 'cur' : ''}" style="background:${bg}">${isN(v) ? (v * 100).toFixed(1) + '%' : '—'}</td>`;
+    });
+    h += '</tr>';
+  });
+  $('sens').innerHTML = h + '</table><div class="hint" style="margin-top:6px">计算口径：同一套 g₂ / n₁ / N / 现价，仅改变该行的 g₁ 与该列的期末 PE。金框 = 当前假设。</div>';
+}
+
+/* ---------------- 速查表 ---------------- */
+const REF_ROWS = [
+  ['总市值', '股价 × 总股本', '衡量公司体量；指数权重、流动性都和它相关', '股价高低本身无意义，取决于股本拆分'],
+  ['EPS 每股收益', '净利润 ÷ 总股本', '估值的分母基础；看扣非 EPS 更真实', '增发/送股摊薄；一次性损益虚增'],
+  ['PE 市盈率', '股价 ÷ EPS', '同行业内比较盈利定价；成长高、价值低', '周期股低 PE 在顶部；亏损无意义；口径要统一（静态/TTM/动态）'],
+  ['PB 市净率', '股价 ÷ 每股净资产', '金融/重资产行业主力指标；破净看资产质量', '商誉与减值让账面净资产失真；轻资产行业失真'],
+  ['PS 市销率', '市值 ÷ 营收', '未盈利成长股（SaaS/创新药）的过渡指标', '不含利润率信息，必须配合毛利率看'],
+  ['PEG', 'PE ÷ 净利润增速(%)', '衡量"增长性价比"；≈1 合理', '对增速假设极敏感；低速与周期股失效'],
+  ['ROE', '净利润 ÷ 净资产', '长期 >15% 且低杠杆 = 好生意候选', '用杜邦拆解，警惕杠杆堆出来的 ROE'],
+  ['ROA', '净利润 ÷ 总资产', '剔除杠杆看资产质量；银行间比较更公平', '不同行业不可直接比'],
+  ['毛利率', '(营收−成本) ÷ 营收', '定价权与竞争格局；看趋势与同行', '高毛利≠高净利，费用可能吃掉一切'],
+  ['净利率', '净利润 ÷ 营收', '商业模式含金量；看趋势与同行差距', '一次性收益、时来运不可外推'],
+  ['资产负债率', '总负债 ÷ 总资产', '财务风险；行业差异极大', '区分有息负债（压力）与经营性负债（话语权）'],
+  ['股息率', '每股分红 ÷ 股价', '现金回报底仓；成熟行业看 4%+', '特别分红虚高；股价大跌也会推高股息率'],
+  ['派息率', '分红总额 ÷ 净利润', '30%–60% 常见；判断分红可持续性', '过高难持续；过低要看留存 ROE 是否够高'],
+  ['BPS 每股净资产', '净资产 ÷ 总股本', 'PB 的分母；清算价值参考', '历史成本口径，与重置价值可能差很远'],
+];
+function buildRef() {
+  $('ref-table').innerHTML =
+    '<tr><th>指标</th><th>公式</th><th>怎么用</th><th>常见陷阱</th></tr>' +
+    REF_ROWS.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td style="color:#9aa4b8">${r[3]}</td></tr>`).join('');
+}
+
+/* ---------------- 交互 ---------------- */
+function updateAll() { renderSandbox(); renderForecast(); }
+
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('section').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  $('sec-' + b.dataset.tab).classList.add('on');
+}));
+
+$('btn-reset').addEventListener('click', () => {
+  SB_INPUTS.forEach(([id, , , , , def]) => { $(id + '-r').value = def; $(id + '-n').value = def; });
+  updateAll();
+});
+
+$('btn-to-fc').addEventListener('click', () => {
+  const s = sandboxCompute();
+  $('f_price-r').value = $('f_price-n').value = s.price;
+  $('f_shares-r').value = $('f_shares-n').value = s.shares;
+  $('f_ni0-r').value = $('f_ni0-n').value = s.ni;
+  $('f_g1-r').value = $('f_g1-n').value = s.g;
+  updateAll();
+  document.querySelector('.tab[data-tab="forecast"]').click();
+});
+
+$('btn-from-sb').addEventListener('click', () => {
+  const s = sandboxCompute();
+  $('f_price-r').value = $('f_price-n').value = s.price;
+  $('f_shares-r').value = $('f_shares-n').value = s.shares;
+  $('f_ni0-r').value = $('f_ni0-n').value = s.ni;
+  $('f_g1-r').value = $('f_g1-n').value = s.g;
+  updateAll();
+});
+
+$('btn-pe-sug').addEventListener('click', () => {
+  const sug = Math.min(35, Math.max(8, Math.round(num('f_g2'))));
+  $('f_peT-r').value = $('f_peT-n').value = sug;
+  updateAll();
+});
+
+/* ---------------- 初始化 ---------------- */
+buildInputs('sb-inputs', SB_INPUTS);
+buildInputs('fc-inputs', FC_INPUTS);
+buildCards();
+buildRef();
+updateAll();
+</script>
+</body>
+</html>
