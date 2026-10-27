@@ -1,0 +1,2 @@
+# PersonalCourses 课程站拉取式部署：每分钟检查 GitHub 新提交（flock 防并发）
+* * * * * root flock -n /run/personalcourses-deploy.lock /opt/personalcourses/deploy.sh
