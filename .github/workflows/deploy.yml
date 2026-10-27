@@ -8,6 +8,10 @@ concurrency:
   group: deploy-prod
   cancel-in-progress: true
 
+env:
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,21 +24,34 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          # GitHub(海外) 到国内服务器 22 端口偶发超时，keyscan 失败不阻塞，由 accept-new 兜底
+          ssh-keyscan -T 15 -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || \
+            echo "keyscan failed, fall back to accept-new"
+          echo "StrictHostKeyChecking accept-new" >> ~/.ssh/config
 
       - name: Rsync to server
         run: |
-          rsync -az --delete \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude '.screenshots' \
-            --exclude '.trae-html-share-packages' \
-            --exclude 'deploy' \
-            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/personalcourses/"
+          ok=0
+          for i in 1 2 3; do
+            if rsync -az --delete \
+              -e "ssh -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=4" \
+              --exclude '.git' \
+              --exclude '.github' \
+              --exclude '.screenshots' \
+              --exclude '.trae-html-share-packages' \
+              --exclude 'deploy' \
+              ./ "$SSH_USER@$SSH_HOST:/var/www/personalcourses/"; then
+              ok=1
+              break
+            fi
+            echo "rsync attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          [ "$ok" = "1" ] || { echo "rsync failed after 3 attempts"; exit 1; }
 
       - name: Verify deployment
         run: |
-          code=$(ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+          code=$(ssh -o ConnectTimeout=30 "$SSH_USER@$SSH_HOST" \
             "curl -s -o /dev/null -w '%{http_code}' -H 'Host: course.leozhu.cn' http://127.0.0.1/")
           echo "HTTP status: $code"
           [ "$code" = "200" ] || { echo "Site did not return 200"; exit 1; }
