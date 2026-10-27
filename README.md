@@ -13,6 +13,7 @@
 | 邓普顿的逆向投资方法 | 投资 · 金融 | [templeton-course.html](./templeton-course.html) |
 | 读懂高赔率逆向评估报告（宁德时代案例） | 投资 · 金融 | [catl-report-course.html](./catl-report-course.html) |
 | 股票估值指标互动实验室 | 投资 · 金融工具 | [stock-valuation-lab.html](./stock-valuation-lab.html) |
+| Microduck 复刻工程（12 课系列，入口页） | 机器人 · 具身智能 | [microduck.html](./microduck.html) |
 
 ## 使用方式
 

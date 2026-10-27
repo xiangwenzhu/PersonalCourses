@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microduck 复刻工程 · 课程系列</title>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--warn:#f59e0b;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.7 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar a.back{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.topbar a.back:hover{text-decoration:underline}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px 60px}
+.hero h2{margin:0 0 8px;font-size:26px}
+.hero p{margin:0;color:var(--muted);max-width:68ch}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:14px}
+.stat b{font-size:17px;color:var(--primary);margin-right:4px}
+.route{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0 8px;font-size:14px}
+.route .node{background:var(--primary-soft);color:var(--primary);font-weight:600;padding:5px 12px;border-radius:99px}
+.route .arr{color:var(--muted)}
+.stage{margin-top:30px}
+.stage>h3{display:flex;align-items:center;gap:8px;font-size:18px;margin:0 0 4px}
+.stage>h3 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.stage>p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{position:relative;display:flex;flex-direction:column;gap:8px;padding:20px 22px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);text-decoration:none;color:var(--text);transition:transform .15s,border-color .15s}
+a.card:hover{transform:translateY(-2px);border-color:var(--primary)}
+.card .tag{align-self:flex-start;font-size:12px;padding:2px 10px;border-radius:99px;font-weight:600;color:#fff}
+.card h3{margin:0;font-size:18px}
+.card p{margin:0;color:var(--muted);font-size:14.5px;flex:1}
+.card .levels{display:flex;gap:6px;margin-top:2px}
+.card .dot.lv{width:8px;height:8px;border-radius:50%}
+.card .more{font-size:14px;color:var(--primary);font-weight:600}
+.card.locked{opacity:.55}
+.card.locked .more{color:var(--muted)}
+.prog{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:99px;padding:1px 10px;align-self:flex-start}
+.prog.full{color:var(--ok);border-color:var(--ok)}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:13.5px}
+.tag.s1{background:var(--l1)}.tag.s2{background:var(--l2)}.tag.s3{background:var(--l3)}.tag.s4{background:var(--l4)}.tag.s5{background:var(--warn)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="back" href="index.html">← 返回课程库</a>
+  <h1>Microduck 复刻工程</h1>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h2>复刻一只 399 美元的机器鸭</h2>
+    <p>Microduck 是 Hugging Face 旗下 Pollen Robotics 于 2026 年 8 月发布的 25cm 微型双足机器人：15 个电机、摄像头、ToF 激光雷达、夹爪鸭嘴，会走路、踢球、滑轮滑、摔倒了自己爬起来。开售 4 天狂揽 10500 台订单。本系列从认识产品讲到国产供应链与量产，带你走完"看懂 → 造出来 → 跑起来 → 卖得好"的完整复刻路线。</p>
+    <div class="stats">
+      <span class="stat"><b>25cm</b>身高 800g</span>
+      <span class="stat"><b>15</b>个电机</span>
+      <span class="stat"><b>399</b>美元售价</span>
+      <span class="stat"><b>4 天</b>订单破万台</span>
+      <span class="stat"><b>开源</b>Isaac Lab 训练栈</span>
+    </div>
+    <div class="route">
+      <span class="node">看懂</span><span class="arr">→</span>
+      <span class="node">造出来</span><span class="arr">→</span>
+      <span class="node">跑起来</span><span class="arr">→</span>
+      <span class="node">卖得好</span>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--l1)"></span>阶段一 · 认识产品</h3>
+    <p>先搞清楚它是什么、凭什么爆火、钱怎么算，再决定要不要动手。</p>
+    <div class="grid">
+      <a class="card" href="microduck-01-overview.html">
+        <span class="tag s1">机器人 · 具身智能</span>
+        <h3>01 认识 Microduck</h3>
+        <p>拆解这只机器鸭的硬件构成、开源生态与爆火逻辑，算一算 399 美元背后的 BOM 账本，画出你的复刻路线图。</p>
+        <span class="prog" data-file="0"></span>
+        <span class="more">开始学习 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--l2)"></span>阶段二 · 机械与电子</h3>
+    <p>把一只鸭子的"骨骼""肌肉""神经"设计出来：结构、舵机、电路、传感器。</p>
+    <div class="grid">
+      <a class="card" href="microduck-02-mechanics.html">
+        <span class="tag s2">机器人 · 机械设计</span>
+        <h3>02 机械结构与自由度设计</h3>
+        <p>25cm 身上怎么排 15 个电机：自由度分配、正运动学初体验、重心与支撑面，再聊 3D 打印件的间隙与刚度。</p>
+        <span class="prog" data-file="1"></span>
+        <span class="more">开始学习 →</span>
+      </a>
+      <a class="card" href="microduck-03-actuators.html">
+        <span class="tag s2">机器人 · 执行器</span>
+        <h3>03 舵机与执行器选型</h3>
+        <p>舵机内部的四大件、PWM 与总线舵机之争、扭矩计算器手把手教你算：0.8kg 的鸭子到底要多大的"肌肉"。</p>
+        <span class="prog" data-file="2"></span>
+        <span class="more">开始学习 →</span>
+      </a>
+      <a class="card" href="microduck-04-electronics.html">
+        <span class="tag s2">机器人 · 电子硬件</span>
+        <h3>04 主控电路与电源</h3>
+        <p>脑与脊髓分层的主控架构、从电池到传感器的电源树、功耗预算计算器，以及鸭子"走着走着断电重启"的真相。</p>
+        <span class="prog" data-file="3"></span>
+        <span class="more">开始学习 →</span>
+      </a>
+      <div class="card locked">
+        <span class="tag s2">机器人 · 传感器</span>
+        <h3>05 传感器系统</h3>
+        <p>IMU 姿态解算、ToF 激光雷达、摄像头接口：给鸭子装上眼睛、耳朵和内耳。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--l3)"></span>阶段三 · 嵌入式与运动数学</h3>
+    <p>让鸭子真正动起来：固件、实时控制循环，以及驱动关节的数学。</p>
+    <div class="grid">
+      <div class="card locked">
+        <span class="tag s3">嵌入式 · 固件</span>
+        <h3>06 嵌入式固件与实时控制</h3>
+        <p>1kHz 控制循环、舵机总线协议、固件分层架构：鸭子的"脊髓反射"怎么写。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+      <div class="card locked">
+        <span class="tag s3">机器人 · 运动学</span>
+        <h3>07 运动学</h3>
+        <p>正逆运动学、DH 参数、腿部关节解算：让脚落到你想要的每一个点。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--l4)"></span>阶段四 · 控制与智能</h3>
+    <p>从"不摔倒"到"会干活"：经典控制、强化学习仿真训练、感知与抓取。</p>
+    <div class="grid">
+      <div class="card locked">
+        <span class="tag s4">机器人 · 控制</span>
+        <h3>08 经典控制与步态</h3>
+        <p>PID/LQR、倒立摆、ZMP 平衡判据与步态规划：鸭子走路不摔的第一性原理。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+      <div class="card locked">
+        <span class="tag s4">AI · 强化学习</span>
+        <h3>09 强化学习与仿真训练</h3>
+        <p>Isaac Lab 里练出走路的策略、sim-to-real 迁移与域随机化：在虚拟世界摔一万次，现实一次不摔。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+      <div class="card locked">
+        <span class="tag s4">AI · 感知与VLA</span>
+        <h3>10 感知与 VLA</h3>
+        <p>视觉抓取、模仿学习、LeRobot 数据集：教鸭子用嘴叼起一只袜子。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--warn)"></span>阶段五 · 产品化与商业化</h3>
+    <p>从原型到商品：供应链、成本、品牌、社区与合规，这是"中国复刻"的决胜局。</p>
+    <div class="grid">
+      <div class="card locked">
+        <span class="tag s5">硬件 · 供应链</span>
+        <h3>11 国产供应链与 BOM</h3>
+        <p>模具、量产、品控与成本工程：把 399 美元的鸭子做出来，还能留下利润。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+      <div class="card locked">
+        <span class="tag s5">产品 · 增长</span>
+        <h3>12 产品化与冷启动</h3>
+        <p>萌系 ID 设计、开源社区运营、众筹节奏与 3C/SRRC 认证：让鸭子像 Microduck 一样卖爆。</p>
+        <span class="more">写作中 🔒</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    本系列各门课程均为独立单文件 HTML，含分层讲解、交互演示与小测验，进度保存在浏览器本地。每学完一章，本页对应卡片会自动更新进度。
+  </footer>
+</main>
+
+<script>
+(() => {
+  const KEY = 'microduck-series-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem(KEY, next);
+  });
+
+  // 各课程标题需与对应课程文件 <title> 完全一致，total 为章节数
+  const COURSES = [
+    { title: '认识 Microduck：399 美元的机器鸭 · 互动课程', total: 8 },
+    { title: '机器鸭机械结构与自由度 · 互动课程', total: 8 },
+    { title: '机器鸭舵机与执行器选型 · 互动课程', total: 8 },
+    { title: '机器鸭主控电路与电源 · 互动课程', total: 8 },
+  ];
+  document.querySelectorAll('.prog').forEach(el => {
+    const i = +el.dataset.file;
+    if (!(i >= 0 && i < COURSES.length)) return;
+    try {
+      const s = JSON.parse(localStorage.getItem('course:' + COURSES[i].title) || 'null');
+      const done = s && Array.isArray(s.done) ? s.done.length : 0;
+      if (done >= COURSES[i].total) { el.textContent = '已完成 ✓'; el.classList.add('full'); }
+      else el.textContent = done > 0 ? `已学 ${done}/${COURSES[i].total} 章` : '未开始';
+    } catch (e) { el.textContent = '未开始'; }
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭舵机与执行器选型 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭舵机与执行器选型</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="肌肉从哪里来">
+      <h2>肌肉从哪里来</h2>
+      <p class="tldr">舵机不是普通电机，而是「电机 + 减速齿轮组 + 位置传感器 + 控制电路」四合一的总成——自带司机和后视镜，指令发到哪就精确转到哪。</p>
+
+      <p>机器鸭全身 15 个关节的「肌肉」，主角就是本课的主角：<mark>舵机</mark>。很多人第一次拆开舵机都会惊讶：这么小的盒子里居然塞了一整套系统。普通电机只负责「通电就转」，你既不知道它转了多少度，也没法让它精确停在 37°；舵机则在电机外面套了三层装备，把「疯转」变成「指哪转哪」。</p>
+
+      <div class="analogy">把舵机想象成一个「自带司机和后视镜的电机」：电机是发动机，只会埋头猛转；减速齿轮组是把猛劲变实劲的变速箱；位置传感器是后视镜，随时报告「现在转到哪了」；控制电路是司机，盯着你的目的地指令和后视镜，自动打方向盘修偏误差。四件套合在一起，才叫舵机。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，拆解舵机的四大件</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">电机</div><div class="back">动力源。通常是直流电机或空心杯电机，转速高但力道小、角度不受控，是整只舵机的「心脏」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">减速齿轮组</div><div class="back">变速箱。多级齿轮把电机「快而虚」的转速换成「慢而实」的扭矩；塑料齿轮轻便宜但易磨损，金属齿轮耐用但贵且重。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">位置传感器</div><div class="back">后视镜。电位器或编码器实时测量输出轴的角度；没有它，闭环控制就无从谈起。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">控制电路</div><div class="back">司机。内置的小芯片比对「目标角度」与「当前角度」，差多少补多少，自动闭环——你只管发指令，它自己纠偏。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">拆开一只舵机，下列哪个部件「不在」里面？</p>
+        <button class="opt" data-fb="有的。齿轮组把电机快而虚的转速换成慢而实的扭矩，是舵机四大件之一。">减速齿轮组</button>
+        <button class="opt" data-fb="有的。位置传感器（电位器或编码器）实时报告输出轴角度，没有它闭环控制无从谈起。">位置传感器（电位器或编码器）</button>
+        <button class="opt" data-fb="对，舵机里没有化油器——那是燃油发动机的部件。舵机是电机、减速齿轮组、位置传感器、控制电路的四合一总成。">化油器</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">舵机 = 电机（动力）+ 齿轮组（变力）+ 传感器（反馈）+ 控制电路（闭环）。记住「自带司机和后视镜」这个比喻，后面讲选型时你会反复用到它。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="一根线控制一个关节的时代过去了">
+      <h2>一根线控制一个关节的时代过去了</h2>
+      <p class="tldr">PWM 模拟舵机一个关节一根信号线、只发不收；串行总线舵机菊花链串联、能读回状态、软件校准——关节一多，天平就倒向总线。</p>
+
+      <p>舵机怎么「听指挥」？老一代 <b>PWM 模拟舵机</b>靠脉冲宽度说话：主控为每只舵机单独拉一根信号线，用约 1~2 毫秒宽的脉冲告诉它目标角度。一只舵机一根线，五只还凑合，可 15 个关节就是 15 路信号线在机身里穿来穿去；而且主控只发不收——舵机转没转到、烫不烫、电压够不够，外面一概不知。</p>
+
+      <p>新一代 <b>串行总线舵机</b>改用串口指令帧：所有舵机首尾相连串成一条<mark>菊花链</mark>，每只有自己的 ID，主控在一条总线上「点名」发指令；位置、温度、电压、负载随时读回，中位与限位发个指令就能校准。</p>
+
+      <table>
+        <tr><th>对比项</th><th>PWM 模拟舵机</th><th>串行总线舵机</th></tr>
+        <tr><td>接线数量</td><td>每只 3 根线（电源两根 + 一路信号），15 只关节要 15 路信号线拉回主控</td><td>每只同样 3 根线（电源两根 + 总线），但总线可菊花链，主控只需一路串口贯通全身</td></tr>
+        <tr><td>能否菊花链</td><td>不能，一路信号只能驱动一只舵机</td><td>能，舵机串成一条链，各自靠 ID 认领指令</td></tr>
+        <tr><td>能否读回状态</td><td>不能，只发不收，转没转到、烫没烫都无从知道</td><td>能读回位置、温度、电压、负载等实时状态</td></tr>
+        <tr><td>校准方式</td><td>手动调电位器中位，或靠主控固件硬微调</td><td>发指令即可设置中位、角度限位、ID 等参数</td></tr>
+      </table>
+
+      <p>这也是为什么 Microduck 这类桌面双足产品，以及 LeRobot 开源生态中的 SO-ARM100 等开源机械臂，普遍采用串行总线舵机——关节一多，接线、诊断、校准三座大山全压到总线的优势侧。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">给 15 个关节的机器人选执行器，串行总线舵机相比 PWM 模拟舵机最直接的优势是？</p>
+        <button class="opt" data-fb="扭矩取决于电机与齿轮方案，跟通信方式无关——两种舵机都有大扭矩型号。">单只舵机的扭矩更大</button>
+        <button class="opt" data-fb="对。所有舵机菊花链挂一条总线、接线大幅精简，还能读回位置温度电压、软件校准中位——这正是双足与开源机械臂普遍采用总线舵机的原因。">菊花链挂一条总线即可，还能读回位置、温度、电压</button>
+        <button class="opt" data-fb="舵机永远需要供电，总线只是把控制线合并了，省不了电源线。">不需要供电也能工作</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">选总线舵机，本质是选「可运营的关节」：接线大幅精简、状态可读、参数可调——复刻 15 关节的机器鸭，这几乎是必选项。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="读懂参数表">
+      <h2>读懂参数表</h2>
+      <p class="tldr">规格书先盯五项：扭矩管力气、速度管快慢、分辨率管细腻、电压管口粮、堵转电流管极限；kg·cm 的直觉就是「几厘米力臂上挂几公斤」。</p>
+
+      <p>打开任何一家舵机的规格书，密密麻麻几十行参数，但选型第一步只需要盯住下面五个。</p>
+
+      <table>
+        <tr><th>参数</th><th>常用单位</th><th>它在说什么</th></tr>
+        <tr><td>扭矩</td><td>kg·cm</td><td>力气：能扛起多大的负载，选型的第一指标</td></tr>
+        <tr><td>速度</td><td>s/60°</td><td>快慢：转 60° 需要多久，数值越小越快（测试条件以规格书标注为准）</td></tr>
+        <tr><td>分辨率</td><td>度</td><td>细腻：最小能分辨的角度步进，决定动作丝不丝滑</td></tr>
+        <tr><td>工作电压</td><td>V</td><td>口粮：只有在额定电压范围内性能才有保证，扭矩与电压强相关</td></tr>
+        <tr><td>堵转电流</td><td>A</td><td>极限：输出轴被卡死时的电流，是供电与保护设计的重要依据</td></tr>
+      </table>
+
+      <p>扭矩单位 <b>kg·cm</b>（千克力·厘米）最需要建立直觉：<mark>1 kg·cm 表示在 1cm 的力臂上能吊起约 1kg 的重物</mark>。力臂翻倍，能吊的重量减半——所以标称 12 kg·cm 的舵机，在 4cm 力臂末端大约只能吊 3kg。力与力臂此消彼长，这就是杠杆。</p>
+
+      <div class="analogy">把它想成跷跷板：砝码挂在离支点 1cm 处，撬动它要 1 份力；挂到 4cm 处，同样的砝码就要 4 份力——力臂是扭矩需求的放大器。</div>
+
+      <div class="widget fill">
+        <p class="q">直觉换算：把 0.5kg 的重物挂在 4cm 长的力臂末端，所需扭矩 τ = <input data-answer="2|2kg·cm|2 kg·cm">（填数字或带单位均可）。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">某舵机参数标注「速度 0.1 s/60°」，它的含义是？</p>
+        <button class="opt" data-fb="对。这是角速度指标：转 60° 最快约需 0.1 秒，数值越小越快；具体测试条件以厂商规格书标注为准。">输出轴转 60° 最快约需 0.1 秒</button>
+        <button class="opt" data-fb="反了：是转 60° 用约 0.1 秒，折算约每秒 600°，不是每 0.1 秒才转 1°。">每 0.1 秒转 1°</button>
+        <button class="opt" data-fb="按这个速度估算，转满一圈 360° 约需 0.6 秒；0.1 秒对应的是 60° 行程。">0.1 秒内完成整圈 360°</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">五参数口诀：扭矩是力气、速度是脾气、分辨率是细腻、电压是口粮、堵转电流是底线。选型先算扭矩，再校另外四项。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="常见总线舵机一览">
+      <h2>常见总线舵机一览</h2>
+      <p class="tldr">国产的飞特（STS/SCS 系列）、幻尔是消费级复刻的常客，Robotis Dynamixel 是工业级标杆但价格高；一切确切参数以厂商规格书为准，本课档位仅作教学示例。</p>
+
+      <p>总线舵机市场如今是「国产主力 + 国外高端」的格局。国产阵营里，<b>飞特 Feetech</b> 的 STS、SCS 系列在开源双足与机械臂项目里出镜率很高；<b>幻尔 Hiwonder</b> 在桌面机械臂与教学套件里产品线齐全。国外阵营的 <b>Robotis Dynamixel</b> 是研究与工业级的标杆，一致性与功能都强，但价格高出一个量级，通常不进消费级产品的物料清单。</p>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，认识这几家常见厂商</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">飞特 Feetech</div><div class="back">国产总线舵机常客，STS、SCS 系列大量出现在开源双足与机械臂项目里，性价比高；确切参数以厂商规格书为准。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">幻尔 Hiwonder</div><div class="back">国产厂商，桌面机械臂与机器人教学套件的常见供应商，总线舵机产品线齐全；选型同样以规格书为准。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">Dynamixel</div><div class="back">Robotis 出品的研究与工业级总线舵机标杆，功能与一致性强，但价格高出一个量级，一般不进消费级 BOM。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">教学档位</div><div class="back">本课用约 1.3 / 4.8 / 12 / 19.5 / 30 kg·cm 五档常见规格做练习；它们是教学示例，不是某型号的精确承诺。</div></div></div>
+        </div>
+      </div>
+
+      <p>为了方便后面章节做计算练习，我们约定五个「教学档位」——注意它们只是常见的标称规格区间，<mark>同一型号在不同电压下扭矩不同，确切数值请以各厂商规格书为准</mark>。</p>
+
+      <table>
+        <tr><th>教学档位</th><th>标称扭矩</th><th>教学示例用途</th></tr>
+        <tr><td>轻载档</td><td>约 1.3 kg·cm</td><td>手指、鸭嘴夹爪等微动作关节</td></tr>
+        <tr><td>小载档</td><td>约 4.8 kg·cm</td><td>踝、腕等末端小关节</td></tr>
+        <tr><td>中载档</td><td>约 12 kg·cm</td><td>桌面双足髋、膝等主力关节</td></tr>
+        <tr><td>大载档</td><td>约 19.5 kg·cm</td><td>更大机身的腿部关节</td></tr>
+        <tr><td>重载档</td><td>约 30 kg·cm</td><td>大型双足或机械臂基座关节</td></tr>
+      </table>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">选型时想确认某型号舵机确切的堵转扭矩，最可靠的做法是？</p>
+        <button class="opt" data-fb="网页标题常省略测试电压与条件；同一型号在不同电压下扭矩并不相同，直接采用容易埋雷。">直接按商家网页标题的数字设计</button>
+        <button class="opt" data-fb="经验值只能做初筛，不能替代规格书——不同厂商的标称条件可能完全不同。">按同类产品的经验值套用</button>
+        <button class="opt" data-fb="对。扭矩与测试电压强相关，务必查厂商规格书、确认测试条件后再定档；本课的档位数字只是教学示例。">查厂商规格书，确认测试电压与条件后再定档</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">品牌决定生态与预算，档位决定设计下限：先用档位做粗算，再用规格书收口——这是选型的两步走。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="扭矩计算：单脚站立有多吃力">
+      <h2>扭矩计算：单脚站立有多吃力</h2>
+      <p class="tldr">单脚站立是双足的扭矩噩梦：τ = m·g·d，重心偏得越远越吃力；算完还要乘安全系数——0.8kg 的鸭子重心偏 3cm，就得按约 7.2 kg·cm 去选 12 kg·cm 档。</p>
+
+      <p>双足机器人最恶劣的静态工况，是<mark>单脚支撑且重心偏离支撑脚</mark>：此时全身重量通过重心对支撑点形成力矩，全部由支撑腿的关节扛住。静态力学只需要两条公式：$F = m \cdot g$（重力 = 质量 × 重力加速度），$\tau = F \cdot d$（力矩 = 力 × 力臂），合起来就是 $\tau = m \cdot g \cdot d$。</p>
+
+      <p>工程单位下有个方便的换算：1kg 的物体受到的重力约为 1kgf，所以质量（kg）乘以力臂（cm）就直接得到 kg·cm。走查一遍算例：<b>0.8kg 的鸭子、重心侧向偏移 3cm</b>，静态需求扭矩约 0.8 × 3 = 2.4 kg·cm；再乘<b>安全系数 3</b>（留给动态冲击、模型误差与老化的余量），约 7.2 kg·cm——小载档（4.8）不够，应选中载档（12）才稳。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">单脚站立扭矩计算器：需求条能不能被档位条盖住</div>
+        <canvas width="800" height="210"></canvas>
+        <div class="controls">
+          <label>整机质量 m（kg） <span class="val" data-for="m"></span><input type="range" name="m" min="0.5" max="3" step="0.1" value="0.8"></label>
+          <label>重心侧向偏移 d（cm） <span class="val" data-for="d"></span><input type="range" name="d" min="0" max="8" step="0.5" value="3"></label>
+          <label>安全系数 SF <span class="val" data-for="sf"></span><input type="range" name="sf" min="1" max="5" step="0.5" value="3"></label>
+          <label>舵机档位 <span class="val" data-for="idx"></span><input type="range" name="idx" min="0" max="4" step="1" value="2"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>拖动上面的滑块复现这个算例；再把安全系数拉到 5、或把重心偏移拉大，观察需求条如何吃掉档位的余量。注意这仍只是静态下限：起跳、落地瞬间的冲击扭矩远大于静态值——这正是安全系数存在的意义。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">0.8kg 的鸭子单脚站立、重心偏离支撑脚 3cm，静态需求扭矩约为多少（不含安全系数）？</p>
+        <button class="opt" data-fb="小数点错位了：力臂是 3cm 而不是 0.3cm，直接相乘得 2.4。">约 0.24 kg·cm</button>
+        <button class="opt" data-fb="对。按 τ = m·g·d 折算成工程单位就是 0.8 × 3 ≈ 2.4 kg·cm；乘安全系数 3 约 7.2 kg·cm，应选 12 kg·cm 档。">约 2.4 kg·cm</button>
+        <button class="opt" data-fb="多乘了 10 倍。注意单位统一用厘米，别在米和厘米之间混用。">约 24 kg·cm</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">选型公式一句话：静态需求 = m × d，再乘安全系数 2~5（按场景取），最后向上取标准档位。但也别一味求大——更重的舵机自身又会增加质量与扭矩需求，这是第 02 课讲过的循环。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="发热、堵转与占空比">
+      <h2>发热、堵转与占空比</h2>
+      <p class="tldr">保持姿势不等于休息：位置环仍在持续出力；被卡死仍通电的堵转是几秒级的烧毁工况；发热要降额、动作要留占空比。</p>
+
+      <p>很多人以为舵机「不动就是歇着」——恰恰相反。让它保持一个蹲姿时，控制电路的位置环发现角度被重力压偏，就命令电机持续出力顶回去：<mark>电流一直在流，热量一直在积</mark>。所以规格书的扭矩是「短时峰值能力」，不是「长期保持的许用值」——需要长时间维持的静力要做降额（教学上常按额定的一部分取用，具体以厂商文档为准）。</p>
+
+      <div class="warn">「舵机没动 = 没在工作 = 不发热」是最危险的想当然。对抗重力的静力维持，正是发热的主力之一；摸一下保持姿势几分钟的舵机，它往往是全身最烫的。</div>
+
+      <p>更危险的是<b>堵转</b>：输出轴被卡死（比如关节卡进结构缝隙、动作幅度设超了机械限位）仍继续通电，电机被迫输出最大扭矩，电流飙到规格表里最大的堵转电流档，热量几秒内就能积聚到损坏级——绕组、驱动管甚至塑料齿轮都可能报废。调试新动作时，听到异响、看到抖动、摸到发烫，第一反应应该是断电排查。</p>
+
+      <details class="reveal">
+        <summary>展开：什么是占空比，它怎么救舵机一命</summary>
+        <p>占空比指「高负载出力时间」占总时间的比例。就像间歇冲刺：跑 10 秒歇 20 秒能坚持很久，一直冲刺很快就虚脱。给舵机编排动作时，让高负载动作与低负载动作交替、或插入放松时段，就是在给它开「散热窗口」。连续满载时间越长，选型降额就要越狠。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">让舵机保持一个蹲姿几分钟，下列说法正确的是？</p>
+        <button class="opt" data-fb="对。保持姿势时位置环仍在持续出力纠偏，静力维持同样积累热量，必须考虑降额与占空比。">舵机并非在休息：位置环持续出力，长时间保持要考虑发热降额</button>
+        <button class="opt" data-fb="恰恰相反：为了对抗重力它一直在输出扭矩，电流持续流过电机与驱动电路，热量持续积累。">只要没动就是在休息，不会发热</button>
+        <button class="opt" data-fb="堵转电流只是上限：持续接近上限的静力同样会让温度一路爬升，最终触发过热损坏。">只要不超过堵转电流就绝对不会坏</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">额定扭矩是短跑上限，长期保持要降额，堵转是几秒级的红线——发热管理要在选型时就算进去，而不是烧了一只舵机再后悔。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="供电与总线压降">
+      <h2>供电与总线压降</h2>
+      <p class="tldr">15 只舵机菊花链挂一条总线，剧烈动作的瞬间大电流把远端电压拉垮——掉线、踉跄、摔倒一条龙；对策是星型供电与多电源注入点。</p>
+
+      <p>串行总线省下的是信号线，省不掉的是功率线：15 只舵机的电，都得从同一个电源出发。菊花链结构里，功率沿总线一站一站传下去，每段线材和接插件都有阻抗；平时没问题，可一旦多只关节同时爆发发力，瞬间电流成倍上涨，<mark>链条远端的电压就被拉垮了</mark>。</p>
+
+      <div class="widget">
+        <div class="widget-title">分步点播：一次剧烈动作引发的连锁反应</div>
+        <div class="steps">
+          <div class="step"><b>平静起步</b> —— 15 只总线舵机菊花链挂在一条串行总线上，功率也沿着这条链一站站传下去。</div>
+          <div class="step"><b>剧烈动作</b> —— 起跳或爬起的瞬间，多条腿的关节同时发力，总线电流成倍上涨。</div>
+          <div class="step"><b>电压跌落</b> —— 大电流流过长供电路径，链路阻抗把远端的电压拉低。</div>
+          <div class="step"><b>舵机掉线</b> —— 远端舵机电压跌破工作下限，欠压复位、从总线上失联。</div>
+          <div class="step"><b>动作踉跄</b> —— 失联的关节瞬间失去支撑力，动作开始变形、身体开始晃。</div>
+          <div class="step"><b>全身摔倒</b> —— 一个关节失联引发连锁失衡，整只鸭子摔给你看。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <p>对策思路是把「大电流走远路」改成「大电流走近路」：<b>星型供电</b>让功率线从电源直接放射到各关节组；<b>多电源注入点</b>在链条中段再并一路电；再加<mark>缩短大电流路径、加粗线径、在舵机附近加大电容</mark>做本地「水库」。桌面双足常用标称 7.4V 的 2S 锂电供电——完整的电源设计与保护电路，正是下一课的主角。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">多只总线舵机菊花链供电，剧烈动作时远端舵机掉线的根本原因是？</p>
+        <button class="opt" data-fb="线长会带来一些信号延迟，但那不是掉线主因；掉线多是欠压复位导致的通信中断。">总线数据线太长，信号延迟变大</button>
+        <button class="opt" data-fb="ID 冲突在配置阶段就会暴露并持续存在，不会只在剧烈动作时才发作。">舵机 ID 配置冲突</button>
+        <button class="opt" data-fb="对。大电流在供电链阻抗上产生压降，远端电压跌破工作下限导致舵机复位失联；对策是星型供电、多注入点、缩短大电流路径。">大电流压降使远端电压跌破下限，舵机复位失联</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">总线掉线十有八九不是通信问题，而是供电问题：先查压降，再查协议。星型供电 + 多注入点 + 粗线 + 大电容，是桌面双足的保命四件套。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道综合题检验选型功力：总线对比 PWM、扭矩算例、堵转红线；过关后进入第 04 课，为这只鸭子设计心脏与血管。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">综合：桌面双足与 LeRobot 开源机械臂生态普遍选串行总线舵机，核心理由是？</p>
+        <button class="opt" data-fb="总线舵机单价通常更高；选它图的是接线、诊断与校准，不是省钱。">因为它比 PWM 舵机更便宜</button>
+        <button class="opt" data-fb="对。菊花链接线简单、状态可读、参数软件校准——十几个关节的系统里，这些优势是压倒性的。">接线可菊花链、能读回状态、参数可软件校准，适合多关节系统</button>
+        <button class="opt" data-fb="分辨率取决于编码器与齿轮方案，两种舵机都有高分辨率产品，这不是分界线。">因为它的分辨率天然更高</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">综合：1kg 的机器鸭单脚站立、重心偏离支撑脚 4cm，取安全系数 3，所选舵机额定扭矩至少约多少？</p>
+        <button class="opt" data-fb="对。静态需求 1 × 4 = 4 kg·cm，乘安全系数 3 得 12 kg·cm——恰好对上常见的中载档位。">约 12 kg·cm</button>
+        <button class="opt" data-fb="少乘了安全系数：4 kg·cm 只是静态需求，选型还要再乘 SF。">约 4 kg·cm</button>
+        <button class="opt" data-fb="数量级差了 10 倍：检查一下力臂单位是厘米，4cm 不是 0.4cm。">约 1.2 kg·cm</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">综合：调试时舵机被卡住仍持续通电，最危险的后果是？</p>
+        <button class="opt" data-fb="远不止动作做不出来：堵转是电流与热量的最恶劣工况，伤的是硬件本身。">只是那个动作做不出来</button>
+        <button class="opt" data-fb="读数不准是小事；堵转电流数倍于正常工作电流，热量几秒内就能积到损坏级。">位置读数暂时不准</button>
+        <button class="opt" data-fb="对。堵转时电流飙到规格表最大档，几秒内就可能烧毁绕组、驱动电路甚至齿轮——异响、抖动、发烫要立即断电。">电流飙到堵转电流，几秒内可能烧毁电机或驱动电路</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">下一步：舵机选好了，怎么喂电、怎么防压降、主控怎么连？进入 <a href="microduck-04-electronics.html">第 04 课：主控电路与电源</a>。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 定制演示：单脚站立扭矩计算器 ================= */
+demo('#demo1', ({ m, d, sf, idx }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted'), cLine = css.getPropertyValue('--border');
+  const tiers = [1.3, 4.8, 12, 19.5, 30];
+  const need = m * d * sf;          // 需求扭矩（含安全系数），kg·cm
+  const rated = tiers[idx];         // 所选档位额定扭矩
+  const pass = rated >= need;
+  const marginV = rated - need;
+  const padL = 190, padR = 84, padT = 40, barH = 30, gap = 58;
+  const maxV = Math.max(32, need, rated) * 1.1;
+  const xOf = v => padL + v / maxV * (W - padL - padR);
+  // 刻度网格
+  ctx.font = '12px sans-serif';
+  for (let v = 0; v <= 30; v += 5) {
+    if (v > maxV) break;
+    ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xOf(v), padT - 16); ctx.lineTo(xOf(v), padT + gap + barH + 12); ctx.stroke();
+    ctx.fillStyle = cMut; ctx.textAlign = 'center'; ctx.fillText(String(v), xOf(v), padT + gap + barH + 28);
+  }
+  ctx.fillStyle = cMut; ctx.textAlign = 'left'; ctx.fillText('单位：kg·cm', padL, padT - 22);
+  // 两根水平条
+  const bar = (y, val, color, label) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(padL, y, Math.max(2, xOf(val) - padL), barH);
+    ctx.fillStyle = cTxt; ctx.font = '13px sans-serif';
+    ctx.textAlign = 'right'; ctx.fillText(label, padL - 10, y + barH / 2 + 5);
+    ctx.textAlign = 'left'; ctx.fillText(val.toFixed(1) + ' kg·cm', Math.min(xOf(val) + 8, W - padR), y + barH / 2 + 5);
+  };
+  bar(padT, need, '#f59e0b', '需求扭矩（含安全系数）');
+  bar(padT + gap, rated, pass ? '#16a34a' : '#dc2626', '所选档位额定扭矩');
+  // 档位显示与结论
+  const vEl = root.querySelector('.val[data-for="idx"]');
+  if (vEl) vEl.textContent = tiers[idx] + '（档 ' + (idx + 1) + '/5）';
+  const ro = root.querySelector('.readout');
+  if (pass) ro.textContent = `✅ 通过：额定 ${rated} kg·cm ≥ 需求 ${need.toFixed(1)} kg·cm，富余 ${marginV.toFixed(1)} kg·cm。`;
+  else ro.textContent = `❌ 不够：额定 ${rated} kg·cm < 需求 ${need.toFixed(1)} kg·cm，还差 ${(-marginV).toFixed(1)} kg·cm，换大一档试试。`;
+});
+</script>
+</body>
+</html>

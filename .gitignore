@@ -1,0 +1,3 @@
+# 本地临时/截图目录，不入库也不部署
+.screenshots/
+.trae-html-share-packages/

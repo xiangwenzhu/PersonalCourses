@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭机械结构与自由度 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* dof list */
+.doflist{display:grid;gap:6px;margin:12px 0 4px}
+.dofrow{padding:7px 12px;border-radius:8px;font-size:14px}
+.dofrow.yes{background:var(--ok-soft);color:var(--ok)}
+.dofrow.no{background:var(--bad-soft);color:var(--bad);opacity:.72}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭机械结构与自由度</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="为什么 25 厘米里塞 15 个电机这么难">
+      <h2>为什么 25 厘米里塞 15 个电机这么难</h2>
+      <p class="tldr">25 厘米、约 800 克、15 个电机——三个数字互相挤压：空间装不下、重量抬不动、走线缠住关节。机械设计的第一课，是学会在毫米和克上「抢预算」。</p>
+
+      <p>第 01 课我们数过这只鸭子的「器官」：15 个电机、摄像头、ToF 激光雷达、双 IMU、电池，外加一只鸭嘴夹爪。现在把这张清单变成一道工程题：<mark>它们必须全部塞进 25 厘米高、约 800 克重的身体里</mark>，还得让每个关节都转得开。</p>
+
+      <p>难在哪？<b>空间</b>：每个电机、每块电路板都要占据毫米级的位置，关节内部还要留出转动的余量，塞太满就是卡死。<b>重量</b>：每 1 克都要靠腿抬起来，配重偏高一分，平衡难度就涨一分。<b>走线</b>：15 个电机意味着十几组线缆要从躯干穿进四肢，穿关节的线还要留弯曲余量——线一多，就会绊关节、磨破皮，甚至被自己绞断。</p>
+
+      <div class="analogy">这就像在行李箱里搭一个会跑的乐高小人：行李箱有尺寸上限（空间），小人带的每件装备都得自己掂量分量（重量预算），而且所有装备的电线必须收拾整齐——关节一转就像关一次行李箱，线没理好就夹住。新手最容易低估的，恰恰是「理线」这件事。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：三本必须记的账</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">空间约束</div><div class="back">机身每一点体积都要精打细算：电机本体、减速箱、线缆接头、结构壁厚，还要给转动留余隙。小型机器人的设计常常是「从毫米里抠空间」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">重量预算</div><div class="back">整机约 800 克是硬门槛：电机越重腿越抬不动，重心越高越容易倒。每个零件进场前都要回答「你值几克」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">走线</div><div class="back">十几组电机线、传感器线要穿过会转动的关节。不留弯曲余量就会绷断，捆扎不对称还会改变重心——走线是机械与电路的交界难题。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">把 15 个电机、结构、电池塞进 25 厘米的机身，最根本的难点是？</p>
+        <button class="opt" data-fb="力倒不是第一矛盾——空间塞不下、重量超预算时，再大的力也发挥不出来。">电机不够力</button>
+        <button class="opt" data-fb="对。空间、重量、走线三本账同时告急，而且互相牵制：为省空间用细线，可靠性就掉；为减重把电池垫高，平衡就难。每一毫米、每一克、每一根线都要靠抢。">空间、重量、走线三个预算同时告急</button>
+        <button class="opt" data-fb="外观是最后一步。内部三难不解决，再可爱的壳也只是摆设。">外壳不够可爱</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住三本账：<b>空间账（毫米）、重量账（克）、走线账（根）</b>。本课后面每一个设计决策，都在这三本账上花钱。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="关节：机器人的骨头与肌肉">
+      <h2>关节：机器人的骨头与肌肉</h2>
+      <p class="tldr">机器人没有骨头和肌肉，但有刚性的连杆（骨头）和电机驱动的转动关节（肌肉加关节窝）；认识「1 个转动关节 = 1 个自由度」，就认识了电机数量的算法。</p>
+
+      <p>机器人身体的基本词汇只有两个：<b>连杆</b>——不会变形的硬杆件，相当于骨头；<b>关节</b>——连接两根连杆、允许相对运动的部分，相当于关节窝加肌肉。最常见的是<b>转动关节</b>（也叫铰链、转动副）：像门的合页，只允许两根连杆绕同一根轴相对旋转。</p>
+
+      <p>对照你自己：髋连接躯干与大腿，膝连接大腿与小腿，踝连接小腿与脚掌。鸭子的腿也是同款三段式——造型是鸭子，骨架逻辑和人腿同源。给每个转动关节配一个电机，它就成了一根「会自己转的骨头」。</p>
+
+      <div class="analogy">门合页无论门板多重，只让它绕竖直轴转一个角度——这就是转动关节的全部。给它配一个电机，你就得到「1 个自由度的关节」；想要更多方向的转动，只能再叠合页、再添电机，没有捷径。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：腿上的三大关节</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">髋</div><div class="back">躯干与大腿的连接。人腿的髋是球窝结构，能朝 3 个方向转动，是全身最忙的关节群——抬腿、侧摆、转身都靠它。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">膝</div><div class="back">大腿与小腿之间。人膝只有 1 个转动方向（前后弯），蹲下、起立、蹬地全靠它，是典型的「少而关键」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">踝</div><div class="back">小腿与脚掌之间。负责把脚掌放平、微调重心投影的位置，走路时还是离地最近的「减震器」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">转动关节</div><div class="back">只允许绕一根轴相对旋转的连接。1 个转动关节 = 1 个自由度，通常对应 1 个电机——这笔账下一章展开。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">关于转动关节，下面哪个说法是对的？</p>
+        <button class="opt" data-fb="对。铰链式的转动只有 1 个自由度，要几个自由度就要几个电机——这是估算电机数量的地基。">一个转动关节让两根连杆绕同一根轴相对转动，提供 1 个自由度</button>
+        <button class="opt" data-fb="让脚在空间里「随便动」需要 3 个自由度；单个转动关节只能绕一根轴转。">一个转动关节能让脚在空间里随意动</button>
+        <button class="opt" data-fb="恰恰相反：关节越多、电机越多、整机越重，单个电机的负担往往不降反升。">关节越多，每个关节越省力</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">连杆是骨头、电机是肌肉、转动关节是关节窝——<b>1 关节 = 1 电机 = 1 自由度</b>，这台账后面会反复用到。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="自由度 DOF：描述一个姿势需要几个数">
+      <h2>自由度 DOF：描述一个姿势需要几个数</h2>
+      <p class="tldr">自由度 = 完全描述一个姿势所需的独立数字个数。空间中的刚体有 6 个自由度；每个转动关节贡献 1 个。自由度越多越灵活，但也越重、越贵、越难控制。</p>
+
+      <p>先看一个悬空的例子：一架直升机悬停在空中，要完整说清它的状态需要几个数？上下、左右、前后 3 个平动，加上俯仰、横滚、偏航 3 个转动——<mark>共 6 个，一个都不能少</mark>。这就是空间中自由刚体的 6 个自由度（Degree of Freedom，简称 DOF），是刚体的上限。</p>
+
+      <p>机器人不必为每个部位都堆到 6：每一个转动关节只提供 1 个自由度，任务决定配置。那问题来了——走路到底需要几个自由度？拖动下面的滑块，给每条腿配上不同数量的关节电机，看这只鸭子能解锁什么动作。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">自由度配餐器：每条腿给几个关节电机？</div>
+        <div class="controls">
+          <label>每条腿的自由度 n <span class="val" data-for="n"></span><input type="range" name="n" min="1" max="6" step="1" value="5"></label>
+        </div>
+        <div class="doflist"></div>
+        <p class="readout"></p>
+      </div>
+
+      <p>这份「动作解锁表」是教学化的简化（真实控制远比条件判断复杂），电机估算公式<b>全身 = 2n + 喙 1 + 头 2</b> 也是教学口径——<mark>Microduck 官方并未公开 15 个电机的具体分配</mark>。但它揭示的权衡是真的：自由度每加 1，就多一台电机的重量、成本、走线与控制复杂度。</p>
+
+      <div class="warn">自由度不是越多越好。工程的目标不是「最灵活」，而是在够用与轻便宜之间找平衡点——这正是下一章每腿 5 自由度方案的由来。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">空间中一个可以自由运动的刚体（比如悬空的机身），要用几个数才能完全描述它的位置和姿势？</p>
+        <button class="opt" data-fb="这只说清了「在哪」（3 个平动），还没说「朝哪」——姿势还差 3 个转动。">3 个：上下、左右、前后</button>
+        <button class="opt" data-fb="对。3 个平动定位置、3 个转动定姿势，共 6 个自由度，这是空间刚体的上限。">6 个：3 个平动加 3 个转动</button>
+        <button class="opt" data-fb="15 是 Microduck 的电机总数，和刚体自由度是两码事：电机数是实现手段，自由度是运动描述的维度。">15 个：一台电机对应一个自由度</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">6 是刚体自由度的上限；关节一个一个往上加，动作一个一个解锁——配餐的艺术在于<b>刚好够用</b>。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="双足的典型布局：每腿 5 自由度方案">
+      <h2>双足的典型布局：每腿 5 自由度方案</h2>
+      <p class="tldr">人腿 7 自由度：髋 3 + 膝 1 + 踝 3。桌面小型双足普遍砍到每腿 5：髋 3 + 膝 1 + 踝 1（俯仰）。Microduck 官方未公开电机分配，本课按业内典型方案做教学推测。</p>
+
+      <p>先看人腿这份「满配」：髋关节是球窝结构，能朝 3 个方向转——前后摆（俯仰）、左右摆（横滚）、内外旋（偏航）；膝关节只有前后弯 1 个；踝关节又有 3 个。<mark>一条腿 3 + 1 + 3 = 7 个自由度</mark>，所以人能走、能跑、能蹲、能盘腿，花样百出。</p>
+
+      <p>25 厘米的桌面机器人学不来这份奢侈：踝部塞 3 个电机，空间、重量、成本三本账全爆。业内的典型折中（教学推测）是<b>每腿 5 自由度：髋保留全部 3 个方向，膝 1 个俯仰，踝只留 1 个俯仰</b>。道理在于：走路主要发生在前后平面里，侧向平衡与转向集中交给髋部的横滚和偏航就够了。</p>
+
+      <table>
+        <tr><th>关节</th><th>人腿自由度</th><th>桌面双足典型（教学推测）</th><th>主要职责</th></tr>
+        <tr><td>髋</td><td>3（俯仰 / 横滚 / 偏航）</td><td>3（全保留）</td><td>抬腿迈步、侧移重心、转向</td></tr>
+        <tr><td>膝</td><td>1（俯仰）</td><td>1（俯仰）</td><td>蹲伸、蹬地发力</td></tr>
+        <tr><td>踝</td><td>3</td><td>1（俯仰）</td><td>放平脚掌、蹬地微调</td></tr>
+        <tr><td>合计</td><td>7</td><td>5</td><td>——</td></tr>
+      </table>
+
+      <p>按这个方案算总账：两条腿 10 个，鸭嘴夹爪 1 个、头部 2 个，共 13 个；与整机 15 个电机相比还剩 2 个——<mark>官方未公开完整分配</mark>，社区有不同猜测（腰部、颈部冗余等），本系列一律按教学口径推进：先建立方法，而非背数字。</p>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：每腿 5 个自由度都花在哪了</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">髋俯仰</div><div class="back">大腿前后摆动——迈步的主引擎，走路中使用频率最高的关节之一。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">髋横滚</div><div class="back">大腿朝身体外侧、内侧摆——把重心从一只脚挪到另一只脚的关键，侧向平衡全靠它。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">髋偏航</div><div class="back">整条腿绕竖直轴内外旋——转向的执行者，转个身就是两只脚轮流偏航。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">膝俯仰</div><div class="back">小腿折叠与伸直——蹲下、起立、跨障碍、落地缓冲的核心。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">踝俯仰</div><div class="back">脚尖上勾与下踩——蹬地离地的最后一下、重心前后微调的第一道保险。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">每腿 5 自由度的桌面双足方案里，踝关节通常只保留哪一个转动？</p>
+        <button class="opt" data-fb="桌面小机器人为省电机一般不做踝横滚，侧向平衡交给髋横滚完成。">横滚：脚掌左右翻</button>
+        <button class="opt" data-fb="对。踝俯仰是蹬地与重心前后微调的关键；省下的 2 个自由度换来更轻的腿梢和更低的成本——这正是「每腿 5」方案的精髓。">俯仰：脚尖上勾下踩</button>
+        <button class="opt" data-fb="人脚确实能拧，但桌面方案一般把偏航上移给髋部，脚踝只留俯仰。">偏航：脚掌左右拧</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">每腿 5 = 髋 3 + 膝 1 + 踝 1：把灵活性集中在髋、把重量从腿梢减下来——桌面双足的经典折中（教学推测口径，官方未公开）。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="正运动学初体验：关节角一转，脚去了哪里">
+      <h2>正运动学初体验：关节角一转，脚去了哪里</h2>
+      <p class="tldr">正运动学回答一个问题：每个关节转到什么角度，脚端在哪里。对两连杆腿，答案只要两行三角函数。</p>
+
+      <p>设大腿长 $L_1$、小腿长 $L_2$，髋角 $\theta_1$ 与膝角 $\theta_2$ 都<b>从竖直向下方向量起</b>（$\theta_2$ 是膝关节的相对转角）。把两段连杆看成首尾相接的两支矢量，各自往水平、竖直方向投影再相加：</p>
+      <div style="text-align:center;margin:10px 0">
+        $$x = L_1\sin\theta_1 + L_2\sin(\theta_1+\theta_2)$$
+        $$y = L_1\cos\theta_1 + L_2\cos(\theta_1+\theta_2)$$
+      </div>
+      <p>直觉：大腿先把脚「甩」向一边，小腿在膝角的基础上再甩一次；两段全拉直（两个角都为 0）时脚最低、离髋最远；膝盖一弯，脚就抬起来收回去。</p>
+
+      <div class="widget demo" id="demo2">
+        <div class="widget-title">两连杆腿模拟器：拖动关节角，看脚端坐标</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls">
+          <label>髋角 θ1（度，从竖直向下量） <span class="val" data-for="t1"></span><input type="range" name="t1" min="-60" max="60" step="1" value="0"></label>
+          <label>膝角 θ2（度，负值 = 向后弯） <span class="val" data-for="t2"></span><input type="range" name="t2" min="-120" max="0" step="1" value="0"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>演示里每段 90px，对应教学尺寸约每段 5 厘米（与 Microduck 量级相当，非官方数据）。图中的绿色虚线弧是脚端的「势力范围」：半径 $L_1+L_2$ 的圆弧下沿。顺带埋个种子：反过来的问题——「我想让脚踩到某个点，关节该转多少度」叫<b>逆运动学</b>，走路控制的底层几乎天天在解它。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">两连杆腿的关节都能自由转动时，脚端离髋的最远距离是多少？</p>
+        <button class="opt" data-fb="两段连杆可以拉成一条直线，短的那段不会闲着。">较长那段的长度</button>
+        <button class="opt" data-fb="对。两个关节角都为 0 时两段竖直拉直，脚到髋的距离达到上限 L1+L2——这也决定了它单步最多能跨多大。">L1 + L2，两段完全伸直</button>
+        <button class="opt" data-fb="那是两段互相垂直时的直线距离（斜边），不是最远情形；拉直时更长。">两段拼成直角三角形时的斜边长</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">正运动学：关节角 → 脚端位置，两行三角函数搞定；它的镜像问题逆运动学，是走路控制算法的日常口粮。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="站得稳的秘密：重心与支撑面">
+      <h2>站得稳的秘密：重心与支撑面</h2>
+      <p class="tldr">静态平衡的判据只有一句话：重心的铅垂投影落在支撑面内。支撑面就是脚底（或双脚）围成的多边形——一根铅垂线决定站与倒。</p>
+
+      <p>把鸭子看成一块整体，它主要受两个力：重力（过重心竖直向下）和地面支持力（过脚底向上）。<b>支撑多边形</b>指双脚站立时两脚掌覆盖的区域，单脚时就是一只脚的底面。静态稳定的判据极简：<mark>重心向地面作的铅垂投影落在支撑多边形内，就站得住；一出界，重力矩就开始把鸭子往出界的方向转，直到摔倒</mark>。</p>
+
+      <p>这对布局设计是直接的指令：<b>电池</b>往往是整机最重的单一部件，把它放低、放在支撑面正上方附近，比什么都管用；<b>走线与零件</b>尽量左右对称布置，别让重心天然偏一侧；头部尽量做轻（摄像头、小舵机），别让「大脑袋」把铅垂线拽出脚尖。</p>
+
+      <div class="analogy">像叠石头：歪歪扭扭的石头能立住，靠的是整体重心的铅垂线落在最底部接触范围内；出界就哗啦倒下。鸭子低头、身体前倾、电池挪位，本质上都在挪这根铅垂线。</div>
+
+      <div class="widget demo" id="demo3">
+        <div class="widget-title">侧视稳定性实验：前倾与电池位置如何挪动铅垂线</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>身体前倾角（度，正 = 向前倾） <span class="val" data-for="tilt"></span><input type="range" name="tilt" min="-30" max="30" step="1" value="0"></label>
+          <label>电池前后位置（px，正 = 靠前） <span class="val" data-for="batt"></span><input type="range" name="batt" min="-20" max="20" step="1" value="0"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>演示采用教学化的简化模型：重心水平偏移 ≈ 脚踝上方高度 × sin(前倾角) + 电池水平偏移，再与脚底支撑半宽（约 28px）比较。真实机器人还会弯腰、摆臂、迈步来抢救——那已是<b>动态平衡</b>的领域：走路本质是「受控的失稳」，主动把重心移出支撑面，再用下一步接住。这也解释了第 01 课为什么说感知—决策—执行循环的速度是生死线。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">静态平衡判据说：鸭子站得稳，当且仅当——</p>
+        <button class="opt" data-fb="双脚贴地只是表象；单脚站立也可以很稳，关键看重心投影落在哪。">两只脚掌都完全贴地</button>
+        <button class="opt" data-fb="重心低确实更有利，但它不是判据本身：重心再低，投影一出支撑面照样倒。">重心越低越好，低到一定程度就绝对不会倒</button>
+        <button class="opt" data-fb="对。投影在支撑面内，重力与地面支持力就能平衡；一旦越出边界，重力矩会把鸭子转倒——演示里越出 ±28px 的瞬间就是失稳点。">重心的铅垂投影落在支撑面（脚底多边形）内部</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一根铅垂线定生死：重心投影在支撑面内就稳、出界就倒。<b>电池下置、布局对称</b>，就是给这根线买保险。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="结构工艺：3D 打印、间隙与刚度">
+      <h2>结构工艺：3D 打印、间隙与刚度</h2>
+      <p class="tldr">3D 打印让个人也能造结构件，但材料要分场景选；齿隙、轴系间隙、走线槽，是「打得出来」与「用得顺手」之间的三道坎。</p>
+
+      <p>复刻阶段最现实的工艺是 FDM 3D 打印：改一版设计，隔天就能拿到新零件。但三种常见材料的选择，直接决定结构件的命运（下表数值为量级参考，不同牌号差异较大）：</p>
+
+      <table>
+        <tr><th>材料</th><th>强度与刚性</th><th>耐温</th><th>成本量级（人民币）</th><th>适合场景</th></tr>
+        <tr><td>PLA</td><td>中等，偏脆</td><td>约 60°C 起变形</td><td>每公斤几十元</td><td>打样验证、装饰件</td></tr>
+        <tr><td>PETG</td><td>中上，韧性好</td><td>约 80°C 上下</td><td>每公斤百元上下</td><td>过渡件、外壳</td></tr>
+        <tr><td>PA-CF（尼龙碳纤维）</td><td>高，刚性好</td><td>约 150°C 上下</td><td>每公斤数百元，需高温机型</td><td>承力主件、正式件</td></tr>
+      </table>
+
+      <p>第二道坎是<b>齿隙（backlash）</b>：减速齿轮之间必然存在间隙，电机换向时要先空转「吃掉」这段空程才真正传力，外在表现就是动作抖动、定位来回过冲。这是小型舵机机器人的经典顽疾，对策包括选用行星减速或谐波结构的执行器、软件上做间隙补偿——第 03 课展开。</p>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：工艺三道坎</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">齿隙</div><div class="back">齿轮啮合面的空程。换向瞬间先空转后发力，控制上表现为抖动与过冲；间隙越大，平衡越难调。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">轴系与轴承</div><div class="back">转轴要靠轴承对中固定。轴一晃，关节就「旷」，自由度布置再标准也白搭；小型机器人常用微型滚珠轴承。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">走线槽</div><div class="back">在结构件里预留的线缆通道。穿过关节的部分要留弯曲半径，绝不能绷直——好结构是每一根线都有家。</div></div></div>
+        </div>
+      </div>
+
+      <p>还记得第 1 章的走线账吗？走线槽就是它的解法：设计结构时就把每根线的路径画出来，而不是装到一半才发现线没地方走。刚度同理——打印方向、壁厚、加强筋都会影响腿部件抗冲击的能力，打样阶段就要想清楚「哪一面受力」。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">复刻打样第一阶段：要快速反复验证结构形状、坏了就重打，选哪种材料最合适？</p>
+        <button class="opt" data-fb="性能最好，但每公斤数百元还要高温打印设备，打样阶段用它属于高射炮打蚊子。">PA-CF 尼龙碳纤维</button>
+        <button class="opt" data-fb="对。PLA 便宜、易打印、成型精度好；虽不耐温不抗摔，但打样要的是快和便宜，验证通过后再换 PETG 或 PA-CF 做正式件。">PLA</button>
+        <button class="opt" data-fb="普通光固化树脂偏脆、耐冲击差，做受力腿件容易碎裂；而且「越硬越好」本身是误区，腿件需要韧性。">光固化树脂，越硬越好</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">打样用 PLA、正式件看 PA-CF；齿隙靠选型与软件补、轴系靠轴承、走线靠槽——工艺三件事提前想，返工少一半。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道综合题检验自由度、稳定性、材料三大主线；通过后，下一步是把「纸面上的关节」变成真正转得动的舵机。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">按本课教学口径（每腿 5 自由度、喙夹爪 1、头部 2）估算，全身关节电机是多少个？</p>
+        <button class="opt" data-fb="10 个只是两条腿的部分；喙和头还要吃掉 3 个名额。">10 个：全部给腿</button>
+        <button class="opt" data-fb="对。2×5 + 1 + 2 = 13 个；与整机 15 个相比还剩 2 个——官方未公开完整分配，本课按教学估算口径计算。">13 个：剩下 2 个预算留作冗余或扩展</button>
+        <button class="opt" data-fb="教学口径下是 13 个；15 是整机电机总数，官方未公开每个电机的确切位置，不能想当然地对上。">15 个：一个不多一个不少</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">重心铅垂投影恰好落到脚尖边缘之外的一瞬间，会发生什么？</p>
+        <button class="opt" data-fb="摩擦防的是打滑，防不了绕脚尖的翻转力矩。">什么也不会发生，脚底有摩擦就行</button>
+        <button class="opt" data-fb="断电救不了力学：重力矩照转不误，该倒还是倒。">电池会自动断电保护</button>
+        <button class="opt" data-fb="对。投影一出支撑面，静态平衡立即破产；只能靠动态平衡（甩臂、迈步）把重心重新拉回来——这也是机械布局与控制算法必须配合的原因。">重力产生绕脚尖的翻转力矩，静态失稳开始倾倒</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">腿部主承力骨架件：要长期承受落地冲击，还靠近发热的电机，正式件选哪种材料？</p>
+        <button class="opt" data-fb="对。高强度、高刚性、耐温约 150°C 上下，正是承力结构件的首选——代价是每公斤数百元与更高的打印门槛。">PA-CF 尼龙碳纤维</button>
+        <button class="opt" data-fb="打样可以，正式件不行：约 60°C 就开始变形，电机发热加阳光暴晒就可能让腿「软化」。">PLA</button>
+        <button class="opt" data-fb="比 PLA 强、韧性好，但刚性与耐温仍不及 PA-CF；承力主件上它常做过渡方案而非终点。">PETG</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">毕业检查：你能说清 15 个电机为什么难塞、转动关节与自由度的换算、每腿 5 自由度怎么分配、正运动学怎么算脚端位置、静态稳定判据是什么、打样与正式件各用什么材料。都答上来了，就进入 <a href="microduck-03-actuators.html">第 03 课：舵机与执行器选型</a>——把今天的纸面关节，变成真正转得起来的动力源。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 定制演示 1：自由度配餐器（DOM 交互） ================= */
+demo('#demo1', ({ n }, ctx, cv, root) => {
+  const acts = [
+    { min: 1, name: '站立抗扰：脚踝微调，晃而不倒' },
+    { min: 2, name: '原地踏步：两脚交替抬起放下' },
+    { min: 3, name: '前后行走：迈步、蹬地、落地' },
+    { min: 4, name: '侧向平衡：左右移重心、侧向挪步' },
+    { min: 5, name: '转向自如：边走边拐弯、原地转身' },
+    { min: 6, name: '踢球等大幅动作：全范围摆腿' },
+  ];
+  const total = 2 * n + 1 + 2;
+  const list = root.querySelector('.doflist');
+  list.innerHTML = acts.map(a => {
+    const ok = n >= a.min;
+    return '<div class="dofrow ' + (ok ? 'yes' : 'no') + '">' + (ok ? '✅ 已解锁' : '❌ 需每腿 ≥ ' + a.min + ' 个自由度') + '｜' + a.name + '</div>';
+  }).join('');
+  const ro = root.querySelector('.readout');
+  let tip;
+  if (n <= 2) tip = '电机少、轻、便宜，但只能勉强站住——这只鸭子寸步难行。';
+  else if (n <= 4) tip = '能走能稳，是「够用」的门槛配；但转向还得靠绕圈子凑合。';
+  else if (n === 5) tip = '业内典型的桌面双足配置（教学推测）：灵活与重量、成本的平衡点。';
+  else tip = '动作最华丽，但每腿 6 个自由度意味着更重、更贵、走线更密——离整机 15 个电机的预算红线越来越近。';
+  ro.textContent = '全身电机估算 = 2×' + n + ' + 喙 1 + 头 2 = ' + total + ' 个（教学估算，官方未公开分配）。' + tip;
+});
+
+/* ================= 定制演示 2：两连杆腿正运动学（canvas） ================= */
+demo('#demo2', ({ t1, t2 }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cMain = css.getPropertyValue('--primary');
+  const cOk = css.getPropertyValue('--ok');
+  const L1 = 90, L2 = 90, cx = W / 2, hipY = 50, groundY = 234;
+  const rad = Math.PI / 180;
+  // 地面
+  ctx.strokeStyle = cLine; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(20, groundY); ctx.lineTo(W - 20, groundY); ctx.stroke();
+  ctx.fillStyle = cMut; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('地面', 24, groundY + 18);
+  // 竖直参考线（角度从竖直向下量起）
+  ctx.setLineDash([4, 4]); ctx.strokeStyle = cMut; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx, hipY); ctx.lineTo(cx, groundY); ctx.stroke();
+  ctx.setLineDash([]);
+  // 最大可达弧（半径 L1+L2 的下半圆）
+  ctx.setLineDash([6, 5]); ctx.strokeStyle = cOk; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, hipY, L1 + L2, 0, Math.PI); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = cOk;
+  ctx.fillText('最大可达弧（半径 L1+L2）', cx + 96, hipY + 176);
+  // 运动学计算
+  const a1 = t1 * rad, a12 = (t1 + t2) * rad;
+  const kx = cx + L1 * Math.sin(a1), ky = hipY + L1 * Math.cos(a1);
+  const fx = kx + L2 * Math.sin(a12), fy = ky + L2 * Math.cos(a12);
+  // 大腿与小腿
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = cMain; ctx.lineWidth = 11;
+  ctx.beginPath(); ctx.moveTo(cx, hipY); ctx.lineTo(kx, ky); ctx.stroke();
+  ctx.strokeStyle = css.getPropertyValue('--l2'); ctx.lineWidth = 9;
+  ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(fx, fy); ctx.stroke();
+  // 脚掌
+  ctx.strokeStyle = cTxt; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(fx - 16, fy + 4); ctx.lineTo(fx + 16, fy + 4); ctx.stroke();
+  // 关节点
+  ctx.fillStyle = cTxt;
+  [[cx, hipY], [kx, ky]].forEach(([jx, jy]) => { ctx.beginPath(); ctx.arc(jx, jy, 6, 0, Math.PI * 2); ctx.fill(); });
+  ctx.fillStyle = css.getPropertyValue('--bad');
+  ctx.beginPath(); ctx.arc(fx, fy + 4, 5, 0, Math.PI * 2); ctx.fill();
+  // 标签
+  ctx.fillStyle = cTxt; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('髋', cx - 22, hipY - 12);
+  ctx.fillText('膝', kx + 24, ky);
+  ctx.fillText('脚', fx + 2, fy + 26);
+  // 读数（90px ≈ 5cm）
+  const s = 5 / 90;
+  const ro = root.querySelector('.readout');
+  ro.textContent = '脚端：水平 x = ' + ((fx - cx) * s).toFixed(1) + ' cm（正 = 向前），离地 h = ' + ((groundY - fy) * s).toFixed(1) + ' cm ｜ 每段腿长 90px ≈ 5 cm（教学尺寸）。';
+});
+
+/* ================= 定制演示 3：重心与支撑面（canvas 侧视简笔鸭） ================= */
+demo('#demo3', ({ tilt, batt }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cMain = css.getPropertyValue('--primary');
+  const cOk = css.getPropertyValue('--ok'), cBad = css.getPropertyValue('--bad');
+  const cWarn = css.getPropertyValue('--warn');
+  const cx = W / 2, groundY = 250, halfW = 28, hBody = 110, footY = groundY - 8;
+  const rad = Math.PI / 180;
+  const t = tilt * rad;
+  const off = hBody * Math.sin(t) + batt;
+  let col = cOk;
+  if (Math.abs(off) > 28) col = cBad; else if (Math.abs(off) > 24) col = cWarn;
+  // 地面
+  ctx.strokeStyle = cLine; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(20, groundY); ctx.lineTo(W - 20, groundY); ctx.stroke();
+  // 支撑面（脚底区域）
+  ctx.fillStyle = 'rgba(245,158,11,.25)';
+  ctx.fillRect(cx - halfW, groundY - 8, halfW * 2, 8);
+  ctx.strokeStyle = cWarn; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - halfW, groundY - 14); ctx.lineTo(cx - halfW, groundY);
+  ctx.moveTo(cx + halfW, groundY - 14); ctx.lineTo(cx + halfW, groundY);
+  ctx.stroke();
+  ctx.fillStyle = cWarn; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('支撑面（半宽 28px）', cx, groundY + 20);
+  // 身体：绕脚踝倾转的简笔鸭
+  const dirX = Math.sin(t), dirY = -Math.cos(t);
+  const headX = cx + dirX * 150, headY = footY + dirY * 150;
+  ctx.strokeStyle = cMut; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cx, footY); ctx.lineTo(cx + batt, groundY - 24); ctx.stroke();
+  ctx.strokeStyle = cMain; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx, footY); ctx.lineTo(headX, headY); ctx.stroke();
+  ctx.beginPath(); ctx.arc(headX, headY, 15, 0, Math.PI * 2);
+  ctx.fillStyle = cMain; ctx.fill();
+  ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(headX + dirX * 15, headY + dirY * 15); ctx.lineTo(headX + dirX * 33, headY + dirY * 33); ctx.stroke();
+  // 电池
+  ctx.fillStyle = cBad;
+  ctx.fillRect(cx + batt - 18, groundY - 32, 36, 16);
+  ctx.fillStyle = cTxt; ctx.font = '11px sans-serif';
+  ctx.fillText('电池', cx + batt, groundY - 38);
+  ctx.fillText('脚踝', cx, footY + 22);
+  // 合成重心与铅垂线
+  const comY = footY + dirY * hBody;
+  const comX = cx + off;
+  ctx.strokeStyle = col; ctx.setLineDash([5, 4]); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(comX, comY); ctx.lineTo(comX, groundY - 4); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(comX - 6, groundY - 12); ctx.lineTo(comX, groundY - 3); ctx.lineTo(comX + 6, groundY - 12);
+  ctx.closePath();
+  ctx.fillStyle = col; ctx.fill();
+  ctx.beginPath(); ctx.arc(comX, comY, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('合成重心', comX, comY - 14);
+  // 读数与三档结论
+  const ro = root.querySelector('.readout');
+  let verdict;
+  if (Math.abs(off) <= 24) verdict = '✅ 稳：重心投影在支撑面内，余量 ' + (28 - Math.abs(off)).toFixed(0) + 'px。';
+  else if (Math.abs(off) <= 28) verdict = '⚠️ 危险：重心已贴到支撑面边缘，一点扰动就会翻。';
+  else verdict = '❌ 倒：重心投影越出支撑面（±28px），静态失稳，只能靠动态平衡抢救。';
+  ro.textContent = '前倾 ' + tilt + '°、电池偏移 ' + batt + 'px → 重心水平偏移 = 110×sin(' + tilt + '°) + ' + batt + ' = ' + off.toFixed(1) + 'px。' + verdict;
+});
+</script>
+</body>
+</html>

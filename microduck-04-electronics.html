@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭主控电路与电源 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭主控电路与电源</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="鸭子的神经系统：脑、脊髓与反射">
+      <h2>鸭子的神经系统：脑、脊髓与反射</h2>
+      <p class="tldr">机器鸭的身体里住着一套「神经系统」：跑视觉与 AI 策略的大脑（单板计算机）、管姿态与舵机节拍的脊髓（MCU）、以及藏在每只舵机里的膝跳反射——三层各司其职，缺一不可。</p>
+
+      <p>拆开鸭子的外壳，你会发现主控电路并不是「一颗芯片搞定一切」，而是<b>三层结构</b>：</p>
+      <p><b>第一层：高层算力。</b>一块单板计算机（SoC），跑着 Linux 操作系统和神经网络，负责看摄像头画面、认出物体、决定下一步策略——这是鸭子的<mark>大脑</mark>。</p>
+      <p><b>第二层：实时微控制器（MCU）。</b>它以约 1kHz 的节拍读取 IMU、解算身体姿态、给 15 只舵机发角度指令——这是鸭子的<mark>脊髓</mark>。它不需要聪明，但必须快而稳，一拍都不能停。</p>
+      <p><b>第三层：舵机内部的位置闭环。</b>每只舵机自己比较目标角度和当前角度，偏差就地纠正——这是<mark>膝跳反射</mark>，连脊髓都不用惊动。</p>
+
+      <div class="analogy">医生敲你的膝盖，小腿弹起来的指令根本没到大脑，脊髓就地处理完了——等你「感觉到」，腿已经收回去了。机器人也一样：如果每个关节的小纠正都要等 SoC 批准，鸭子早就摔了。<b>反应越基础的，越要放在越低层。</b></div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：三层神经系统对照表</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">大脑<br>= 单板计算机</div><div class="back">SoC 跑 Linux 与神经网络，负责视觉识别与 AI 策略。聪明但不守时，只管「想」，不管「抖」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">脊髓<br>= 实时 MCU</div><div class="back">微控制器以 1kHz 节拍跑姿态解算与舵机控制。不聪明但硬实时，说好一毫秒一拍就一拍不差。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">膝跳反射<br>= 舵机内部闭环</div><div class="back">每只舵机自带位置闭环，就地纠正角度偏差，不需要上层芯片参与——最底层的快速反应。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">摄像头看到「前方有一个球」并决定绕开，这个「决定」发生在哪一层？</p>
+        <button class="opt" data-fb="MCU 只负责实时控制：读 IMU、发舵机指令，既不做视觉也没有跑 AI 策略的算力。">实时 MCU</button>
+        <button class="opt" data-fb="对。视觉识别与 AI 策略都跑在单板计算机这颗「大脑」上，决策结论再经串口发给 MCU 去执行。">单板计算机（SoC）</button>
+        <button class="opt" data-fb="舵机闭环只管「把转轴转到指定角度」，它不知道球是什么，更做不了绕行的决定。">舵机内部位置闭环</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住三层口诀：<b>大脑管决策、脊髓管节拍、反射管关节</b>——层次分明，鸭子才走得又聪明又稳。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="一块板子上住着谁">
+      <h2>一块板子上住着谁</h2>
+      <p class="tldr">主控板虽然只有巴掌大，却住着四类住户：管聪明的 SoC、管守时的 MCU、搬大电流的 DC-DC、以及磨出干净低压的 LDO。</p>
+
+      <p>打开任何一块机器人主板的原理图，你都会反复遇到四个名词。它们分工明确：两个管「算」，两个管「电」。算的部分上一章讲过了，电的部分从本章开始贯穿全课——<mark>把电压从电池那一档，一级级降到每颗芯片需要的档位</mark>，就是电源树的本职工作。</p>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：主控板上的四位常住居民</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">SoC<br>单板计算机</div><div class="back">一块板子上的完整小电脑：CPU、内存、接口齐全，能跑 Linux 与神经网络。算力强、生态好，但任务调度不保证「准时」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">MCU<br>微控制器</div><div class="back">单片芯片里的迷你电脑，主频不高却胜在硬实时：说好 1kHz 就是 1kHz。便宜、省电，是控制节拍的守门人。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">DC-DC 降压<br>（buck）</div><div class="back">用高速开关「搬运」能量，把 7.4V 降到 5V。效率高（通常九成上下）、发热小，适合大电流场合，代价是输出纹波稍大。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">LDO<br>稳压器</div><div class="back">像一道水坝，把较高的电压「磨」成干净稳定的低压（如 3.3V）。电路简单、噪声低，但压差大时发热厉害，只适合小电流。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">一句话分工：<b>SoC 管聪明，MCU 管准时；DC-DC 管大电流，LDO 管小电流。</b>后面章节的所有设计决策，都是围绕这四句话展开的。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="为什么要两颗芯片">
+      <h2>为什么要两颗芯片</h2>
+      <p class="tldr">单板计算机生态强却不守时，MCU 守时却不聪明；WiFi 一挤占控制节拍鸭子就摔——所以聪明的大脑和守时的脊髓必须分工，谁也别想兼谁的职。</p>
+
+      <p>先看大脑这边的候选：<b>单板计算机</b>（RK3588、Jetson 级别）能跑完整 Linux，GPU 与 NPU 带得动神经网络，开源生态极其丰富——想换模型、装库、连 WiFi，应有尽有。但它有个致命脾气：<mark>Linux 是非实时系统</mark>。系统调度器随时可能让别的任务插队——WiFi 收一个包、写一条日志、刷一次界面——控制循环的间隔就会抖动几毫秒甚至几十毫秒。对走路这件事，几十毫秒的迟到足以让鸭子脸着地。</p>
+
+      <p>再看脊髓这边的候选：<b>MCU</b>（ESP32-S3、STM32，以及国产的 GD32 系列）跑裸机或实时操作系统，1kHz 的姿态环雷打不动；一片只要几块到几十块人民币，功耗低到可以忽略。但它既跑不动神经网络，也伺候不了摄像头的大数据量。</p>
+
+      <p>于是答案自然浮现：<b>两颗芯片用串口对话</b>。SoC 负责想——「往左绕、慢一点」；MCU 负责做——每毫秒把意图变成 15 只舵机的角度指令。WiFi 属于 SoC 那一侧，就算网络卡顿，也只影响「想法」更新得慢一点，<mark>绝不会挤占「动作」的控制节拍</mark>。</p>
+
+      <div class="widget demo">
+        <div class="widget-title">静态架构图：电怎么流、数据怎么走</div>
+        <svg viewBox="0 0 800 300" role="img" aria-label="Microduck 主控与电源架构图" font-family="sans-serif">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <!-- 盒子 -->
+          <rect x="20" y="122" width="130" height="56" rx="10" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="85" y="145" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2330">电池 2S 锂电</text>
+          <text x="85" y="166" text-anchor="middle" font-size="13" fill="#1f2330">7.4V</text>
+          <rect x="210" y="122" width="140" height="56" rx="10" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.5"/>
+          <text x="280" y="145" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2330">电源树</text>
+          <text x="280" y="166" text-anchor="middle" font-size="13" fill="#1f2330">DC-DC + LDO</text>
+          <rect x="410" y="122" width="140" height="56" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+          <text x="480" y="145" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2330">实时 MCU</text>
+          <text x="480" y="166" text-anchor="middle" font-size="13" fill="#1f2330">1kHz 控制环</text>
+          <rect x="630" y="122" width="150" height="56" rx="10" fill="#f3e8ff" stroke="#a855f7" stroke-width="1.5"/>
+          <text x="705" y="145" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2330">大脑 SoC</text>
+          <text x="705" y="166" text-anchor="middle" font-size="13" fill="#1f2330">Linux + AI + WiFi</text>
+          <rect x="410" y="232" width="140" height="56" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="480" y="255" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2330">舵机总线</text>
+          <text x="480" y="276" text-anchor="middle" font-size="13" fill="#1f2330">×15 只舵机</text>
+          <rect x="210" y="12" width="140" height="56" rx="10" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.5"/>
+          <text x="280" y="35" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2330">摄像头 / IMU</text>
+          <text x="280" y="56" text-anchor="middle" font-size="13" fill="#1f2330">传感器组</text>
+          <!-- 连线 -->
+          <line x1="150" y1="150" x2="210" y2="150" stroke="currentColor" stroke-width="1.6" marker-end="url(#arr)"/>
+          <text x="180" y="141" text-anchor="middle" font-size="12" fill="currentColor">7.4V</text>
+          <line x1="350" y1="150" x2="410" y2="150" stroke="currentColor" stroke-width="1.6" marker-end="url(#arr)"/>
+          <text x="380" y="141" text-anchor="middle" font-size="12" fill="currentColor">5V/3.3V</text>
+          <line x1="480" y1="178" x2="480" y2="232" stroke="currentColor" stroke-width="1.6" marker-end="url(#arr)"/>
+          <text x="492" y="208" text-anchor="start" font-size="12" fill="currentColor">舵机指令</text>
+          <line x1="550" y1="150" x2="630" y2="150" stroke="currentColor" stroke-width="1.6" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <text x="590" y="141" text-anchor="middle" font-size="12" fill="currentColor">串口</text>
+          <line x1="310" y1="68" x2="445" y2="122" stroke="currentColor" stroke-width="1.6" marker-end="url(#arr)"/>
+          <text x="330" y="86" text-anchor="start" font-size="12" fill="currentColor">姿态/图像经 MCU</text>
+          <path d="M85,178 L85,260 L410,260" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arr)"/>
+          <text x="240" y="252" text-anchor="middle" font-size="12" fill="currentColor">7.4V 直供（大电流）</text>
+        </svg>
+      </div>
+
+      <p>读图要点：粗看是「电池 → 电源树 → MCU → 舵机总线」一条电力主干，实际上<mark>舵机的大电流由电池虚线直供</mark>，不经过任何稳压器——15 只舵机的电流没有任何稳压器扛得住。SoC 与 MCU 之间的双向箭头是串口：上行报状态，下行发意图。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么不让单板计算机直接以 1kHz 控制所有舵机，省掉 MCU？</p>
+        <button class="opt" data-fb="方向反了：MCU 只要几块到几十块人民币，是整台机器里最便宜的零件之一，省它省不出多少钱。">MCU 太贵，为了省成本</button>
+        <button class="opt" data-fb="对。Linux 不是实时系统，任务调度有抖动，WiFi、日志随时插队；控制节拍一被挤占，平衡直接失守——这正是两颗芯片分工的核心原因。">Linux 调度有抖动，控制节拍会被挤占，平衡失守</button>
+        <button class="opt" data-fb="舵机由电池总线直接供电，不消耗芯片算力；控制 15 只舵机只是发指令，算力完全不是瓶颈。">单板计算机算力带不动 15 只舵机</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">两颗芯片不是浪费，是分工：SoC 出主意、MCU 守节拍、串口当传令兵——生态与实时性各取所长。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="电源树：从电池到每一颗芯片">
+      <h2>电源树：从电池到每一颗芯片</h2>
+      <p class="tldr">一块电池进来，分三路出去：7.4V 直供舵机、buck 降到 5V 喂单板机、LDO 磨出 3.3V 给传感器；所有地共地，电池入口再并一颗大电容坐镇。</p>
+
+      <p>电源树就像家里的配电箱：总闸（电池）之后，分出不同电压等级的支路，每条支路只喂「吃得惯」的设备。机器鸭的树干上共有三条主支路：</p>
+      <p><b>支路一：7.4V 直供舵机总线。</b>2S 锂电满电约 8.4V、标称 7.4V，正好落在舵机的工作区间——先降压再升压纯属白白损耗，所以<mark>大电流路径越短越好，能不经过稳压器就不经过</mark>。</p>
+      <p><b>支路二：buck 降到 5V，喂单板计算机。</b>DC-DC 效率高、发热小，选型时电流余量至少留一倍。</p>
+      <p><b>支路三：LDO 出 3.3V，喂传感器。</b>IMU、摄像头这些小电流器件最怕电源噪声，LDO 输出干净，正合适。</p>
+      <p>另外两条铁律：<b>所有地共地</b>——三路电压可以不同，但参考点必须是同一个地，否则串口两边说话鸡同鸭讲；<b>电池入口并联大电容</b>——舵机瞬间抽流时先由电容顶上，缓冲击击电流造成的电压塌陷（第 6 章详述）。</p>
+
+      <div class="widget order" data-answer="a,b,c,d">
+        <div class="widget-title">把电能从电池到传感器的路径排成正确顺序</div>
+        <div class="item" data-id="c">DC-DC 降压：buck 电路把 7.4V 高效降到 5V，供给单板计算机</div>
+        <div class="item" data-id="a">电池输出：2S 锂电提供标称 7.4V 的原始电能</div>
+        <div class="item" data-id="d">传感器供电：LDO 把 5V 磨成干净稳定的 3.3V，喂给 IMU 等传感器</div>
+        <div class="item" data-id="b">保护板 BMS：防过放、过流、短路，是电池的第一道闸门</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">电池入口并联大电容的主要目的是？</p>
+        <button class="opt" data-fb="电容存的能量相对电池九牛一毛，对续航几乎没有贡献，它的职责是「救急」不是「蓄水」。">增加电池容量，延长续航</button>
+        <button class="opt" data-fb="对。舵机启动瞬间电流激增，电容就近放电顶住缺口，避免总线电压瞬间塌下去、连累逻辑电路复位——它是电压的「减震器」。">舵机瞬间抽流时缓冲击击，避免电压瞬间塌陷</button>
+        <button class="opt" data-fb="无线干扰要靠布局、屏蔽与天线净空解决，不是靠电源入口一颗电容。">滤除 WiFi 无线干扰</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">电源树口诀：<b>大电流走直路、小电流走净路、三路共一个地、入口并一颗大电容</b>。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="功耗预算与续航计算">
+      <h2>功耗预算与续航计算</h2>
+      <p class="tldr">功率等于电压乘电流：站立静态约 17W，22Wh 的 2S 3000mAh 电池约能撑 78 分钟——会算这笔账，电池选型和电源设计才有依据。</p>
+
+      <p>整个电源设计只有一条公式打头阵：<b>$P = U \times I$</b>——功率（瓦）等于电压（伏）乘电流（安）。续航就是把电池里的能量存量为功率消耗除一下：</p>
+
+      <p><b>第一步：算功耗。</b>以站立静态为例，逐项走查：</p>
+      <table>
+        <tr><th>负载</th><th>估算式</th><th>功率</th></tr>
+        <tr><td>15 只舵机（站立静态）</td><td>15 × 0.1A × 7.4V</td><td>≈ 11W</td></tr>
+        <tr><td>逻辑板（SoC + MCU + 传感）</td><td>实测估算</td><td>≈ 4W</td></tr>
+        <tr><td>摄像头等外设</td><td>按规格书</td><td>≈ 1.5W</td></tr>
+        <tr><td><b>合计</b></td><td>—</td><td><b>≈ 17W</b></td></tr>
+      </table>
+
+      <p><b>第二步：算电池能量。</b>2S 3000mAh 电池的能量是 7.4V × 3Ah ≈ 22Wh。</p>
+      <p><b>第三步：算续航。</b>$t = \dfrac{E}{P} \approx \dfrac{22}{17} \approx 1.3$ 小时，也就是 <b>约 78 分钟</b>。注意这还是站立静态的乐观值——走路时舵机电流会翻好几倍，实际续航明显更短。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">功耗计算器：拖动滑块，看看鸭子能站多久、电源扛不扛得住</div>
+        <canvas width="800" height="270"></canvas>
+        <div class="controls">
+          <label>逻辑板功率（W） <span class="val" data-for="logicW"></span><input type="range" name="logicW" min="2" max="12" step="0.5" value="4"></label>
+          <label>每只舵机平均电流（A） <span class="val" data-for="servoA"></span><input type="range" name="servoA" min="0.05" max="0.5" step="0.05" value="0.1"></label>
+          <label>电池容量（mAh） <span class="val" data-for="batmAh"></span><input type="range" name="batmAh" min="1000" max="5000" step="100" value="3000"></label>
+          <label>电池放电倍率（C） <span class="val" data-for="batC"></span><input type="range" name="batC" min="2" max="20" step="1" value="10"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>图中三条功率条按固定刻度（0 到 70W）绘制，方便你横向比较。把舵机电流拉到 0.3A 以上（接近走路工况），你会看到两件事同时发生：<mark>续航条目迅速缩水</mark>，而<mark>峰值电流可能超过电池的持续放电上限</mark>——电池选型要同时满足能量和放电倍率两个条件，缺一不可。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">其他条件不变，把电池从 3000mAh 换成 6000mAh，站立续航大约变成？</p>
+        <button class="opt" data-fb="那是容量减半（1500mAh）的结果，方向反了——容量翻倍续航也翻倍。">约 39 分钟</button>
+        <button class="opt" data-fb="约 78 分钟是原容量 3000mAh 的续航；容量翻倍，续航同样翻倍。">约 78 分钟</button>
+        <button class="opt" data-fb="对。电池能量从约 22Wh 翻倍到约 44Wh，除以 17W 约 2.6 小时，即约 156 分钟——续航与容量成正比。">约 156 分钟</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">功耗账本三步走：<b>逐项算功率、电压乘容量得能量、能量除功率得续航</b>——记得给走路工况留余量。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="brownout：走着走着突然重启的真相">
+      <h2>「走着走着突然重启」的真相：brownout</h2>
+      <p class="tldr">走着走着突然重启，多半不是程序 bug，而是 15 只舵机同时抽流把电源电压拉垮，MCU 触发欠压复位——这条死亡链条完全可以靠设计斩断。</p>
+
+      <p>复刻机器鸭最经典的翻车现场：明明程序没问题、电池也满电，鸭子走两步就突然「断片」重启，舵机一抖，直接趴窝。这个现象有个专门的名字：<mark>brownout（欠压复位）</mark>。它的本质是一连串连锁反应，点击下面的按钮，一步步看清这条死亡链条：</p>
+
+      <div class="widget">
+        <div class="widget-title">分步揭示：一条断电死亡链条</div>
+        <div class="steps">
+          <div class="step"><b>起步瞬间</b> —— 15 只舵机同时收到动作指令，电机从静止启动，瞬间电流冲到正常值的好几倍，电池与走线内阻上瞬间产生很大压降。</div>
+          <div class="step"><b>电压塌陷</b> —— 总线电压被拉低，buck 与 LDO 来不及补，5V、3.3V 各路跟着一起往下掉。</div>
+          <div class="step"><b>MCU 欠压复位</b> —— 输入电压跌破 MCU 的最低工作电压，芯片直接复位重启，1kHz 控制环戛然而止——这就是 brownout。</div>
+          <div class="step"><b>舵机重新上电</b> —— 复位期间控制信号中断、部分供电重建，舵机丢失目标角度，关节集体抖动。</div>
+          <div class="step"><b>摔倒</b> —— 控制中断哪怕只有零点几秒，双足平衡早已无从谈起，鸭子应声倒地。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="key">斩断链条的三个解法：<b>① 大电容</b>——电源入口与大电流节点就近并联大容量电容（如 470μF 起），瞬态缺口由电容顶上；<b>② 分级上电</b>——舵机分批使能、错峰启动，把电流尖峰削平；<b>③ 低压监测</b>——用 ADC 监视电池电压，低于阈值先告警、再降负载，别等芯片自己复位。</div>
+
+      <div class="warn">常见误区：以为是程序死循环，加个看门狗就好。看门狗只能帮你「重启得体面一点」，治不了电压塌陷本身——排查顺序永远是<b>先查电源，再查代码</b>。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">按死亡链条的因果顺序，「舵机重新上电抖动」的直接原因是？</p>
+        <button class="opt" data-fb="程序死循环不会切断舵机供电或控制信号，与「重新上电」这个动作对不上。">程序 bug 导致死循环</button>
+        <button class="opt" data-fb="没电是持续性状态，撑不了两步；brownout 是毫秒级的瞬态塌陷，恢复后系统还能继续跑。">电池彻底没电了</button>
+        <button class="opt" data-fb="对。MCU 复位导致控制信号中断、供电重建，舵机丢失目标角度，表现出来就是关节集体抖动——而根源是第一环的电压塌陷。">MCU 欠压复位期间控制信号中断、供电重建，舵机丢失目标角度</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">brownout 四字诀：<b>储能、错峰、监测、共地</b>——电源稳健了，鸭子才不会走着走着「断片」。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="PCB 布局入门：大电流与小人儿和平共处">
+      <h2>PCB 布局入门：大电流与「小人儿」和平共处</h2>
+      <p class="tldr">布局三原则：大电流走线短而粗、天线区净空、敏感器件远离干扰源；再给每颗芯片电源脚配好去耦电容，让 4 层板的完整地层替你兜底。</p>
+
+      <p>原理图对了，板子还是可能「灵异现象」频发——问题多半出在布局。一块机器鸭主板上，几十安培的舵机电流、微伏级的 IMU 信号、 GHz 级的 WiFi 天线挤在巴掌大的地方，<mark>布局就是让大电流、敏感信号、无线射频这三种「脾气迥异的住户」互不打架</mark>。五条入门规则先记牢：</p>
+
+      <table>
+        <tr><th>布局要点</th><th>为什么</th><th>怎么做</th></tr>
+        <tr><td>大电流走线</td><td>舵机电流峰值可达数十安培，细长走线的电阻会白白分压、发热</td><td>电池到舵机总线的路径尽量短而粗，铺铜加过孔阵列，能走平面不走细线</td></tr>
+        <tr><td>天线区净空</td><td>天线附近的金属与铺铜会吸收、反射射频信号，WiFi 直接变「半聋」</td><td>天线投影区域不打地、不走任何走线，留出净空，必要时挖槽隔离</td></tr>
+        <tr><td>IMU 摆位</td><td>buck 与舵机线的发热引起板形变、磁场扰动；机身形变会直接污染姿态测量</td><td>IMU 远离电源发热件与大电流线，尽量靠近身体刚性中心（形变最小处）</td></tr>
+        <tr><td>去耦电容</td><td>芯片瞬间抽流会在电源轨上掀起毛刺，沿走线传播干扰全网</td><td>每颗芯片电源脚旁放 100nF 去耦电容，电源入口再配 10μF 级大电容</td></tr>
+        <tr><td>完整地层</td><td>完整的参考地给电流提供最短回流路径，还能屏蔽层间干扰</td><td>优先 4 层板（信号-地-电源-信号），坚决不让分割线切断地平面</td></tr>
+      </table>
+
+      <div class="analogy">把 PCB 想成一栋合租房：<b>大电流</b>是爱开派对的大块头，得给他住一楼带独立出入的房间（短粗走线）；<b>IMU</b> 是浅眠的作家，要住顶楼最安静的位置（远离干扰、靠近刚体中心）；<b>天线</b>是阳台上的歌者，周围不许堆杂物（净空）；<b>去耦电容</b>则是每位住户床头的储蓄罐，要用钱时先取自己的，不去银行挤兑（就近供能）。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">IMU 的最佳摆位是？</p>
+        <button class="opt" data-fb="反了：buck 电感的开关噪声与发热正是 IMU 的天敌，贴得越近姿态数据越脏。">紧贴 buck 电感，方便就近取电</button>
+        <button class="opt" data-fb="板上各处的振动、形变与干扰并不均匀，IMU 摆位对姿态测量精度影响很大。">板边哪里空放哪里，位置无所谓</button>
+        <button class="opt" data-fb="对。靠近身体刚性中心形变最小，同时远离 buck、舵机大电流线等发热与干扰源，姿态数据才干净。">靠近身体刚性中心，远离电源发热件</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">布局口诀：<b>大电流短粗、天线净空、IMU 居中、百纳电容随身、四层完整地</b>——做到五条，板子就稳了大半。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道题检验你是否吃透了本课：双芯片架构的理由、brownout 的机理、续航的估算——全对，就可以给鸭子装「感官」了。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">本课反复强调「两颗芯片分工」，最核心的工程理由是？</p>
+        <button class="opt" data-fb="即使单板计算机算力富余，Linux 的调度抖动依然是硬伤——问题不在「算得快不快」，在「准时不准时」。">一颗芯片跑两套程序性能不够</button>
+        <button class="opt" data-fb="对。SoC 生态强但不守时，MCU 守时但不聪明：视觉与 WiFi 交给 SoC，1kHz 控制节拍锁死在 MCU，各取所长、互不拖累。">SoC 生态强但不守时，MCU 守时但不聪明，分工各取所长</button>
+        <button class="opt" data-fb="工程决策看的是可靠性与总成本，不是为了多卖一颗几块钱的芯片。">为了多卖一颗芯片</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">brownout 死亡链条的第一环（一切的根源）是？</p>
+        <button class="opt" data-fb="复位是链条的第三环，它是电压塌陷的结果而不是原因，因果不能倒置。">MCU 欠压复位</button>
+        <button class="opt" data-fb="站立时电压完全够用，问题恰恰出在瞬态抽流——满电也会 brownout。">电池容量不足</button>
+        <button class="opt" data-fb="对。15 只舵机同时启动瞬间电流激增，电池与走线内阻分压导致总线电压瞬间跌落——后面每一环都由它引发。">15 只舵机同时启动，瞬间电流激增拉低总线电压</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">站立总功率约 17W，2S 3000mAh 电池（约 22Wh）的续航大约是？</p>
+        <button class="opt" data-fb="22 是电池的 Wh 数不是分钟数——被数字骗了，正确的除法是能量除以功率。">约 22 分钟</button>
+        <button class="opt" data-fb="对。22Wh 除以 17W 约 1.3 小时，即约 78 分钟——注意这是站立静态的乐观值，走路会更短。">约 78 分钟</button>
+        <button class="opt" data-fb="那需要约 47Wh 的电池容量，接近两块 3000mAh 的 2S 电池。">约 170 分钟</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">电路这一关过了，鸭子就有了稳定的「心脏与脊髓」。下一课我们给它装上「感官」——<a href="microduck.html">05 传感器系统（写作中，点击返回系列目录）</a>。</div>
+    </section>
+
+  </main>
+</div>
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 定制演示 1：功耗计算器（功率分解 + 续航 + 峰值放电校验） ================= */
+demo('#demo1', ({ logicW, servoA, batmAh, batC }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted'), cLine = css.getPropertyValue('--border');
+  const VB = 7.4;                        // 2S 锂电标称电压
+  const servoW = 15 * servoA * VB;       // 舵机总功率
+  const otherW = 1.5;                    // 摄像头等外设（固定）
+  const totalW = servoW + logicW + otherW;
+  const wh = VB * batmAh / 1000;         // 电池能量
+  const min = wh / totalW * 60;          // 续航分钟
+  const peakA = 15 * 1.8;                // 峰值电流假设：每只舵机 1.8A
+  const maxA = batmAh / 1000 * batC;     // 电池最大持续放电电流
+
+  // 功率分解水平条形图（固定刻度 0-70W，便于比较）
+  const rows = [
+    { name: '舵机 ×15', v: servoW, c: '#f59e0b' },
+    { name: '逻辑板', v: logicW, c: '#3b82f6' },
+    { name: '摄像头等', v: otherW, c: '#22c55e' },
+  ];
+  const barX = 110, barW = W - barX - 150, maxScale = 70, rowH = 40, barH = 24, top = 34;
+  ctx.font = '13px sans-serif';
+  rows.forEach((r, i) => {
+    const y = top + i * rowH;
+    const w = Math.max(0, r.v / maxScale * barW);
+    ctx.fillStyle = cTxt; ctx.textAlign = 'right';
+    ctx.fillText(r.name, barX - 8, y + barH / 2 + 4);
+    ctx.fillStyle = cLine; ctx.fillRect(barX, y, barW, barH);
+    ctx.fillStyle = r.c; ctx.fillRect(barX, y, w, barH);
+    ctx.fillStyle = cTxt; ctx.textAlign = 'left';
+    ctx.fillText(r.v.toFixed(1) + 'W', barX + w + 6, y + barH / 2 + 4);
+  });
+  // 刻度
+  ctx.fillStyle = cMut; ctx.textAlign = 'center';
+  [0, 35, 70].forEach(v => { const x = barX + v / maxScale * barW; ctx.fillText(v + 'W', x, top + rows.length * rowH - 8); });
+  // 汇总文字
+  const sy = top + rows.length * rowH + 18;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = cTxt;
+  ctx.fillText(`总功率 ≈ ${totalW.toFixed(1)}W · 电池能量 ≈ ${wh.toFixed(1)}Wh`, barX, sy);
+  ctx.fillText(`估算续航 ≈ ${min.toFixed(0)} 分钟`, barX, sy + 24);
+  ctx.fillStyle = peakA <= maxA ? '#16a34a' : '#dc2626';
+  ctx.fillText(`峰值电流 27A（15×1.8A 假设）vs 电池持续放电上限 ${maxA.toFixed(0)}A（${(batmAh / 1000).toFixed(1)}Ah × ${batC}C）`, barX, sy + 48);
+
+  const ro = root.querySelector('.readout');
+  const rt = min >= 40 ? '✅ 续航足够' : '⚠️ 续航偏短';
+  const pk = peakA <= maxA ? '✅ 峰值放电安全' : '❌ 峰值放电过载';
+  ro.textContent = `${rt}（约 ${min.toFixed(0)} 分钟）；${pk}：峰值 27A ${peakA <= maxA ? '低于' : '已超过'}电池持续放电上限 ${maxA.toFixed(0)}A。`;
+});
+</script>
+</body>
+</html>

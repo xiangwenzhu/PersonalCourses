@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>认识 Microduck：399 美元的机器鸭 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>认识 Microduck：399 美元的机器鸭</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="一只会自己爬起来的鸭子">
+      <h2>一只会自己爬起来的鸭子</h2>
+      <p class="tldr">2026 年 8 月底，一只 25 厘米高的小机器鸭在 4 天里拿下超过一万台订单——它便宜、可爱、还会开源，这正好是普通人可以"复刻"的那种产品。</p>
+
+      <p>你有没有想过，为什么科幻片里的机器人几十年了还没走进客厅？因为它们太贵、太大、太"高冷"。而 2026 年 8 月 27 日，Hugging Face 旗下的机器人团队 <b>Pollen Robotics</b> 发布了一个反着来的产品：<mark>Microduck，一只 25 厘米高、约 800 克重的桌面双足机器鸭，售价 399 美元</mark>。</p>
+
+      <p>据公开报道，它的战绩是这样的：开订高峰期平均<b>每 4 秒卖出一台</b>，4 天拿下 10500 台订单、销售额超过 400 万美元；随后英伟达 CEO 黄仁勋在 GTC 柏林大会上现场演示了它，预售量进一步冲破 2 万台，首批交付排到了 2026 年圣诞节前。</p>
+
+      <div class="analogy">这有点像当年的个人电脑：大型机时代，计算机是实验室里的庞然大物；直到有人做出"便宜到个人也买得起"的版本，行业才真正引爆。Microduck 对机器人行业扮演的正是这个角色——<b>第一台普通人买得起、还愿意买的双足机器人</b>。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，认识这场爆火背后的四个关键词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">Hugging Face</div><div class="back">全球最大的开源 AI 模型社区，Microduck 的"娘家"。它开源了大量模型与工具，机器人的软件栈也延续了这个思路。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">Pollen Robotics</div><div class="back">Hugging Face 旗下的机器人团队，Microduck 的设计者，此前已推出过 Reachy 系列开源机器人。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">双足机器人</div><div class="back">用两条腿走路、像人和鸟一样保持平衡的机器人。比轮式难得多——摔倒、爬起、动态平衡都是硬问题。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">开源</div><div class="back">把软件代码（部分情况下也包括设计资料）公开，让任何人都能查看、修改、复用。这是"复刻"这个词成立的前提。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">据公开报道，Microduck 开订后高峰期的销售速度大约是？</p>
+        <button class="opt" data-fb="这个速度太慢了，按这个速度 4 天远卖不到一万台。">每 4 分钟一台</button>
+        <button class="opt" data-fb="没错，高峰期平均每 4 秒卖出一台，4 天累计约 10500 台、销售额超 400 万美元。">每 4 秒一台</button>
+        <button class="opt" data-fb="这就夸张了——4 天 105 万台相当于消费级机器人从未有过的量级，实际报道是「4 秒一台」。">每 4 秒卖 100 台</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">Microduck = 便宜（399 美元）+ 萌（鸭子造型）+ 开源（可玩可改）——三个条件叠加，才造就了消费级机器人罕见的市场爆发。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="它会做什么、不会做什么">
+      <h2>它会做什么、不会做什么</h2>
+      <p class="tldr">复刻之前先看清产品边界：Microduck 是一只"会运动的萌物 + 开发者玩具"，而不是一个全能管家。</p>
+
+      <p>据官方资料与媒体报道，Microduck 的拿手动作包括：<b>双足行走、踢球、穿轮滑鞋滑行、摔倒后自己爬起来</b>；它的鸭嘴是一只小夹爪，能叼起袜子、马克笔这类轻小物体。它还会"睡觉"和玩耍——这些拟人化的小动作正是它讨喜的关键。</p>
+
+      <p>但它同样有清晰的边界：它不能做家务、不能搬重物（夹爪力很小）、不能长时间户外奔跑，续航也有限。它更多是一个<b>运动能力展示平台 + 开发者训练平台</b>——你可以给它训练新技能，而不是指望它替你打扫房间。</p>
+
+      <div class="analogy">把 Microduck 想成一只"电子宠物狗"：它会坐下、握手、接飞盘，看起来很聪明；但你不会让它去上班挣钱。<mark>产品定义的关键就是想清楚"会什么、不会什么"</mark>——这也是你复刻时做决策的第一步。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击翻面：哪些是它的真实能力，哪些是想象</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">踢球</div><div class="back">真实能力。动态运动是它的核心卖点，踢球是官方展示的代表性动作之一。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">自己爬起来</div><div class="back">真实能力。摔倒后自主起身，对 25cm 的小机器人来说是难度很高的控制问题。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">穿轮滑鞋滑行</div><div class="back">真实能力。轮滑把"双足"变成了"轮式"，考验的是另一套平衡策略。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">替你做家务</div><div class="back">想象。夹爪力量很小、续航有限，它是玩具和开发平台，不是保姆。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">复刻 Microduck 这类产品时，"产品定义"阶段最重要的产出是什么？</p>
+        <button class="opt" data-fb="外形只是结果，不是定义。没想清楚能力边界就画外观，很容易做出「好看但没用」的原型。">先设计一个足够可爱的外观</button>
+        <button class="opt" data-fb="堆功能会推高成本、拖慢进度。Microduck 的启示恰恰是「少而精」。">功能越多越好，最好全能</button>
+        <button class="opt" data-fb="对。先划定「会什么、不会什么」的能力边界，才能反过来决定硬件配置与成本，这正是本课后续内容的主线。">明确能力边界：会什么、不会什么</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">会走、会踢球、会叼袜子、会自己爬起来；不会做家务、搬重物、长续航——看清这条能力边界线，你的复刻才有靶心。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="硬件构成：一只鸭子的器官清单">
+      <h2>硬件构成：一只鸭子的"器官清单"</h2>
+      <p class="tldr">15 个电机是肌肉，夹爪鸭嘴是手，摄像头是眼，ToF 雷达是回声定位，IMU 是内耳——把机器人翻译成人体器官，硬件清单就不再吓人。</p>
+
+      <p>据官方规格，Microduck 的核心硬件包括：<mark>15 个电机、一颗摄像头、一枚ToF 激光雷达、两只惯性传感器（IMU），以及一只作为夹爪的鸭嘴</mark>。听起来名词很多，其实每个部件都能在人体上找到对应。</p>
+
+      <div class="analogy">把这只鸭子想象成一个缩小的人：<b>电机</b>是肌肉，负责每个关节的发力；<b>鸭嘴夹爪</b>是手；<b>摄像头</b>是眼睛，负责"看见"；<b>ToF 激光雷达</b>像蝙蝠的回声定位，直接量出"离障碍物多远"；<b>IMU（惯性测量单元）</b>相当于人的内耳前庭，闭着眼也知道自己在倾倒；<b>电池</b>则是心脏，给全身供能。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，把器官清单记牢</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">电机 ×15</div><div class="back">机器的"肌肉"。每条腿多个电机协同，才能完成走、踢、蹲、爬起等动作。选型与布置是复刻的头号难题。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">鸭嘴夹爪</div><div class="back">机器的"手"。开合抓取轻小物体，是它"能干活"的部分——也决定了它玩不了搬运。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">摄像头</div><div class="back">机器的"眼睛"。拍摄彩色画面，交给算法识别物体、寻找目标。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">ToF 激光雷达</div><div class="back">机器的"回声定位"。向物体发射光脉冲、测量返回时间，直接得到距离，不受光线明暗影响。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">IMU ×2</div><div class="back">机器的"内耳"。测量角速度与加速度，实时知道身体倾了多少——双足平衡的第一手信息。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">电池与电源</div><div class="back">机器的"心脏和血管"。锂电供电，电源设计决定它是稳定运行还是走着走着断电。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">闭着眼睛也知道身体在倾倒，靠的是人的内耳前庭；机器人上对应的是 <input data-answer="IMU|imu|惯性测量单元|惯性传感器|陀螺仪">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">想在黑暗环境里感知"前方 40 厘米有个障碍物"，Microduck 上最合适的传感器是？</p>
+        <button class="opt" data-fb="对。ToF 激光雷达主动发光测距，不依赖环境光，黑暗中也能直接给出距离。">ToF 激光雷达</button>
+        <button class="opt" data-fb="摄像头是被动的：环境一暗它就「看不见」了，需要额外光源才能工作。">普通摄像头</button>
+        <button class="opt" data-fb="IMU 测的是自身姿态（倾斜、旋转），感知不到外部障碍物的位置。">IMU 惯性传感器</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句口诀记住硬件：<b>电机是肌肉、夹爪是手、摄像头是眼、ToF 是回声、IMU 是内耳、电池是心脏</b>。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="开源生态：为什么说它可复刻">
+      <h2>开源生态：为什么说它"可复刻"</h2>
+      <p class="tldr">Microduck 真正的革命性不在某个零件，而在"训练在仿真、部署到真机"的开源软件栈——这让后来者的复刻从"逆向发明"变成了"站在开源上盖楼"。</p>
+
+      <p>据官方介绍，Microduck 的玩法是：<mark>在 Isaac Lab 里训练策略，在 Omniverse 数字孪生中测试，再部署到真机</mark>。翻译一下：先在电脑里的虚拟世界教会鸭子走路（虚拟世界摔一万次也不要钱），验证通过后把"大脑"下载到真鸭子身上。配套的开发者扩展套件还能加装更多舵机，扩展它的能力。</p>
+
+      <p>但要注意一个关键区分：<b>它开源的主要是软件栈，而不是全部硬件图纸</b>。结构怎么设计、电路怎么画、模具怎么开，很大程度上仍要靠自己——这正是本系列课程阶段二到阶段五要逐门解决的问题。</p>
+
+      <div class="widget">
+        <div class="widget-title">分步看清这套开源工具链</div>
+        <div class="steps">
+          <div class="step"><b>Isaac Lab</b> —— 英伟达的机器人仿真训练框架：在虚拟环境里放上成百上千只"平行宇宙的鸭子"，用强化学习同时训练它们走路、爬起。</div>
+          <div class="step"><b>Omniverse 数字孪生</b> —— 给真鸭子在虚拟世界建一个一模一样的"镜像"，新技能先在镜像里试跑，验证没问题再上真机。</div>
+          <div class="step"><b>部署到真机</b> —— 把训练好的策略文件下载到鸭子体内的大脑（主控板）上，虚拟世界的本领落进现实。</div>
+          <div class="step"><b>开发者扩展套件</b> —— 官方提供加装舵机的扩展方案，社区可以自己改造出更多玩法。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">"训练在仿真、部署到真机"这条路线最大的好处是什么？</p>
+        <button class="opt" data-fb="仿真训练本身仍需要大量算力和时间，「省算力」不成立；它省的是真机损耗与时间。">完全不消耗任何算力</button>
+        <button class="opt" data-fb="对。真机试错会摔坏硬件、等待充电与维修；在仿真里摔一万次几乎零成本，学成后再一次性迁移，大幅降低研发成本与周期。">试错成本极低：虚拟世界摔一万次也摔不坏硬件</button>
+        <button class="opt" data-fb="恰恰相反，仿真和现实存在「鸿沟」，需要专门的技术（域随机化等）来弥合，这是第 09 课的主题。">仿真结果可以百分百复刻到现实</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">软件栈开源 = 复刻的"地基"已经有了；但结构、电路、供应链仍要自己搭——这决定了本系列课程的路线。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="感知-决策-执行：机器人的呼吸循环">
+      <h2>感知—决策—执行：机器人的"呼吸循环"</h2>
+      <p class="tldr">所有机器人都在跑同一个循环：传感器读世界 → 大脑算决策 → 执行器动身体，循环越快，站得越稳。</p>
+
+      <p>鸭子被你推一下为什么不倒？因为在极短时间内它完成了一整套动作：<b>IMU 察觉身体前倾（感知）→ 控制器计算"该往哪落脚、脚踝用多大力"（决策）→ 舵机转动脚踝和腿部（执行）</b>。然后循环立刻开始下一轮，周而复始——这个循环就是机器人的"呼吸"。</p>
+
+      <p>呼吸的"频率"至关重要：感知与控制的频率越低，机器人依据的"世界快照"就越旧，动作就像慢半拍；快到一定程度，它才能像生物一样灵敏。下面的实验让你亲手体会这件事。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">推一下鸭子：控制频率如何决定它摔不摔</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls">
+          <label>推力导致的初始倾角（度） <span class="val" data-for="push"></span><input type="range" name="push" min="5" max="40" step="1" value="20"></label>
+          <label>控制频率（Hz） <span class="val" data-for="freq"></span><input type="range" name="freq" min="1" max="60" step="1" value="10"></label>
+          <label>控制强度 Kp <span class="val" data-for="kp"></span><input type="range" name="kp" min="20" max="200" step="5" value="100"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>图中横轴是时间，纵轴是身体倾角（绿线为±90 度"摔倒线"）。你会看到：<b>频率太低时</b>，控制器拿着过期的姿态数据发力，鸭子越晃越大直至摔倒；<b>频率提上去之后</b>，同样的推力它两三秒就稳稳站住。真实产品的平衡控制通常跑在几百到上千赫兹，远高于演示。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">把控制频率从 50Hz 降到 2Hz，最直接的后果是？</p>
+        <button class="opt" data-fb="恰恰相反：频率低意味着感知和发力都变「迟钝」。">省电，站立反而更稳</button>
+        <button class="opt" data-fb="传感器本身没变，变的是「多久用一次传感器数据做决策」。">传感器读数会变得不准确</button>
+        <button class="opt" data-fb="对。决策基于 0.5 秒前的旧姿态，发力时机全错，身体会越晃越大，最终摔倒——你在上面演示里降低频率就能看到。">决策用的是"过期"的姿态信息，身体会震荡直至摔倒</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">感知—决策—执行的循环速度，直接决定双足机器人的生死：循环慢半拍，鸭子就摔给你看。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="399 美元的账本：BOM 成本拆解">
+      <h2>399 美元的账本：BOM 成本拆解</h2>
+      <p class="tldr">399 美元里要先扣掉渠道、物流、售后，再扣掉物料成本才轮到利润——而 15 个电机通常就是物料成本里最大的一块。</p>
+
+      <p>复刻一款产品，先要读懂它的价格结构。制造业里有个基础概念叫 <b>BOM（Bill of Materials，物料清单）</b>：造出一台设备所需要采购的全部零件的成本总和。BOM 只是起点，零售价里还要覆盖组装、物流、仓储、渠道分成、售后，最后剩下的才是利润。</p>
+
+      <p>据媒体报道，Microduck 能把价格压到 399 美元，背后有国产供应链与国产芯片的功劳——这也是"在中国复刻"这件事成立的根本原因：<mark>同样的东西，在中国造往往能做出更低的 BOM</mark>。下面的计算器用一套教学估算值（非官方数据）模拟这台账本，拖动滑块感受每个零件的分量。</p>
+
+      <div class="widget demo" id="demo2">
+        <div class="widget-title">BOM 计算器：这门生意到底赚不赚钱（教学估算）</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>单个电机（美元） <span class="val" data-for="motorP"></span><input type="range" name="motorP" min="4" max="40" step="1" value="18"></label>
+          <label>主控与电路板（美元） <span class="val" data-for="pcb"></span><input type="range" name="pcb" min="8" max="60" step="1" value="25"></label>
+          <label>电池（美元） <span class="val" data-for="batt"></span><input type="range" name="batt" min="4" max="30" step="1" value="12"></label>
+          <label>传感器组（美元） <span class="val" data-for="sens"></span><input type="range" name="sens" min="4" max="40" step="1" value="15"></label>
+          <label>结构与紧固件（美元） <span class="val" data-for="struct"></span><input type="range" name="struct" min="6" max="50" step="1" value="20"></label>
+          <label>组装与包装（美元） <span class="val" data-for="assem"></span><input type="range" name="assem" min="4" max="30" step="1" value="10"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>图中彩色段是各项 BOM 成本，灰色段是按零售价约 45% 估算的渠道与运营成本（含物流、仓储、售后、税费——真实比例因模式而异），剩下的白色段才是毛利空间。你会发现：<b>电机单价每降 1 美元，整台机器就省 15 美元</b>——这就是为什么选型（第 03 课）和供应链（第 11 课）是复刻的生死线。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">BOM 指的是？</p>
+        <button class="opt" data-fb="那是「毛利」的概念：BOM 只是成本的一部分，还没算运营与渠道。">产品的最终利润率</button>
+        <button class="opt" data-fb="对。BOM（物料清单）= 造一台设备所需全部物料的成本总和，是成本结构的第一层。">造一台设备所需全部物料的成本总和</button>
+        <button class="opt" data-fb="那是「售价」。BOM 是售价之下的第一层成本。">产品的零售定价</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">399 美元 = BOM + 组装物流渠道运营 + 利润。谁能压低 BOM（尤其 15 个电机），谁就握住了复刻的命门。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="复刻路线图与合规边界">
+      <h2>复刻路线图与合规边界</h2>
+      <p class="tldr">复刻五步走：定边界 → 选方案 → 打样迭代 → 仿真训练 → 小批量试产；同时避开外观专利、认证、开源协议三道合规红线。</p>
+
+      <p>综合前面几章，你可以把"在中国复刻 Microduck"拆成五个阶段——本系列 12 门课就是按这条路线展开的。但动手之前，还有三道红线要先划出来：</p>
+
+      <table>
+        <tr><th>红线</th><th>风险点</th><th>复刻策略</th></tr>
+        <tr><td>外观与专利</td><td>直接照抄鸭嘴造型、配色与产品名，可能侵犯外观设计专利与商标</td><td>"复刻能力，原创造型"：学它的自由度布局与玩法，外观自成一格</td></tr>
+        <tr><td>产品认证</td><td>在国内销售电子产品需要 3C 认证；带无线模块（WiFi/蓝牙）还需无线电型号核准（SRRC）</td><td>立项时就把认证列入预算与周期，别等量产前才发现过不了</td></tr>
+        <tr><td>开源协议</td><td>使用他人开源代码需遵守对应许可证（如署名、开源衍生代码等义务）</td><td>逐项确认所用开源组件的许可证条款，保留合规记录</td></tr>
+      </table>
+
+      <div class="widget order" data-answer="a,b,c,d,e">
+        <div class="widget-title">把复刻的五个阶段排成正确顺序</div>
+        <div class="item" data-id="c">打样迭代：结构、电路第一版做出来，摔了改、改了再摔</div>
+        <div class="item" data-id="a">定边界：明确"会什么、不会什么"，圈定能力与成本目标</div>
+        <div class="item" data-id="e">小批量试产：验证供应链、品控与认证，为量产铺路</div>
+        <div class="item" data-id="d">仿真训练：在 Isaac Lab 等环境训练运动策略，迁移到真机</div>
+        <div class="item" data-id="b">系统选型：自由度布局、舵机、主控、传感器方案定稿</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">关于复刻的合规边界，下面哪种做法是对的？</p>
+        <button class="opt" data-fb="对。「复刻能力、原创造型」既学到产品的核心价值，又绕开外观专利与商标风险，是业内常见的良性路径。">复刻它的能力与玩法，但外观与命名完全原创</button>
+        <button class="opt" data-fb="风险很高：外观设计专利与商标保护的是「长得像、叫得像」，1:1 仿制很容易踩线，即使功能开源也不例外。">既然软件开源了，直接 1:1 复制外观和名字也没事</button>
+        <button class="opt" data-fb="太天真：3C 认证与 SRRC 核准都有固定周期和费用，量产前才处理大概率跳票。">认证等量产前再补办就行</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">能力可以复刻，外观必须原创；认证要提前规划，开源协议要逐项核验——合规不是成本，是入场券。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">四道题检验你是否真的"看懂"了这只鸭子；通过后，阶段二将带你真正动手设计它。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">Microduck 的"鸭嘴"在功能上本质是什么？</p>
+        <button class="opt" data-fb="它确实长得像嘴，但不发声，本质是执行器。">一个扬声器，负责叫声</button>
+        <button class="opt" data-fb="摄像头装在头部用于观察，鸭嘴的功能是「抓」，不是「看」。">一个摄像头云台</button>
+        <button class="opt" data-fb="对。鸭嘴是一只小夹爪（末端执行器），能开合叼起袜子、马克笔等轻小物体——是它「能干活」的部分。">一个夹爪执行器，用来抓取轻小物体</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">Microduck 训练"走路、爬起"这类运动技能的标准路线是？</p>
+        <button class="opt" data-fb="真机试错成本极高：摔坏硬件、反复充电维修，正是仿真路线要避免的。">直接在真机上反复试错</button>
+        <button class="opt" data-fb="对。在 Isaac Lab 仿真中训练、Omniverse 数字孪生中验证，再部署到真机——虚拟世界摔一万次，现实一次不摔。">仿真中训练策略，验证后部署到真机</button>
+        <button class="opt" data-fb="人工遥控只能采集示教数据，做不了动态平衡这类高速控制技能。">出厂预装、人工遥控录制动作</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么说"在中国复刻"这件事特别成立？</p>
+        <button class="opt" data-fb="软件栈是全球开源的，跟在哪复刻无关；真正的原因在供应链。">因为中国开发者更容易访问开源社区</button>
+        <button class="opt" data-fb="对。据媒体报道，Microduck 的低成本本身就依赖国产芯片与供应链；而中国拥有最完整的电机、结构件、电子制造生态，能把 BOM 压得更低。">国产供应链与芯片生态能把 BOM 压到最低</button>
+        <button class="opt" data-fb="制造成本只占价格的一部分，运营与渠道全国都差不多；差距在 BOM 与供应链效率。">因为国内的渠道和物流费用接近于零</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">下一步动手前，最该先做的动作是？</p>
+        <button class="opt" data-fb="没有边界就开模、买电机，是最贵的弯路。">先买齐 15 个电机再说</button>
+        <button class="opt" data-fb="直接进强化学习为时过早：策略要跑在确定的硬件与结构之上，先有「身体」才有「大脑」。">先搭仿真环境训练走路</button>
+        <button class="opt" data-fb="对。先按第 02 课划定自由度布局、确定能力边界，再做舵机选型（第 03 课）与电路设计（第 04 课）——这正是阶段二的顺序。">划定自由度与能力边界，进入机械与选型设计</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">毕业检查：你能说出它的六大"器官"、它开源了什么、没开源什么、399 美元的账本怎么算、复刻要避开哪三道红线。都答上来了，就进入 <a href="microduck-02-mechanics.html">第 02 课：机械结构与自由度设计</a>。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 定制演示 1：推一下鸭子（离散控制频率对稳定性的影响） ================= */
+demo('#demo1', ({ push, freq, kp }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, padL = 46, padR = 16, padT = 18, padB = 30;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--muted'), cLine = css.getPropertyValue('--border');
+  const cMain = css.getPropertyValue('--primary'), cBad = css.getPropertyValue('--bad');
+
+  // 离散控制仿真：T = 1/freq 采样一次状态，其余时间保持控制量
+  const T = 1 / freq, dt = 0.001, tEnd = 4;
+  const kd = 2 * Math.sqrt(kp) * 0.7;
+  let th = push * Math.PI / 180, w = 0, thS = th, wS = 0, next = T;
+  const pts = [];
+  let fell = false, maxAfter = 0;
+  for (let t = 0; t <= tEnd; t += dt) {
+    if (t >= next) { thS = th; wS = w; next += T; }
+    const u = -kp * thS - kd * wS;
+    w += u * dt; th += w * dt;
+    pts.push([t, th * 180 / Math.PI]);
+    if (Math.abs(th) * 180 / Math.PI > 90) { fell = true; break; }
+    if (t >= 2) maxAfter = Math.max(maxAfter, Math.abs(th) * 180 / Math.PI);
+  }
+
+  const yOf = deg => padT + (90 - deg) / 180 * (H - padT - padB);
+  const xOf = t => padL + t / tEnd * (W - padL - padR);
+  // 坐标轴
+  ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+  [90, 45, 0, -45, -90].forEach(d => {
+    ctx.beginPath(); ctx.moveTo(padL, yOf(d)); ctx.lineTo(W - padR, yOf(d)); ctx.stroke();
+    ctx.fillStyle = cTxt; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(d + '°', padL - 6, yOf(d) + 4);
+  });
+  // 摔倒线
+  ctx.strokeStyle = cBad; ctx.setLineDash([5, 4]);
+  [90, -90].forEach(d => { ctx.beginPath(); ctx.moveTo(padL, yOf(d)); ctx.lineTo(W - padR, yOf(d)); ctx.stroke(); });
+  ctx.setLineDash([]);
+  ctx.fillStyle = cBad; ctx.textAlign = 'left';
+  ctx.fillText('±90° 摔倒线', padL + 4, yOf(90) - 5);
+  // 曲线
+  ctx.strokeStyle = cMain; ctx.lineWidth = 2.2; ctx.beginPath();
+  pts.forEach(([t, d], i) => { const x = xOf(t), y = yOf(Math.max(-90, Math.min(90, d))); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke();
+  ctx.fillStyle = cTxt; ctx.textAlign = 'right'; ctx.fillText('时间 → 4s', W - padR, H - 10);
+
+  const ro = root.querySelector('.readout');
+  if (fell) ro.textContent = '❌ 控制循环太慢（或强度不足）：倾角发散超过 ±90°，鸭子摔倒了。提高频率试试。';
+  else if (maxAfter > 5) ro.textContent = '⚠️ 站住了但一直在晃：恢复过程伴随明显振荡，控制频率仍偏低。';
+  else ro.textContent = `✅ 稳稳站住：约 ${freq}Hz 的控制频率足以在推扰后 ${tEnd}s 内收敛（残余倾角低于 5°）。`;
+});
+
+/* ================= 定制演示 2：BOM 计算器 ================= */
+demo('#demo2', ({ motorP, pcb, batt, sens, struct, assem }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, padL = 20, padR = 20;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const parts = [
+    { name: '电机 ×15', v: motorP * 15, c: '#a855f7' },
+    { name: '主控电路', v: pcb, c: '#3b82f6' },
+    { name: '传感器组', v: sens, c: '#14b8a6' },
+    { name: '结构紧固', v: struct, c: '#22c55e' },
+    { name: '电池', v: batt, c: '#f59e0b' },
+    { name: '组装包装', v: assem, c: '#ef4444' },
+  ];
+  const retail = 399, ops = retail * 0.45;
+  const bom = parts.reduce((s, p) => s + p.v, 0);
+  const margin = retail - bom - ops;
+  const rate = margin / retail;
+
+  // 顶部堆叠条
+  const y = 40, h = 44, total = retail;
+  const scale = x => padL + x / total * (W - padL - padR);
+  ctx.font = '13px sans-serif';
+  let x = padL;
+  parts.forEach(p => {
+    const w = scale(p.v) - padL;
+    ctx.fillStyle = p.c; ctx.fillRect(x, y, w, h);
+    if (w > 44) { ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(p.name, x + w / 2, y + h / 2 + 4); }
+    x += w;
+  });
+  const wOps = scale(ops) - padL;
+  ctx.fillStyle = css.getPropertyValue('--border'); ctx.fillRect(x, y, wOps, h);
+  if (wOps > 70) { ctx.fillStyle = cMut; ctx.textAlign = 'center'; ctx.fillText('渠道运营估算', x + wOps / 2, y + h / 2 + 4); }
+  const wM = W - padR - x - wOps;
+  if (wM > 2) { ctx.fillStyle = margin > 0 ? '#16a34a' : '#dc2626'; ctx.fillRect(x + wOps, y, wM, h); }
+  // 价格刻度线
+  ctx.strokeStyle = cTxt; ctx.beginPath(); ctx.moveTo(W - padR, y - 8); ctx.lineTo(W - padR, y + h + 8); ctx.stroke();
+  ctx.fillStyle = cTxt; ctx.textAlign = 'right'; ctx.fillText('零售 399', W - padR, y - 14);
+
+  // 图例与数字
+  ctx.textAlign = 'left';
+  let ly = y + h + 46;
+  parts.forEach(p => {
+    ctx.fillStyle = p.c; ctx.fillRect(padL, ly - 10, 12, 12);
+    ctx.fillStyle = cTxt; ctx.fillText(`${p.name}：${p.v.toFixed(0)} 美元`, padL + 20, ly + 1);
+    ly += 24;
+  });
+  ctx.fillStyle = cMut; ctx.fillRect(padL, ly - 10, 12, 12);
+  ctx.fillStyle = cTxt; ctx.fillText(`渠道运营估算（约 45%）：${ops.toFixed(0)} 美元`, padL + 20, ly + 1);
+  ly += 24;
+  ctx.fillStyle = bom > 0 ? '#16a34a' : '#dc2626'; ctx.fillRect(padL, ly - 10, 12, 12);
+  ctx.fillText(`BOM 合计：${bom.toFixed(0)} 美元 · 毛利空间：${margin.toFixed(0)} 美元（毛利率 ${(rate * 100).toFixed(0)}%）`, padL + 20, ly + 1);
+
+  const ro = root.querySelector('.readout');
+  if (rate > 0.15) ro.textContent = `✅ 健康账本：毛利率约 ${(rate * 100).toFixed(0)}%，这门生意能做。试试把电机单价降 5 美元，看毛利变化。`;
+  else if (rate > 0) ro.textContent = `⚠️ 勉强活着：毛利率仅 ${(rate * 100).toFixed(0)}%，一次售后就可能吃掉全部利润。该去谈供应链了。`;
+  else ro.textContent = `❌ 卖一台亏一台：BOM 加运营已超过 399 美元。要么换更便宜的执行器方案，要么重新定义产品。`;
+});
+</script>
+</body>
+</html>

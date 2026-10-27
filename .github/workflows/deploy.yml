@@ -1,0 +1,40 @@
+name: Deploy to Tencent Cloud
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync to server
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.screenshots' \
+            --exclude '.trae-html-share-packages' \
+            --exclude 'deploy' \
+            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/personalcourses/"
+
+      - name: Verify deployment
+        run: |
+          code=$(ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "curl -s -o /dev/null -w '%{http_code}' -H 'Host: course.leozhu.cn' http://127.0.0.1/")
+          echo "HTTP status: $code"
+          [ "$code" = "200" ] || { echo "Site did not return 200"; exit 1; }
