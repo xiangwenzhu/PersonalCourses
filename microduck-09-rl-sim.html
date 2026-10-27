@@ -1,0 +1,677 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭强化学习与仿真训练 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭强化学习与仿真训练</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="当公式追不上动作">
+      <h2>当公式追不上动作</h2>
+      <p class="tldr">经典控制（第 08 课）能走、能站，但一遇到推搡、斜坡、碎石就露馅——因为真实世界太复杂，写不出覆盖所有情况的公式。强化学习换了个思路：不教规则，让它自己摔出来。</p>
+
+      <p>回顾一下经典路线的瓶颈：ZMP/LIPM 假设平地、小角度、准静态；PID 调参只在标称工况下最优。可真实世界从不配合——地面有摩擦突变、孩子会拍它一下、地板接缝会绊脚。每遇到一种新情况，工程师就得回去改模型、重推公式，<mark>公式永远追不上世界的复杂度</mark>。</p>
+
+      <p>强化学习（Reinforcement Learning，RL）提供了另一条路：<b>不写「该怎么走」的规则，只写「走得好不好」的评分，让智能体在仿真里反复尝试</b>。摔了扣分、走得稳加分，它自己摸索出在最广工况下都不摔的步态。Microduck 开源的 Isaac Lab 训练栈，正是这条路线的产品化。</p>
+
+      <div class="analogy">教小孩走路：经典控制像「抬左腿 15 度、重心前移 3 厘米」的口令书——平地上有效，换个地毯全乱；强化学习像「摔了自己爬起来，走稳了给糖」——你不教细节，只给反馈，孩子反而在摸爬滚打里练出各种地面都能走的真功夫。</div>
+
+      <div class="key"><b>核心转变：</b>经典控制是「规则驱动」（工程师写死逻辑），强化学习是「目标驱动」（工程师只定奖励，行为靠探索学出来）。规则会漏掉没预想到的情况，目标不会——这是 RL 在机器人领域逆袭的根本原因。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：两种路线的一次性对比</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">经典控制</div><div class="back">优点：可解释、可验证、调试快。缺点：依赖精确模型，遇到没建模的扰动就失效；每加一种场景都要人工改规则。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">强化学习</div><div class="back">优点：在训练分布内鲁棒性惊人，能学会反直觉的省能步态。缺点：像黑箱、训练吃算力、可能学到「钻奖励空子」的怪招。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：经典控制需要工程师预先写出详细的 <input data-answer="规则|控制律|逻辑|公式">；强化学习只需定义 <input data-answer="奖励|奖励函数|目标|评分">，行为靠智能体自己探索出来。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话记住：规则会被世界复杂度打败，目标不会。当动作复杂到写不出公式时，强化学习接棒——前提是有一个能随便摔的仿真环境。下一章看它的核心机制。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="试错式学习">
+      <h2>试错式学习</h2>
+      <p class="tldr">强化学习的全部秘密就三样：状态（我在哪、倒没倒）、动作（关节怎么转）、奖励（这步走得好不好）；智能体在「试—错—奖—再试」的循环里，逐渐把「好动作」的概率越推越高。</p>
+
+      <p>把鸭子放进一个循环：它观察当前<b>状态</b>（IMU 读数、关节角、脚底接触），据此输出一个<b>动作</b>（各关节的目标位置/力矩），环境返回新的状态和一次<b>奖励</b>（走稳了 +1、摔了 −10、能耗高了扣点分）。智能体内部有一个叫<b>策略</b>（policy）的函数，输入状态、输出动作。训练就是不断调整这个策略，让它在同样的状态下，越来越倾向于拿高奖励的动作。</p>
+
+      <p>具体怎么调？最常用的算法之一 <b>PPO</b>（近端策略优化）的思路很朴素：让智能体用当前策略跑一大段「剧情」（episode），统计哪些动作序列拿到了超预期的高奖励（优势为正），就在下一次迭代里把它们的概率调高；反之调低。如此循环几万次，策略就从「秒摔」进化到「走稳」。</p>
+
+      <div class="analogy">训练狗接飞盘：狗冲出去叼回来，你立刻摸头（正奖励）；叼错了方向，你装没看见（无奖励）。重复几十次后，狗会自动把「往飞盘方向跑」这个动作的概率越调越高——强化学习只是把这套「行为-反馈-强化」写成了梯度下降的数学。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">PPO 训练中，对「优势为正」的动作序列，算法会怎么调整策略？</p>
+        <button class="opt" data-fb="那样会削弱好动作，正好反了——正优势意味着这些动作比平均好，应该强化。">降低它们再次出现的概率</button>
+        <button class="opt" data-fb="优势只反映「比预期好多少」，不直接换算成绝对奖励数值">把动作序列的奖励直接加到网络参数上</button>
+        <button class="opt" data-fb="对。正优势 = 这些动作带来了超预期的好结果，PPO 会温和地调高它们在策略中的概率，且幅度受限以免训崩。">调高它们再次出现的概率</button>
+        <button class="opt" data-fb="PPO 不会直接改奖励函数——它只根据已有奖励改进策略，奖励定义是训练前就定好的。">直接修改奖励函数让它们更高分</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：强化学习三要素——智能体感知到的 <input data-answer="状态|state">、它输出的 <input data-answer="动作|action">、环境返回的 <input data-answer="奖励|reward">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">试错式学习 = 状态 → 动作 → 奖励 → 调整策略，循环几万次。PPO 负责「温和地强化好动作」。下一章进入它最离不开的基础设施：仿真器。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="仿真器：Isaac Lab 与域随机化">
+      <h2>仿真器：Isaac Lab 与域随机化</h2>
+      <p class="tldr">真机试错太贵太危险，一切训练都在仿真里做；但仿真和真机有差距——域随机化故意「加噪」（质量、摩擦、电机延迟都随机），逼策略学出对一切合理参数都鲁棒的「内功」。</p>
+
+      <p>训练一个能走 100 万步的策略，意味着要摔 10 万次。真机摔一次就可能断腿，仿真里摔一万次只是重启一行代码。所以 <b>GPU 物理仿真器</b>成了 RL 机器人的标配。Microduck 开源的 <b>Isaac Lab</b>（基于 NVIDIA Isaac Sim/Gym）是其中的代表：它把上千个鸭子实例并行放在 GPU 上，同时、独立地跑各自的训练剧情——别人摔 1 次的工夫，它已经摔了 1000 次。</p>
+
+      <p>但仿真不是真机：URDF 里的质量差了几克、地面摩擦系数差 0.1、电机响应慢 2 毫秒，这些「小误差」足以让训出来的策略一上真机就趴窝——这就是<b>仿真-现实差距</b>（sim-to-real gap）。对策叫<b>域随机化</b>（Domain Randomization）：每次重启剧情时，故意把质量、摩擦、延迟、IMU 噪声等参数在一个合理范围内<b>随机打乱</b>。这样策略没见过任何「确定」的环境，只能学那些<mark>不依赖精确参数的、物理层面更本质的平衡技巧</mark>——上真机时，真机只是又一个「随机出来的环境」而已。</p>
+
+      <div class="analogy">学车：如果驾校只让你在一条笔直、干燥、无风的路上练，你拿到的驾照上了湿滑晚高峰必然抓瞎；聪明的驾校故意换车型、换轮胎磨损、换天气练——逼你学会「离合的半联动点」这种不依赖具体车的真本事。域随机化就是给机器人办「全路况驾校」。</div>
+
+      <div class="key">仿真的两大支柱：<b>并行</b>（GPU 同时跑上千实例，试错成本低到尘埃）+ <b>随机</b>（域随机化把参数不确定性变成训练数据的一部分，弥合 sim-to-real 差距）。二者缺一，策略都上不了真机。</div>
+
+      <details class="reveal">
+        <summary>延伸：Isaac Lab 和它前辈 Isaac Gym 的关系</summary>
+        <p>Isaac Gym 是 NVIDIA 早期的 GPU 物理仿真 + RL 训练框架，以「端到端在 GPU 上完成物理+学习」的极致速度闻名；Isaac Lab 是其继任者，基于更新的 Omniverse 架构，提供更灵活的机器人任务搭建（rsl_rl、 legged_gym 等社区训练栈都迁移到了它上面）。Microduck 开源的训练栈正是这套生态的本地化应用。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">域随机化（Domain Randomization）的核心动机是什么？</p>
+        <button class="opt" data-fb="随机化恰恰是为了让策略「忘掉」精确参数，而不是记住——记忆在确定环境上才发生。">让策略记住每个参数的精确影响，便于精确建模</button>
+        <button class="opt" data-fb="对。真机和仿真总有参数差，随机化强迫策略学不依赖精确参数的本质技能；部署时真机只是又一个随机样本。">弥合仿真-现实差距：逼策略对参数不确定鲁棒</button>
+        <button class="opt" data-fb="随机化通常会让单次训练收敛变慢，但换来的是可迁移性——拿训练速度换鲁棒是笔合算买卖。">加快训练收敛速度，更快得到最优策略</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：训练上万次而不伤真机的关键设施是 <input data-answer="仿真器|GPU物理仿真|Isaac Lab|仿真">；为应对参数不确定，训练中要施加 <input data-answer="域随机化|随机化|domain randomization">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">仿真器负责「随便摔」，域随机化负责「摔得花样百出」。下一步看最微妙的设计：奖励函数怎么写，直接决定策略学出来是「鸭子步」还是「僵尸跳」。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="奖励塑形">
+      <h2>奖励塑形</h2>
+      <p class="tldr">奖励是唯一能指挥策略的「语言」：写得准，它走成优雅的鸭子步；写得偏，它能给你走出「原地抽搐但意外拿分」的僵尸舞——奖励黑客是这条路上最经典的坑。</p>
+
+      <p>一个走路策略的奖励函数，通常由几类分项加权组成：</p>
+      <ul>
+        <li><b>任务进度</b>：前进速度越接近目标越快，拿分最多——这是「为什么走」的主轴。</li>
+        <li><b>姿态与稳定</b>：躯干滚转/俯仰角偏离竖直越小越好，ZMP 靠近支撑中心加分——这是「走得好看、走得稳」。</li>
+        <li><b>正则项</b>：关节力矩惩罚（省能）、动作变化率惩罚（动作平滑）、关节限位惩罚（保护机械）——这是「走得省、走得柔、走得安全」。</li>
+      </ul>
+      <p style="text-align:center">$$R = w_1\,(\text{速度}) + w_2\,(\text{直立}) + w_3\,(\text{省能}) + \cdots$$</p>
+
+      <p>权重 $w_i$ 的相对大小，就是你对「什么叫走得好」的价值判断。<mark>调奖励函数是 RL 机器人工程师的核心手艺</mark>：速度权重太大，鸭子会不惜抽搐狂奔；省能权重太大，它可能学会「站着不动」（速度为 0 但能耗也极低，总分意外的高）——这种钻奖励空子的行为叫<b>奖励黑客</b>（reward hacking）。</p>
+
+      <div class="analogy">家长给孩子定规矩：只奖励「考试分数」，孩子可能熬夜刷题熬坏身体；只奖励「不熬夜」，孩子可能直接睡觉不学习了。好的家规要把「分数、睡眠、运动」按合理权重打包考核——奖励塑形就是在给鸭子写一部「考什么就练出什么」的家规。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">训练出的策略在仿真里「速度奇快」，上真机却剧烈抽搐、几步就摔。最可能的奖励设计问题是？</p>
+        <button class="opt" data-fb="对。速度权重过大、而力矩/平滑惩罚不足时，策略会牺牲平滑与稳定换速度——仿真里物理理想化能蒙混过关，真机上噪声和延迟让它立刻露馅。">速度奖励权重过高，平滑与稳定惩罚不足</button>
+        <button class="opt" data-fb="奖励函数决定的是「优化方向」，不是「优化精度」——方向错了，再多迭代也只是把错误练得更熟练。">训练迭代次数不够，继续训会自愈</button>
+        <button class="opt" data-fb="域随机化管的是参数鲁棒性，治不了「奖励目标本身定偏」的病——目标错了，对什么参数都学出坏动作。">应该加大域随机化的强度</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：策略「钻奖励空子」、拿到高分却没学到期望行为的现象叫 <input data-answer="奖励黑客|reward hacking|钻空子">；对策之一是合理设置 <input data-answer="正则项|惩罚项|权重"> 约束其行为。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">奖励即语言：速度给方向，稳定给底线，正则给品格。权重就是价值观——写奖励函数，本质是在回答「什么叫一只走得好的鸭子」。下一章亲手在实验台里调权重，看「鸭子步」如何在数值上诞生。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="奖励权重模拟">
+      <h2>奖励权重模拟</h2>
+      <p class="tldr">一个极简「一维行走小人」模拟：前进、直立、省能三项奖励打架，小人会倒、会站、会僵尸跳还是会走——拖动三个权重滑块，直观感受「奖励即行为设计」。</p>
+
+      <p>把走路压缩到一维：一个「小人」（质心 + 一条等效腿）想以目标速度前进。它的策略已经训好，行为由奖励权重「编程」：前进权重 $w_f$ 奖励接近目标速度、直立权重 $w_u$ 惩罚躯干倾角、省能权重 $w_e$ 惩罚用力。下面的实验台不做真训练（那要几小时 GPU），而是用<strong>预计算的行为模型</strong>：对每组权重，模拟器按「该激励下的典型策略」演化出重心轨迹，并给出总分与评价——足够让你看清奖励结构的因果。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">奖励权重实验台：调三个权重，看一维小人选择「站、摔、跳还是走」</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>前进权重 w_f <span class="val" data-for="wf"></span><input type="range" name="wf" min="0" max="3" step="0.05" value="1.2"></label>
+          <label>直立权重 w_u <span class="val" data-for="wu"></span><input type="range" name="wu" min="0" max="3" step="0.05" value="1"></label>
+          <label>省能权重 w_e <span class="val" data-for="we"></span><input type="range" name="we" min="0" max="3" step="0.05" value="0.6"></label>
+          <label>扰动强度 <span class="val" data-for="noise"></span><input type="range" name="noise" min="0" max="1" step="0.05" value="0.3"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>试着找到这组典型配置，亲手验证「奖励黑客」：</p>
+      <ul>
+        <li><b>只有前进</b>：把 $w_f$ 拉满、$w_u$ 与 $w_e$ 归零——小人会前倾身体「扑」出去，几步就摔，但摔之前速度极高。</li>
+        <li><b>只有省能</b>：$w_e$ 拉满——小人原地站桩，一步不动（能耗为 0，总分意外可观）。</li>
+        <li><b>平衡配方</b>：$w_f$ 稍高、$w_u$ 守住底线、$w_e$ 适度——小人走出节奏均匀、躯干平稳的真正步态。</li>
+      </ul>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">实验台里把「前进权重」拉到最大、另两项归零，小人最可能的行为是？</p>
+        <button class="opt" data-fb="直立权重归零时，没有任何力量阻止它倒——越稳的走姿反而「浪费」了可用于加速的能量。">稳稳地慢走</button>
+        <button class="opt" data-fb="直立权重归零，它没有理由保持躯干竖直——省能权重也归零，它不在乎用多大力。">原地高抬腿</button>
+        <button class="opt" data-fb="对。唯一被奖励的是速度，于是它用前倾身体换取前进加速度，摔之前速度最高——这是「奖励黑客」的雏形。">前倾扑出，速度极高但几步就摔</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：要防止「为了速度不惜摔倒」的极端行为，应适当提高 <input data-answer="直立|稳定|姿态|wu"> 权重；要防止「原地不动省能耗」，应提高 <input data-answer="前进|速度|wf"> 权重或给「静止」加惩罚。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">奖励结构 = 行为设计。三个权重滑块就是你作为「教练」的指挥棒：偏一分，动作变样。真实项目里，调奖励函数往往比调网络结构更影响最终效果。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="从仿真到真机">
+      <h2>从仿真到真机</h2>
+      <p class="tldr">策略迁移真机前要做三件「翻译」：网络蒸馏成可部署的轻量模型、观测对齐到真机传感器、控制频率匹配电机带宽——任何一环对不上，训练再好的策略也寸步难行。</p>
+
+      <p>训练在服务器 GPU 上，跑在鸭子里的一颗嵌入式芯片上——部署是 RL 机器人最后、也最容易翻车的一关。三件「翻译」必须逐环对上：</p>
+
+      <div class="widget">
+        <div class="widget-title">分步走完「仿真策略 → 鸭子真机」的迁移流水线</div>
+        <div class="steps">
+          <div class="step"><b>① 模型蒸馏与压缩</b> —— 训练用的策略网络可能有几十万参数；通过蒸馏、剪枝或干脆换一个小 MLP，把它压到嵌入式芯片跑得动的规模，延迟压到控制周期以内。</div>
+          <div class="step"><b>② 观测对齐</b> —— 仿真里的状态是「上帝视角」的精确值；真机只有 IMU、编码器等带噪读数。部署时要按同样的顺序拼接、同样的单位归一化，差一个符号全盘皆输。</div>
+          <div class="step"><b>③ 控制频率匹配</b> —— 训练时策略以 50Hz（示例）出动作；真机电机驱动环以 1kHz 跑。策略输出的关节目标位置要交给底层伺服（第 06 课、第 08 课的 PID）以高频跟踪，两层频率必须锁相。</div>
+          <div class="step"><b>④ 安全限幅与看门狗</b> —— 真机上必须给动作加限位、给姿态加「倾倒即切断」的看门狗：策略再鲁棒，也不允许它有把电机烧掉的自由。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <p>迁移中最隐蔽的坑是<b>观测定义漂移</b>：仿真里把 IMU 的俯仰角取「向上为正」，部署时若按「向下为正」拼接输入，策略看到的输入全反了——它会输出与正确动作完全镜像的动作，当场表演「精准地摔倒」。<mark>每一行观测代码，都要和训练配置逐字对齐</mark>。</p>
+
+      <div class="analogy">派驻海外高管：业务能力（策略）再强，到了当地也得过三关——语言（模型压缩成芯片能跑的方言）、法律与记账规则（观测对齐）、当地办公节奏（控制频率匹配）。任何一关糊弄，业务必然停摆；机器人部署同理。</div>
+
+      <div class="warn">最常见误区：以为「仿真里走得稳 = 真机必然走得稳」。仿真-现实差距不只是物理参数差，更是<b>工程实现差</b>：坐标系定义、单位、延迟、限幅……每一行部署代码都是一次可能的翻车点。RL 项目的最后 10% 工程量，往往要花掉 50% 的调试时间。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">策略在仿真里表现完美，上真机后输出动作完全「左右镜像」。最可能的部署 bug 是？</p>
+        <button class="opt" data-fb="摩擦不匹配会导致「走得差」，不会导致「精确镜像」——镜像提示的是符号/坐标系级错误。">地面摩擦系数没随机化</button>
+        <button class="opt" data-fb="对。某个关节角或 IMU 轴的符号在部署时取反，等于给策略的输入全加负号，输出自然完全镜像——这是观测对齐环节的典型事故。">某个观测分量（如某关节角）的符号与训练时不一致</button>
+        <button class="opt" data-fb="网络压缩损失的是精度，不会产生「完美镜像」这种系统性错误。">策略网络压缩蒸馏时参数被截断</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：把大策略网络压成小模型的过程叫 <input data-answer="蒸馏|剪枝|压缩|量化">；部署时给动作加限位、倾倒即断电的保护机制叫 <input data-answer="看门狗|限幅|安全限幅|watchdog">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">部署三关：模型瘦身、观测对齐、频率匹配。RL 项目不是「训完即结束」，最后 10% 的工程实现，往往比前面 90% 更磨人。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="开源栈与训练流水线">
+      <h2>开源栈与训练流水线</h2>
+      <p class="tldr">Microduck 开源的 Isaac Lab 栈把「URDF 建模 → 域随机化 → PPO 训练 → 策略蒸馏」串成一条可复制流水线；跟着它走一遍，等于站在 Pollen Robotics 的肩膀上复现整个训练流程。</p>
+
+      <p>从零搭 RL 训练栈曾是一座高山；Microduck 的开源栈（基于 Isaac Lab 生态）把它变成了可复用的脚手架。一条典型的训练流水线如下：</p>
+
+      <ul>
+        <li><b>资产准备</b>：把鸭子的 URDF/USD 模型导入，确认质量、惯量、关节限位与实际一致——错误的惯量等于在仿真里训一只「假鸭子」。</li>
+        <li><b>环境配置</b>：定义观测（哪些传感器进网络）、动作（关节位置目标还是力矩）、奖励函数与域随机化参数——前面 4 章的知识全在这里兑现。</li>
+        <li><b>PPO 训练</b>：上千并行实例在 GPU 上跑，监控奖励曲线；奖励不再上涨后，导出策略。</li>
+        <li><b>蒸馏与部署</b>：压缩成嵌入式可跑的规模，对齐观测，下真机——按第 6 章的三关逐项验收。</li>
+      </ul>
+
+      <p>这条流水线的真正价值不在「能训」，而在<b>可调</b>：换一只不同的微型双足，只要改 URDF 和少量配置，其余环节原样复用——这就是开源栈对复刻者的意义。<mark>你不只是复刻一只鸭子，更是复刻一条「能批量造鸭子」的产线</mark>。</p>
+
+      <details class="reveal">
+        <summary>延伸：监控训练时该看哪些曲线？</summary>
+        <p>三条核心曲线：<b>① 回合回报</b>（总奖励随迭代上升并收敛）——不升说明奖励/环境有问题；<b>② 回合长度</b>（从秒摔到能走完整 episode）——直接反映稳定性的进步；<b>③ 各奖励分项</b>（速度、直立、省能分别的趋势）——防止「总分涨、某分项崩」的隐性退化。有经验的工程师看分项曲线比看总分更早发现问题。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">训练监控中，「回合长度」从 0.2 秒稳步升到 10 秒（episode 上限），最直接说明什么？</p>
+        <button class="opt" data-fb="对。回合长度就是「多久才摔/触发终止」，它持续变长说明策略维持不倒的能力在真实进步——这是比总奖励更硬核的稳定性指标。">策略维持不摔的能力在持续增强</button>
+        <button class="opt" data-fb="回合长度不直接反映速度——反映速度的是奖励里的速度分项。">前进速度在持续变快</button>
+        <button class="opt" data-fb="能耗对应奖励里的力矩惩罚分项，回合长度与之无直接对应。">能耗在持续降低</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">开源栈 = 可复制流水线：资产 → 环境 → 训练 → 蒸馏 → 部署。监控回合长度比监控总分更诚实。最后一章做总测验，收官整个「学习智能」模块。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道题检验你是否把「试错学习、仿真、奖励塑形、部署」串成闭环；过关之后，去看看鸭子如何长出「眼睛和大脑」，走向感知与 VLA。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">为什么强化学习适合解决「被小孩推一下」这类突发扰动，而经典 ZMP 控制相对吃力？</p>
+        <button class="opt" data-fb="推理速度并不是两者的主要差别；差别在于「有没有预见到这种情况」——RL 的训练分布里见过，ZMP 的模型里没有。">RL 推理速度更快，响应更及时</button>
+        <button class="opt" data-fb="控制器复杂不复杂不是关键；关键是 RL 在训练中「摔过类似的跤」，经典控制没有这段经验。">RL 用的网络更大，容量更足</button>
+        <button class="opt" data-fb="对。推搡属于难精确建模的扰动，经典控制只能事后纠偏；RL 在域随机化的训练里「被推过千万次」，已经学会这类情况下的恢复策略——经验战胜了公式。">RL 训练时已在随机扰动中反复经历过，学到了恢复策略；经典控制依赖预建模型，没建模就没对策</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">关于「奖励黑客」（reward hacking），正确的说法是？</p>
+        <button class="opt" data-fb="拿高分却行为异常，恰恰说明它找到了奖励函数的漏洞——是「太聪明」而非「没学好」。">说明策略还没收敛，继续训练会自愈</button>
+        <button class="opt" data-fb="对。策略只认奖励不认意图：奖励没覆盖的维度（如平滑、能耗）它就可能牺牲。解法只能是回头修奖励函数，补上缺失的约束。">奖励没写到的维度，策略就可能「钻空子」牺牲它；要回头修奖励函数</button>
+        <button class="opt" data-fb="随机化解决的是参数鲁棒性；奖励目标定偏时，对任何参数都会学出坏行为。">域随机化能自动消除奖励黑客</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">部署到真机前，下列哪项工作最不该省？</p>
+        <button class="opt" data-fb="对。观测定义差一个符号、单位差一个量级，策略就会输出系统性错误动作；这是部署阶段最高发、也最容易被忽视的事故源。">逐字核对观测定义与训练配置（符号、单位、顺序）一致</button>
+        <button class="opt" data-fb="界面再漂亮，也救不了内部信号链路的错位——工程顺序不能反。">先做一个漂亮的监控界面再调内核</button>
+        <button class="opt" data-fb="限幅保护是「兜底」，但兜底不能替代「信号本身正确」——前者防意外，后者防系统性错误。">把所有保护先关掉，测试裸奔性能上限</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">「学习智能」模块收官。想巩固控制基础，回顾 <a href="microduck-08-control.html">第 08 课：机器鸭经典控制与步态</a>；下一步去 <a href="microduck-10-perception.html">第 10 课：机器鸭感知与 VLA</a>——看看鸭子如何用视觉理解世界，并听懂「去厨房帮我拿杯水」这样自然的指令。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ============ 课程定制演示：奖励权重实验台（一维行走小人） ============
+   行为模型（预计算典型策略，非实时训练）：
+   - 总激励 S = wf*(前进) + wu*(直立) + we*(省能)
+   - 前倒倾向 a = wf*2.2 - wu*1.6  （权重差决定「想不想前倾加速」）
+   - 平衡能力 b = wu*1.4 + we*0.4 （直立+省能合计提供「站得住」的底子）
+   - 若 b 远小于扰动+前倾需求 → 摔倒；a 过大且 b 不足 → 「僵尸跳」式猛冲；
+     比例合适 → 稳定行走，躯干倾角小、节奏匀。 */
+demo('#demo1', ({ wf, wu, we, noise }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cPri = css.getPropertyValue('--primary');
+  const cBad = css.getPropertyValue('--bad'), cOk = css.getPropertyValue('--ok');
+  const cWarn = css.getPropertyValue('--warn');
+
+  const g = 9.8;
+  const T = 10, dt = 0.02;
+  const n = Math.round(T / dt);
+  const padL = 44, padR = 20, padT = 22, padB = 40;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const X = t => padL + (t / T) * plotW;
+  const angMax = 0.6;                    // 显示范围 ±0.6 rad
+  const Y = a => padT + plotH * (0.5 - a / (2 * angMax));
+
+  // —— 行为判定 ——
+  const drive = wf * 2.2 - wu * 1.6;     // 前倾驱动
+  const balance = wu * 1.4 + we * 0.4;   // 平衡底子
+  const dist = noise * 0.9;              // 扰动强度（角加速度级）
+  const demand = Math.abs(drive) * 0.9 + dist;   // 维持稳定所需能力
+  const margin = balance - demand;
+
+  let mode;                              // walk / stand / charge / fall
+  if (balance < dist * 0.7) mode = 'fall';
+  else if (wf < 0.15) mode = 'stand';
+  else if (margin < 0) mode = 'charge';  // 想走走不好 → 猛冲摔倒
+  else mode = 'walk';
+
+  // —— 生成躯干倾角序列 ——
+  const th = new Array(n + 1); let w = 0, a = 0;
+  const baseLean = mode === 'walk' ? Math.min(0.12, Math.max(0, drive) * 0.05) : (mode === 'charge' ? 0.3 : 0);
+  // 伪随机但确定的扰动序列
+  const rnd = i => Math.sin(i * 12.9898) * 43758.5453 % 1;
+  for (let i = 0; i <= n; i++) {
+    let acc;
+    if (mode === 'walk') {
+      acc = -9 * (a - baseLean) - 3.5 * w + (rnd(i) - 0.5) * dist * 6;
+    } else if (mode === 'stand') {
+      acc = -12 * a - 5 * w + (rnd(i) - 0.5) * dist * 6;
+    } else if (mode === 'charge') {
+      acc = drive * 3.2 - 0.8 * w + (rnd(i) - 0.5) * dist * 6;
+    } else { // fall
+      acc = (a > 0 ? 1 : -1) * g * 0.6 * Math.max(0.08, Math.abs(a)) + (rnd(i) - 0.5) * dist * 4;
+    }
+    w += acc * dt; a += w * dt;
+    if (mode === 'charge' && Math.abs(a) > 0.55) mode = 'fall';   // 猛冲过头转入摔倒
+    th[i] = Math.max(-0.9, Math.min(0.9, a));
+  }
+
+  // —— 指标 ——
+  let maxAbs = 0, fellAt = null;
+  for (let i = 0; i <= n; i++) {
+    if (Math.abs(th[i]) > maxAbs) maxAbs = Math.abs(th[i]);
+    if (fellAt === null && Math.abs(th[i]) > 0.55) fellAt = i * dt;
+  }
+  const meanAbs = th.reduce((s, v) => s + Math.abs(v), 0) / (n + 1);
+  // 伪「总分」：按当前权重给各维度打分
+  const speedScore = mode === 'stand' ? 0 : (mode === 'walk' ? Math.min(1, wf) : (mode === 'charge' ? 1 : 0.2));
+  const uprightScore = Math.max(0, 1 - meanAbs / 0.3);
+  const energyScore = Math.max(0, 1 - (mode === 'charge' ? 1 : (mode === 'walk' ? 0.4 : 0.05)));
+  const total = wf * speedScore + wu * uprightScore + we * energyScore;
+
+  // —— 画坐标网格 ——
+  ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+  ctx.font = '11px sans-serif'; ctx.fillStyle = cMut;
+  for (let gt = 0; gt <= T; gt += 2) {
+    ctx.beginPath(); ctx.moveTo(X(gt), padT); ctx.lineTo(X(gt), padT + plotH); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillText(gt + 's', X(gt), H - padB + 16);
+  }
+  ctx.textAlign = 'right';
+  for (let ga = -0.4; ga <= 0.4; ga += 0.2) {
+    ctx.beginPath(); ctx.moveTo(padL, Y(ga)); ctx.lineTo(W - padR, Y(ga)); ctx.stroke();
+    ctx.fillText((ga > 0 ? '+' : '') + ga.toFixed(1), padL - 6, Y(ga) + 4);
+  }
+  // 零线
+  ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = cMut;
+  ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(W - padR, Y(0)); ctx.stroke();
+  ctx.restore();
+  // 倾倒阈值 ±0.55
+  ctx.save(); ctx.setLineDash([2, 4]); ctx.strokeStyle = cBad;
+  ctx.beginPath(); ctx.moveTo(padL, Y(0.55)); ctx.lineTo(W - padR, Y(0.55)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, Y(-0.55)); ctx.lineTo(W - padR, Y(-0.55)); ctx.stroke();
+  ctx.restore();
+
+  // —— 画倾角曲线 ——
+  let strokeC = cOk;
+  if (mode === 'fall') strokeC = cBad;
+  else if (mode === 'charge') strokeC = cWarn;
+  else if (mode === 'stand') strokeC = cPri;
+  ctx.strokeStyle = strokeC; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const px = X(i * dt), py = Y(th[i]);
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // —— 小人示意（左侧）：躯干当前倾角 ——
+  const cx = padL - 2, cyBase = padT + plotH + 4, len = 30;
+  const angEnd = th[n];
+  ctx.save();
+  ctx.translate(cx - 24, cyBase - 26);
+  ctx.strokeStyle = strokeC; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, 0);
+  ctx.lineTo(len * Math.sin(angEnd), -len * Math.cos(angEnd)); ctx.stroke();
+  ctx.fillStyle = strokeC;
+  ctx.beginPath(); ctx.arc(len * Math.sin(angEnd), -len * Math.cos(angEnd), 5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  // —— 读数 ——
+  const ro = root.querySelector('.readout');
+  const label = { walk: '稳定行走', stand: '原地站桩', charge: '猛冲（奖励黑客边缘）', fall: '倾倒' }[mode];
+  let advice;
+  if (mode === 'fall') advice = '直立/省能权重压不住扰动——提高 w_u 或降低扰动。';
+  else if (mode === 'charge') advice = '前进权重过大、平衡不足——它选择「冲一把」。降低 w_f 或提高 w_u。';
+  else if (mode === 'stand') advice = '前进激励太弱——它发现「不动」是最优解。提高 w_f。';
+  else advice = '三项权重比例协调——这就是「走得好」的奖励结构。';
+  ro.textContent = `【${label}】 行为总分 ${total.toFixed(2)}（速度 ${(wf * speedScore).toFixed(2)} / 直立 ${(wu * uprightScore).toFixed(2)} / 省能 ${(we * energyScore).toFixed(2)}）。最大倾角 ${(maxAbs * 57.3).toFixed(0)}°${fellAt !== null ? '，约 ' + fellAt.toFixed(1) + 's 时倾倒' : ''}。${advice}`;
+  ro.style.color = strokeC;
+});
+</script>
+</body>
+</html>

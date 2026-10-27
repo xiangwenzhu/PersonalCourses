@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭嵌入式固件与实时控制 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭嵌入式固件与实时控制</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="鸭子的脊髓反射：大脑可以慢，反射必须快">
+      <h2>鸭子的脊髓反射：大脑可以慢，反射必须快</h2>
+      <p class="tldr">摸到烫的东西，你先缩手、后喊疼——缩手根本不经过大脑。机器鸭同理：让关节站稳的「反射」必须在一块小芯片上毫秒级完成，而「思考去哪」可以交给慢半拍的大脑。</p>
+
+      <p>上一课我们认识了鸭子的「感官」：IMU 报告身体姿态，摄像头观察世界。但传感器只是收集信息，真正的问题是：<mark>谁来、在哪里、多快地</mark>把这些信息变成关节动作？答案分两层。</p>
+
+      <p>一层是「大脑」——上位机与大模型，负责看懂画面、理解指令、规划路线，一次思考要几十到几百毫秒。很慢，但没关系：「接下来往哪走」晚半秒决定也不致命。另一层是「反射」——身体正在倾倒，脚踝必须在几毫秒内调整力度；等大脑反应过来，鸭子已经脸着地了。</p>
+
+      <div class="analogy">想象你的手碰到滚烫的锅：指尖的神经把信号传到<b>脊髓</b>，脊髓直接下令「缩手」，全程几十毫秒；等「烫」的感觉慢慢传到大脑皮层，你的手早就离开锅了——先行动、后觉得疼，这是脊髓反射弧的分工。机器鸭完全一样：<b>IMU → 主控芯片 → 舵机</b>这条「反射弧」必须毫秒级完成；而<b>摄像头 → 大模型</b>那条「思考回路」慢几百毫秒也能容忍。</div>
+
+      <div class="key">大脑可以慢，反射必须快。本课的主角<b>固件（firmware）</b>，就是住在那块小芯片里的「脊髓」——它不是跑完整操作系统的大程序，而是一段直接控制硬件、精简到极致的底层代码。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：反射弧的四个角色分别是谁</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">脊髓 = 主控芯片</div><div class="back">反射弧的中枢。上面跑着固件，毫秒级完成「感知—决策—执行」，不需要请示大脑。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">大脑 = 上位机与大模型</div><div class="back">负责视觉理解、路线规划这类「慢思考」，几百毫秒出一次结果也不碍事。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">痛觉神经 = IMU</div><div class="back">反射弧的起点：第一时间感知「身体正在倾倒」，第 05 课讲过的老朋友。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">缩手 = 关节修正</div><div class="back">反射弧的终点：舵机在下一拍立刻调整输出，把身体稳住。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你摸到烫东西时，「缩手」这个动作是由身体的哪一部分直接完成决策的？</p>
+        <button class="opt" data-fb="等大脑想完再缩手，手已经烫熟了——缩手反射恰恰不经过大脑，疼的信号是之后才上传的。">大脑皮层深思熟虑后下令</button>
+        <button class="opt" data-fb="对！脊髓在几十毫秒内完成「感知—决策—执行」，疼的感觉才慢慢传给大脑。机器鸭的主控芯片扮演的正是脊髓这个角色。">脊髓直接完成反射弧</button>
+        <button class="opt" data-fb="肌肉只执行、不决策——它只是反射弧的最后一环，发令者是脊髓。">手指的肌肉自己决定</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住一句就够：固件不负责「聪明」，只负责「快而稳」。聪明的部分（视觉、大模型）交给大脑，固件守住毫秒级一拍的反射底线。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="固件是什么：从按下电源到进入主循环">
+      <h2>固件是什么：从按下电源到进入主循环</h2>
+      <p class="tldr">固件是烧写进主控芯片的底层程序。按下电源后的零点几秒内，它要完成一套「起床流程」，然后跳进一个永不退出的主循环，并把 1ms 心跳的定时器中断打开。</p>
+
+      <p><b>固件（firmware）</b>＝固化在芯片里的软件。你手机上的 App 可以随时卸载重装，固件则写进芯片的存储器里、上电即运行——它是硬件与上层软件之间的第一座桥。对机器鸭来说，固件决定了「舵机多久更新一次、IMU 数据怎么读、摔倒了怎么办」这些生死攸关的事。</p>
+
+      <p>那么按下电源开关的那一刻，芯片里发生了什么？它不会立刻开始走路，而是先按部就班做完一套固定的「起床流程」。</p>
+
+      <div class="analogy">就像你每天早上：<b>睁眼</b>（上电复位）→ <b>拉开窗帘知道现在是白天</b>（时钟配置）→ <b>洗漱收拾</b>（外设初始化）→ <b>检查钥匙钱包</b>（自检）→ <b>出门开始一天的工作</b>（进入主循环）。跳过任何一步都可能出乱子——没检查钥匙就出门，一天都白干。</div>
+
+      <div class="widget">
+        <div class="widget-title">分步点亮：上电之后芯片里的五步起床流程（教学示意，不同芯片略有差异）</div>
+        <div class="steps">
+          <div class="step"><b>① 上电复位</b> —— 电源芯片把电压稳定到额定值，复位引脚释放，芯片从一个固定地址开始执行第一行代码。</div>
+          <div class="step"><b>② 时钟配置</b> —— 芯片出厂时用内部慢时钟「苟着」，启动后切换到外部高速晶振，把主频拉满。</div>
+          <div class="step"><b>③ 外设初始化</b> —— 逐一配置定时器、串口、IMU 接口与舵机总线，给它们排好班、定好职责。</div>
+          <div class="step"><b>④ 自检</b> —— 读一次 IMU 确认有数据、扫描总线确认 15 个舵机都在线、检查电池电压；发现问题就进入安全模式（比如趴下并亮灯，教学示意），绝不带着故障硬跑。</div>
+          <div class="step"><b>⑤ 进入主循环</b> —— 启动 1ms 定时器中断，跳进 while 主循环，从此永不退出——直到断电，或被看门狗重启（第 7 章详谈）。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="key">主循环负责「慢事务」，定时器中断负责「快事务」——这个分工从上电那一刻就定下了。中断循环怎么跑，第 5 章拆开细讲。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">固件上电自检（确认 IMU 可读、舵机在线、电量正常）最主要的意义是什么？</p>
+        <button class="opt" data-fb="自检不是仪式感——它挡住的是「带着失灵的传感器硬跑」这类致命问题。">纯属仪式感，可有可无</button>
+        <button class="opt" data-fb="对！带着失灵的 IMU 跑平衡控制，等于闭着眼睛走钢丝。先把「器官」都点验一遍，再开始工作，这是固件的基本素养。">尽早发现硬件故障，避免带着坏传感器进入控制循环</button>
+        <button class="opt" data-fb="自检本身耗不了多少电，它的价值在「发现问题」，不在省电。">节省电池电量</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">固件 = 上电后自动运行的「起床流程 + 永不退出的主循环」。它的第一要务不是聪明，而是让所有硬件进入可预测、随时待命的状态。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="实时性与 1kHz：为什么是 1ms 一拍">
+      <h2>实时性与 1kHz：为什么是 1ms 一拍</h2>
+      <p class="tldr">「实时」的真含义不是「快」，而是「按时」。关节控制通常跑在几百到上千赫兹的量级——本课按教学常用值 1kHz（每 1ms 一拍）来讲（教学估算，Microduck 真实控制频率以厂商固件为准）。</p>
+
+      <p>第 01 课的演示你已经见过：控制频率太低，鸭子被推一下就越晃越大。这类小型双足机器人的关节稳定回路，业界通常放在几百到上千赫兹——本课统一按 <b>1kHz</b> 教学，即每 1 毫秒一拍。</p>
+
+      <p>为什么执着于「毫秒」？因为身体开始倾倒之后，留给抢救的时间只有几百毫秒量级；要把一次倾倒拆成十几二十次「感知—修正」的小步完成，每一步就必须在几毫秒内做完。拍子慢了，鸭子依据的就是「过期」的身体状态，修正全踩在错误的节拍上。</p>
+
+      <p>这里一口气引入四个术语，之后每一章都会反复用到——引入即解释：</p>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，收下实时系统的四张「黑话卡」</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">实时 real-time</div><div class="back">指系统「保证在时限内完成」，跟「快」不完全是一回事——跑得慢但永远按时交卷，也算实时。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">截止期 deadline</div><div class="back">这一拍工作必须完成的最后期限。1kHz 系统里，截止期就是「本拍开始后 1ms 之内」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">硬实时 hard real-time</div><div class="back">错过截止期即失败。关节控制就是硬实时：修正迟到一步，物理世界里就是一次真摔。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">抖动 jitter</div><div class="back">同一件事每次发生的时刻并不完美等间隔，这个波动幅度叫抖动。第 5 章的核心演示会把它画出来。</div></div></div>
+        </div>
+      </div>
+
+      <p>软实时与硬实时的差别，用两个日常场景对比最直观：</p>
+
+      <table>
+        <tr><th>场景</th><th>实时类型</th><th>偶尔迟到一次的后果</th></tr>
+        <tr><td>在线看视频</td><td>软实时</td><td>画面卡一下——烦人，但不丢人</td></tr>
+        <tr><td>关节平衡控制</td><td>硬实时</td><td>姿态数据过期、修正迟到——鸭子当着你的面摔倒</td></tr>
+      </table>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">「看视频卡顿」与「关节控制卡顿」的本质区别是什么？</p>
+        <button class="opt" data-fb="卡顿跟网络无关——控制卡顿发生在机身内部的一块小芯片上，问题出在没赶上截止期。">没有区别，都是网络不好</button>
+        <button class="opt" data-fb="恰恰相反：视频属于软实时，偶尔迟到可以容忍；关节控制才是不能迟到的那一个。">视频卡顿更严重，因为画面更重要</button>
+        <button class="opt" data-fb="对！硬实时的「实时」指「按时」而不是「快」——错过 deadline 的代价不是体验变差，而是物理世界里的摔倒。">视频是软实时：偶尔迟到大体可用；关节控制是硬实时：错过截止期就摔倒</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">判断一个系统是不是硬实时，只问一个问题：错过一次截止期的后果，是「体验变差」还是「物理世界出事」？鸭子给出的答案是后者。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="固件分层架构：一家三层小公司">
+      <h2>固件分层架构：一家三层小公司</h2>
+      <p class="tldr">应用层定「去哪」，运动层翻译成「每个关节转多少度」，驱动层负责「总线上真的发出去、传感器真的读回来」——像公司三层级，各司其职，出了问题才知道该找谁。</p>
+
+      <p>把固件所有代码糊成一团，初期跑得快，后期改一行崩全身。工程上的解法是<b>分层</b>。机器鸭的固件（教学简化模型）大致分三层：</p>
+
+      <table>
+        <tr><th>层</th><th>类比</th><th>职责</th><th>一句台词</th></tr>
+        <tr><td><b>应用层</b></td><td>老板</td><td>决定「做什么」：步态策略、模式切换、与上位机通信</td><td>「下一步落脚在右前方 5 厘米」</td></tr>
+        <tr><td><b>运动层</b></td><td>中层管理者</td><td>把意图翻译成关节语言：运动学映射、姿态融合、平衡修正</td><td>「右髋转到 32 度、右膝弯 15 度……」</td></tr>
+        <tr><td><b>驱动层</b></td><td>一线员工</td><td>与硬件直接打交道：总线收发、IMU 读取、定时器配置</td><td>「收到，这就把目标角写上总线」</td></tr>
+      </table>
+
+      <div class="analogy">公司里，老板不需要知道快递员今天开什么车，员工也不用过问公司战略——大家只需要一份清晰的岗位职责表。分层的好处一模一样：想把总线方案换掉？只改驱动层；想换一种步态？只动应用层。<mark>每层的替换都不波及邻居，这就是好架构</mark>。</div>
+
+      <div class="widget order" data-answer="a,b,c,d,e">
+        <div class="widget-title">把一条「迈步指令」在三层之间的流动排成正确顺序</div>
+        <div class="item" data-id="c">驱动层：把目标角度按协议打包，写进舵机总线</div>
+        <div class="item" data-id="a">应用层：步态策略给出「右脚向前迈 5 厘米」</div>
+        <div class="item" data-id="e">应用层：根据上报的新状态，决定下一步怎么走</div>
+        <div class="item" data-id="d">驱动层：读回 IMU 与舵机状态，向上层上报</div>
+        <div class="item" data-id="b">运动层：把落脚点映射成 15 个关节的目标角度</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">应用层说了一句「右脚向前迈 5 厘米」，这件事最终由谁变成 15 个关节的具体角度？</p>
+        <button class="opt" data-fb="那就分层失效了：应用层一旦自己碰总线细节，换硬件就得改老板的日程表，架构白分了。">应用层自己算好并直接写总线</button>
+        <button class="opt" data-fb="对！运动层就是「中层管理者」：向上把落脚点翻译成关节角，向下把结果交给驱动层执行——第 07 课专门讲它怎么算。">运动层：把落脚点映射成关节目标角，再交驱动层下发</button>
+        <button class="opt" data-fb="舵机只认识「转到角度 X」这样的具体指令，它不懂什么叫「向前 5 厘米」。">舵机自己悟出来</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">分层的检验标准：任何一层的替换都不应波及其他两层。做复刻项目时，先把三层的接口定义清楚，再动手写代码，能少走很多弯路。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="1kHz 定时器中断循环：固件的心跳">
+      <h2>1kHz 定时器中断循环：固件的心跳</h2>
+      <p class="tldr">定时器每 1ms 强行「打断」主程序一次：读 IMU、算关节、发指令、喂狗、记耗时——这一套必须赶在下一次打断前干完。干不完就是超时，下面的演示会把它标红给你看。</p>
+
+      <p><b>中断（interrupt）</b>是什么？主循环正在慢悠悠做事时，定时器像闹钟一样每 1ms 响一次，CPU 无论在干嘛都立刻放下手头工作、跳去执行中断服务程序——做完马上回来接着干。1kHz 的控制频率对应的周期是：</p>
+
+      <p style="text-align:center">$$f = 1000\ \text{Hz} \quad\Rightarrow\quad T = \frac{1}{f} = 1\ \text{ms}$$</p>
+
+      <p>中断服务程序里，每一拍干五件事，逐项拆解：</p>
+
+      <p><b>① 读 IMU</b>——感知：此刻身体什么姿态，第 05 课的传感器在这里派上用场。<b>② 算目标角</b>——决策：上层策略的输出加上平衡修正，得出 15 个关节这一拍该到的角度。<b>③ 发总线</b>——执行：把目标角写出去（时间预算多紧张，第 6 章细算）。<b>④ 喂看门狗</b>——报平安「我还活着」（第 7 章详谈）。<b>⑤ 记耗时</b>——给每拍打上时间戳，超时就计数报警，调试时这就是「病历本」。</p>
+
+      <pre>
+// ===== 主循环：慢路径，做不赶时间的事 =====
+while (true) {
+    处理上位机发来的新指令        // 往哪走、做什么动作
+    刷新指示灯与状态日志          // 不赶时间
+}
+
+// ===== 定时器中断：每 1ms 强行打断一次（教学示意） =====
+on_timer_interrupt_every_1ms:
+    读取 IMU 姿态                  // 感知：身体现在什么状态
+    计算 15 个关节的目标角度        // 决策：策略输出 加 平衡修正
+    通过舵机总线下发目标角度        // 执行：时间预算见第 6 章
+    喂看门狗                       // 报平安：我还活着
+    记录本拍耗时，超时则计数报警    // 给调试留下证据
+</pre>
+
+      <p>关键约束来了：<mark>这五件事的总耗时必须明显小于 1ms</mark>，还要给「万一哪拍慢一点」留出余量——这正是第 3 章说的截止期落到实处。下面的演示让你亲手把「单拍计算耗时」拉过预算线，看看超时是怎么发生的：</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">控制拍时间轴：耗时、周期与抖动的三角关系</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>单拍计算耗时（毫秒） <span class="val" data-for="work"></span><input type="range" name="work" min="0.3" max="1.8" step="0.05" value="0.85"></label>
+          <label>中断周期（毫秒） <span class="val" data-for="period"></span><input type="range" name="period" min="0.5" max="2" step="0.1" value="1"></label>
+          <label>抖动幅度（毫秒） <span class="val" data-for="jit"></span><input type="range" name="jit" min="0" max="0.5" step="0.05" value="0.15"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>仔细观察：把抖动幅度调大后，即使平均耗时没超预算，个别「倒霉拍」也会冲破截止期标红——这就是抖动与超时的关系。所以工程上通常要求平均耗时只占预算的一半左右：<mark>余量就是留给抖动的</mark>（经验法则，教学估算）。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">如果某一拍的计算耗时超过了中断周期，最直接的后果是什么？</p>
+        <button class="opt" data-fb="芯片不会烧——它会「迟到」，而迟到的问题比烧毁更隐蔽，肉眼根本看不出来。">芯片会立刻烧毁</button>
+        <button class="opt" data-fb="对！超时拍挤压下一拍，拍与拍的间隔忽长忽短（抖动变大），姿态数据过期、控制质量下降——把上面演示里的「单拍耗时」拉过预算线就能看到一片红。">控制拍推迟或丢失，拍间隔忽长忽短，控制质量下降</button>
+        <button class="opt" data-fb="没有「免费的跳过」——下一拍要么推迟、要么叠加，时间轴上就是一连串红色溢出。">程序自动跳过这一拍，没有任何影响</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话：中断循环是固件的心跳，心跳的纪律是「每拍必到、每拍按时」。本课剩下的内容——总线预算、状态机、看门狗——全都在为这一句服务。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="半双工 UART 舵机总线：一条线上的轮流传话">
+      <h2>半双工 UART 舵机总线：一条线上的轮流传话</h2>
+      <p class="tldr">15 个舵机共用一条数据线，像一条对讲机频道：主控喊话报 ID，被点名的应答，其余闭嘴。半双工省了线，代价是同一时刻只能一人说话——于是每拍的时间预算必须精打细算。</p>
+
+      <p>15 个关节舵机如果每个都单独拉一组线回主控，接插件会多到可怕，装配也是噩梦。常见做法是<b>总线式</b>：所有舵机并挂在同一对线上，半双工 UART 是这类小型机器人常用的方案之一（Microduck 的具体总线形式以厂商资料为准）。</p>
+
+      <p><b>半双工（half-duplex）</b>＝收发共用同一条线，任一时刻只能一个方向说话。好处是省线、省引脚；代价是主控与舵机必须轮流「抢话筒」——这就引出了协议帧和时间预算两件事。</p>
+
+      <table>
+        <tr><th>字段</th><th>大小（教学示意）</th><th>作用</th></tr>
+        <tr><td>帧头</td><td>2 字节</td><td>唤醒总线上所有设备：「注意，有话要说」</td></tr>
+        <tr><td>舵机 ID</td><td>1 字节</td><td>点名：只有 ID 匹配的舵机继续接收，其余忽略</td></tr>
+        <tr><td>指令</td><td>1 字节</td><td>干什么：写角度、读状态……</td></tr>
+        <tr><td>参数</td><td>若干字节</td><td>具体数据：目标角度、速度限制等</td></tr>
+        <tr><td>校验和</td><td>1 字节</td><td>接收方核对，算错就整帧丢弃（帧结构为教学示意，以厂商手册为准）</td></tr>
+      </table>
+
+      <div class="widget">
+        <div class="widget-title">分步揭示：一帧指令是怎么发出去的（教学示意）</div>
+        <div class="steps">
+          <div class="step"><b>① 抢话筒</b> —— 半双工线上同一时刻只能一方说话，主控先把总线方向切到「发送」。</div>
+          <div class="step"><b>② 喊帧头</b> —— 发出连续两个帧头字节，总线上所有舵机竖起耳朵：有话要说。</div>
+          <div class="step"><b>③ 报 ID 点名</b> —— 接下来的 ID 字节，只有与之匹配的那只舵机继续听，其余 14 只全部忽略。</div>
+          <div class="step"><b>④ 指令与参数</b> —— 「转到目标角度、以这个速度」——具体数据写在这一段。</div>
+          <div class="step"><b>⑤ 校验与回话</b> —— 接收方核对校验和，错了整帧丢弃；需要回包时总线方向翻转，轮到舵机说，主控闭嘴听。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <p>接下来算一笔硬账：波特率 115200 时（教学估算），每个字节在线上要占 10 个位——8 个数据位加上起始位与停止位：</p>
+
+      <p style="text-align:center">$$t_b = \frac{10}{115200}\ \text{ms} \approx 0.0868\ \text{ms}$$</p>
+
+      <p>一帧指令加一帧应答共约 16 字节，一来一回约 1.4 毫秒——<mark>一问一答就吃掉了一整拍的预算</mark>。15 个舵机全轮询一遍要 20 毫秒以上，显然不可能每拍都做。出路无非三条：提高波特率、精简帧长、或者把「写」与「读」拆成不同频率——写目标角每拍必须发，读状态可以隔几拍轮询一只。下面的演示把这笔账算给你看：</p>
+
+      <div class="widget demo" id="demo2">
+        <div class="widget-title">总线时间预算：一拍之内轮询得过来吗（教学估算）</div>
+        <canvas width="800" height="240"></canvas>
+        <div class="controls">
+          <label>波特率档位（1 档 9600 · 6 档 921600） <span class="val" data-for="baudIdx"></span><input type="range" name="baudIdx" min="1" max="6" step="1" value="6"></label>
+          <label>每舵机一拍交换字节数 <span class="val" data-for="bytes"></span><input type="range" name="bytes" min="4" max="32" step="2" value="8"></label>
+          <label>每拍轮询舵机数 <span class="val" data-for="servos"></span><input type="range" name="servos" min="1" max="15" step="1" value="5"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>你会看到：波特率一低、舵机一多，彩色段立刻越过红色预算线。真实固件通常不会每拍轮询全部 15 只——「写」走广播或只写关键关节，「读」分摊到不同拍，才能既保住 1kHz 又拿到足够新的状态（教学示意，具体策略以厂商固件为准）。</p>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">半双工总线上，如果主控和一只舵机同时开口说话，会发生什么？</p>
+        <button class="opt" data-fb="对！一条线同一时刻只能有一个说话者——这正是半双工省线的代价，所以必须轮询、轮流开口。">两个信号叠在一起变成乱码，所以必须轮流说话</button>
+        <button class="opt" data-fb="总线不是会议室：两个电平叠在一起只会得到无意义的电压，谁的话都听不清。">双方消息自动合并，效率更高</button>
+        <button class="opt" data-fb="硬件上只有一条线，变不出第二条——想同时收发得换成全双工硬件，那就多拉线了。">总线自动切换成全双工分流</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">一个常见误区：以为波特率越高越好，无脑拉满——线一长、舵机一多，高速信号容易出错包，校验失败后重传反而更慢。波特率要与线材长度、舵机数量、电路板布局一起权衡（教学经验，以厂商固件为准）。</div>
+
+      <div class="tip">总线设计的本质是算账：波特率 × 帧长 × 舵机数 ＝ 每拍总线时间，必须留足余量。会算这笔账，你就比大多数入门者更懂固件。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="状态机与看门狗：摔倒了就自己爬起来">
+      <h2>状态机与看门狗：摔倒了就自己爬起来</h2>
+      <p class="tldr">固件用状态机管理「现在是站着、走着、摔倒恢复还是充电」，异常来临时按预演好的剧本切换；看门狗则盯着程序心跳，卡死就断电重启——宁可短暂失联，不要永远趴窝。</p>
+
+      <p><b>状态机（state machine）</b>：任意时刻系统只处于一个明确的状态，事件（收到指令、传感器判定、定时器到期）触发状态之间的切换。对双足机器人，最典型的四个状态是<b>站立 / 行走 / 恢复 / 充电</b>。</p>
+
+      <p>为什么需要状态机？因为同一套控制参数不能通吃所有场景——走路的参数拿去站立会抖，站立的参数起不了身。摔倒是双足机器人不可避免的事，所以「恢复」绝不靠临场发挥，而是预存好的一套起立剧本：检测到摔倒 → 切入恢复态 → 关节按剧本逐个回到指定角度 → 回到站立。</p>
+
+      <div class="widget">
+        <div class="widget-title">点击翻面：四种模式各自在忙什么</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">站立</div><div class="back">静态保持平衡，舵机维持锁定力矩，等待上层指令。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">行走</div><div class="back">跑步态策略，左右脚连续交替，实时接收上层的新落脚点。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">恢复</div><div class="back">摔倒后的起立状态机：按预存序列逐关节执行，直到重新站直。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">充电</div><div class="back">趴下休眠，关闭运动输出，只保留电源管理与充电监测。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget order" data-answer="a,b,c,d,e">
+        <div class="widget-title">把摔倒恢复的完整流程排成正确顺序</div>
+        <div class="item" data-id="d">按预存的起立序列逐关节执行动作</div>
+        <div class="item" data-id="a">IMU 姿态持续越界，固件判定：摔倒了</div>
+        <div class="item" data-id="e">回到「站立」，上报恢复完成，等待新指令</div>
+        <div class="item" data-id="c">先泄力：放松关节让身体自然落稳（教学示意）</div>
+        <div class="item" data-id="b">状态机从「行走」切入「恢复」模式</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <p><b>看门狗（watchdog）</b>是芯片里一个自动倒数的计数器：固件必须每隔一小段时间把它清零，俗称「喂狗」；一旦程序卡死、忘了喂，计数器数到底就自动复位整块芯片——固件从第 2 章的「起床流程」重新跑一遍。它防的不是摔倒，而是「程序傻了」。</p>
+
+      <pre>
+// ===== 顶层状态机（教学示意） =====
+switch (当前模式) {
+    case 站立:  收到行走指令，切换到 行走
+    case 行走:  IMU 判定摔倒，切换到 恢复
+    case 恢复:  按起立序列逐关节执行，完成后回到 站立
+    case 充电:  关闭运动输出，只响应电源管理
+}
+
+// ===== 看门狗：只认「按时报平安」 =====
+on_timer_interrupt_every_1ms:
+    执行一拍控制
+    重置看门狗计数器        // 这就是「喂狗」
+// 一旦程序卡死、喂狗停止，计数器溢出，芯片自动复位重启
+</pre>
+
+      <div class="warn">
+        <p><b>在 1ms 中断里做浮点重计算或大段循环</b>——中断拖得越久，下一拍被推得越晚；重活应留给主循环或交给硬件外设（教学示意）。</p>
+        <p><b>在中断里死等总线回包</b>——总线一慢，所有拍跟着超时；总线的收发都应做成非阻塞的。</p>
+        <p><b>状态迁移不设防</b>——「恢复」执行到一半又收到行走指令就直接切过去，关节可能被硬掰；迁移条件要明确、互斥。</p>
+        <p><b>喂狗位置放错</b>——只在和主循环无关的地方喂狗，主循环卡死了狗还活着；常见做法是主循环设置「我活着」的标志，中断确认标志后再喂（教学示意）。</p>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">看门狗在什么情况下会让整块芯片复位重启？</p>
+        <button class="opt" data-fb="电量管理是电源模块的职责，跟看门狗无关——它只认「按时喂狗」这一件事。">检测到电池电量过低</button>
+        <button class="opt" data-fb="对！看门狗只看一件事：有没有按时收到「我还活着」的信号。卡死就重启——宁可短暂失联重启，也不要永远趴窝。">固件卡死、长时间没有喂狗，被认定失去响应</button>
+        <button class="opt" data-fb="过热保护通常由驱动层或舵机自身的保护电路处理，不是看门狗的职责范围。">某个舵机温度过高</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">状态机管「出事了怎么办」，看门狗管「程序傻了怎么办」。一个负责优雅，一个负责粗暴——两手都要硬，鸭子才能长期活着。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道综合题检验「实时、分层、预算」是否真的进了你的脑子；通过后去第 07 课看看：固件每拍要的「15 个关节目标角」，上层是怎么算出来的。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">下面哪件事最不该放进 1ms 的定时器中断里做？</p>
+        <button class="opt" data-fb="这是中断的本职工作——IMU 读取是微秒级的操作，就该放在中断里做。">读取一次 IMU 姿态</button>
+        <button class="opt" data-fb="这正是每拍的核心任务——前提是像第 6 章那样把总线预算算清楚、留足余量。">计算并下发 15 个关节的目标角度</button>
+        <button class="opt" data-fb="对！视觉推理耗时几十到几百毫秒，放进中断会连续错过无数个截止期——它属于「大脑」的慢路径，交给上位机或主循环处理。">跑一遍视觉神经网络，判断眼前是什么物体</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">波特率 115200（教学估算，每字节 10 位），主控与一只舵机一来一回共 16 字节，大约需要多久？</p>
+        <button class="opt" data-fb="差了 10 倍——别忘了每个字节还要附赠起始位与停止位，实际是 160 个位。">约 0.14 毫秒</button>
+        <button class="opt" data-fb="对！16 字节 × 10 位 ÷ 115200 位每秒 ≈ 1.4 毫秒。一问一答就吃掉一整拍预算——所以轮询 15 只舵机必须提波特率或拆分读写频率。">约 1.4 毫秒</button>
+        <button class="opt" data-fb="多算了 10 倍——16 字节 × 10 位 ＝ 160 位，除以 115200 位每秒约 1.4 毫秒。">约 14 毫秒</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">鸭子在行走途中重重摔倒了，固件最合理的反应是什么？</p>
+        <button class="opt" data-fb="摔一下就重启太夸张，代价大且不必要——重启是看门狗对付「程序卡死」的最后手段，不是处理摔倒的手段。">立刻断电重启整个系统</button>
+        <button class="opt" data-fb="姿态已经完全不对，原步态只会越走越糟——该换剧本了。">原地按原步态继续走</button>
+        <button class="opt" data-fb="对！异常恢复靠预演好的状态机：切入「恢复」模式、按剧本起立、再回到「站立」——而不是临场发挥。">状态机切入「恢复」模式，执行预存起立序列，完成后回到「站立」</button>
+        <div class="feedback"></div>
+      </div>
+
+      <p>三道题都过关的话，你已经摸到了固件工程师最核心的三样家伙：<b>实时的纪律、分层的架构、算预算的习惯</b>。接下来有两个方向值得去：</p>
+
+      <p>👉 <b>往上走一层</b>：<a href="microduck-07-kinematics.html">第 07 课：运动学与步态</a>——固件运动层怎么把「落脚点」一步步算成 15 个关节的角度，也就是中断循环里第②步「算目标角」的内部真相。</p>
+
+      <p>👈 <b>回头补一课</b>：<a href="microduck-05-sensors.html">第 05 课：传感器</a>——中断循环每一拍都在读的 IMU 数据从哪来、准不准，回看一遍会有全新的视角。</p>
+
+      <div class="tip">毕业自检：为什么反射必须快而大脑可以慢？上电后固件做了哪五步？1kHz 一拍里干哪五件事？15 只舵机的总线预算怎么算？状态机和看门狗各管什么？五个问题都答上来，就正式进入 <a href="microduck-07-kinematics.html">第 07 课</a>。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i]?.classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 定制演示 1：1kHz 控制拍时间轴（耗时 · 周期 · 抖动） ================= */
+demo('#demo1', ({ work, period, jit }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, padL = 46, padR = 16, padT = 18, padB = 36;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cMain = css.getPropertyValue('--primary');
+  const cBad = css.getPropertyValue('--bad'), cOk = css.getPropertyValue('--ok');
+
+  const N = 10;  // 画出 10 个控制拍
+  const seed = i => { const s = Math.sin(i * 127.1) * 43758.5453; return (s - Math.floor(s)) * 2 - 1; };
+  const durations = [];
+  for (let i = 0; i < N; i++) durations.push(Math.max(0.05, work + jit * seed(i)));
+  const over = durations.map(d => d > period);
+  const tEnd = N * period;
+  const xOf = t => padL + t / tEnd * (W - padL - padR);
+
+  // —— 上半：控制拍时间轴 ——
+  const rowY = padT + 16, rowH = 44;
+  ctx.fillStyle = cTxt; ctx.textAlign = 'left'; ctx.font = '12px sans-serif';
+  ctx.fillText('控制拍时间轴（蓝 ＝ 按时完成 · 红 ＝ 超时拍）', padL, padT + 2);
+  for (let i = 0; i < N; i++) {
+    const x0 = xOf(i * period), x1 = xOf((i + 1) * period);
+    ctx.globalAlpha = 0.22; ctx.fillStyle = cLine;
+    ctx.fillRect(x0, rowY, x1 - x0 - 1, rowH);
+    ctx.globalAlpha = 1;
+    const d = durations[i];
+    const wPix = Math.max(2, xOf(Math.min(d, tEnd)) - x0 - 2);
+    ctx.fillStyle = over[i] ? cBad : cMain;
+    ctx.fillRect(x0 + 1, rowY + rowH / 2 - 9, wPix, 18);
+    if (over[i]) { ctx.fillStyle = cBad; ctx.beginPath(); ctx.arc((x0 + x1) / 2, rowY - 7, 5, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = cMut; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('第' + (i + 1) + '拍', (x0 + x1) / 2, rowY + rowH + 15);
+    ctx.textAlign = 'left';
+  }
+
+  // —— 下半：每拍实际耗时 vs 截止期 ——
+  const gY0 = rowY + rowH + 42, gH = H - padB - gY0;
+  const dTop = Math.max(period * 1.3, ...durations) * 1.12;
+  const yOf = d => gY0 + gH - d / dTop * gH;
+  ctx.strokeStyle = cBad; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(padL, yOf(period)); ctx.lineTo(W - padR, yOf(period)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = cBad; ctx.textAlign = 'left';
+  ctx.fillText('截止期 deadline：' + period.toFixed(1) + ' ms', padL + 4, yOf(period) - 6);
+  ctx.strokeStyle = cMain; ctx.lineWidth = 2; ctx.beginPath();
+  durations.forEach((d, i) => { const x = xOf((i + 0.5) * period), y = yOf(d); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke(); ctx.lineWidth = 1;
+  durations.forEach((d, i) => {
+    ctx.fillStyle = over[i] ? cBad : cOk;
+    ctx.beginPath(); ctx.arc(xOf((i + 0.5) * period), yOf(d), 4, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.fillStyle = cMut; ctx.textAlign = 'right';
+  ctx.fillText('每拍实际耗时', W - padR, gY0 - 6);
+
+  const nOver = over.filter(Boolean).length;
+  const dMin = Math.min(...durations), dMax = Math.max(...durations);
+  const ro = root.querySelector('.readout');
+  if (nOver === 0) ro.textContent = '✅ 10 拍全部按时完成：最大耗时 ' + dMax.toFixed(2) + ' ms，低于 ' + period.toFixed(1) + ' ms 预算，抖动 ' + (dMax - dMin).toFixed(2) + ' ms 仍在安全余量内。';
+  else if (nOver <= 3) ro.textContent = '⚠️ ' + nOver + ' 拍超时：预算明明是 ' + period.toFixed(1) + ' ms，个别拍却冲到 ' + dMax.toFixed(2) + ' ms 并挤压下一拍——抖动正在侵蚀实时性。';
+  else ro.textContent = '❌ ' + nOver + '/10 拍超时：计算耗时长期逼近甚至超过预算，控制拍连续迟到，鸭子会站不稳。把耗时降下来，或放宽中断周期。';
+});
+
+/* ================= 定制演示 2：半双工总线一拍时间预算（教学估算） ================= */
+const BAUDS = [9600, 57600, 115200, 230400, 460800, 921600];
+demo('#demo2', ({ baudIdx, bytes, servos }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, padL = 46, padR = 16, padT = 36, padB = 44;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cBad = css.getPropertyValue('--bad');
+  const colors = ['#a855f7','#3b82f6','#14b8a6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#0ea5e9','#84cc16','#f97316','#06b6d4','#ec4899','#6366f1','#10b981','#eab308'];
+
+  const baud = BAUDS[Math.min(5, Math.max(0, Math.round(baudIdx) - 1))];
+  const nB = Math.round(bytes), nS = Math.round(servos);
+  const perByte = 10 / baud * 1000;      // 每字节耗时 ms：10 位/字节（教学估算）
+  const perServo = 2 * nB * perByte;     // 一发一收
+  const total = nS * perServo;
+  const budget = 1;                      // 1ms 一拍（教学估算）
+  const tEnd = Math.max(budget, total) * 1.12;
+  const xOf = t => padL + t / tEnd * (W - padL - padR);
+
+  ctx.fillStyle = cTxt; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('波特率（教学估算）：' + baud + ' 位/秒 · 每字节 10 位 · 每舵机一发一收 ' + (2 * nB) + ' 字节', padL, padT - 16);
+
+  const yBar = padT, hBar = 36;
+  ctx.strokeStyle = cBad; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(xOf(budget), yBar - 8); ctx.lineTo(xOf(budget), yBar + hBar + 30); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = cBad;
+  ctx.fillText('1 拍预算 1ms', xOf(budget) + 4, yBar + hBar + 24);
+
+  for (let i = 0; i < nS; i++) {
+    const x0 = xOf(i * perServo), x1 = xOf((i + 1) * perServo), xb = xOf(budget);
+    ctx.fillStyle = colors[i % colors.length];
+    const wIn = Math.max(0, Math.min(x1, xb) - x0 - 1);
+    if (wIn > 0) ctx.fillRect(x0, yBar, wIn, hBar);
+    if (x1 > xb) { ctx.fillStyle = cBad; ctx.fillRect(Math.max(x0, xb), yBar, x1 - Math.max(x0, xb), hBar); }
+    if (x1 - x0 > 30) { ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText('S' + (i + 1), (x0 + x1) / 2, yBar + hBar / 2 + 4); ctx.textAlign = 'left'; }
+  }
+  ctx.fillStyle = cTxt; ctx.textAlign = 'right';
+  ctx.fillText('轮询 ' + nS + ' 个舵机共需 ' + total.toFixed(2) + ' ms', W - padR, yBar + hBar + 24);
+
+  const ro = root.querySelector('.readout');
+  if (total <= budget) ro.textContent = '✅ 赶上了：轮询 ' + nS + ' 个舵机共 ' + total.toFixed(2) + ' ms，占 1ms 预算的 ' + Math.round(total / budget * 100) + '%，余量 ' + (budget - total).toFixed(2) + ' ms。';
+  else ro.textContent = '❌ 超预算：轮询 ' + nS + ' 个舵机共 ' + total.toFixed(2) + ' ms，是 1ms 预算的 ' + (total / budget).toFixed(1) + ' 倍——要么提波特率、精简帧长，要么把轮询拆到不同拍里分摊。';
+});
+</script>
+</body>
+</html>

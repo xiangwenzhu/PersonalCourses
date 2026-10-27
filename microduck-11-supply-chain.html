@@ -1,0 +1,661 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭国产供应链与BOM · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭国产供应链与 BOM</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="399美元背后的账">
+      <h2>399 美元背后的账</h2>
+      <p class="tldr">Microduck 售价 399 美元，4 天卖出 10500 台——爆款的另一面，是一道精算题：15 个电机、1 颗主控、1 颗相机，加上结构与电池，BOM（物料清单）成本必须死死压在某条红线以下，否则卖一台亏一台。</p>
+
+      <p>复刻一只 Microduck，最大的误区是只看「技术难度」，忽略「成本结构」。消费级硬件的铁律是：<mark>零售价 ≈ BOM 成本的 2–3 倍</mark>——剩下的部分要覆盖研发摊销、模具、认证、渠道、售后和利润。倒推回来，卖 399 美元的产品，BOM 必须控制在约 120–180 美元区间（教学估算，实际以厂商披露与供应链询价为准）。</p>
+
+      <p>这意味着什么？每一个零部件的选择都是「性能 × 成本 × 可得性」的三元博弈：电机差一点就走得颤，好一点就吃掉毛利；主控选贵了功能强，但可能直接击穿成本红线。中国供应链的恐怖之处，不在于「能造」，而在于<em>以极低的边际成本</em>提供「够用」的选项——让 399 美元定价从不可能变成可能。</p>
+
+      <div class="analogy">开一家奶茶店：招牌定价 15 元一杯，不是拍脑袋定的——倒推回去，杯料成本必须压在 4 元内，房租人工平摊 5 元，剩下的才是利润。原料每涨 5 毛，利润就薄一层。硬件创业同理，只是「杯料」变成了电机、芯片和电池。</div>
+
+      <div class="key"><b>核心公式：</b>零售定价 = BOM 成本 ÷ 成本率（通常 0.33–0.5）。想定 399 美元的价，BOM 必须压在约 130–200 美元；想在中国把价格打到 1999 元（约 280 美元）甚至更低，BOM 还得再砍三成——这就是供应链课要解决的命题。</div>
+
+      <div class="widget fill">
+        <p class="q">填空：消费电子零售价通常是 BOM 成本的 <input data-answer="2-3|2到3|2~3|二到三|2 到 3"> 倍；因此 399 美元的售价，倒推 BOM 应控制在约 <input data-answer="120-180|130-200|120到180|130到200|120–180"> 美元（教学估算）。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话记住：定价倒推 BOM，BOM 决定选型。技术可行性只是入场券，成本可行性才是生死线。下一章把 BOM 拆开看。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="拆解BOM五大件">
+      <h2>拆解 BOM 五大件</h2>
+      <p class="tldr">一只双足机器人的 BOM 可归为五类：执行器（电机+减速器+驱动）、主控与算力、传感器、电池与电源、结构件——每一类都有「够用」与「更好」的两档，差价加起来就是毛利的有无。</p>
+
+      <table>
+        <thead><tr><th>大类</th><th>包含什么</th><th>教学估算占比</th><th>国产替代要点</th></tr></thead>
+        <tbody>
+          <tr><td><b>执行器</b></td><td>15 ×（伺服电机 + 谐波/行星减速器 + 驱动板）</td><td>约 35–45%</td><td>关节模组一体化程度决定体积与成本</td></tr>
+          <tr><td><b>主控与算力</b></td><td>主 SoC（跑 VLA/ROS）+ 协处理器（电机实时控制）</td><td>约 15–20%</td><td>国产 SoC 性价比极高，生态适配是关键</td></tr>
+          <tr><td><b>传感器</b></td><td>IMU、ToF、相机模组、编码器</td><td>约 8–12%</td><td>消费级 IMU 与相机模组白菜价</td></tr>
+          <tr><td><b>电池与电源</b></td><td>锂电芯、BMS、充电管理</td><td>约 8–12%</td><td>圆柱电芯供应链全球最全</td></tr>
+          <tr><td><b>结构件</b></td><td>铝合金/工程塑料壳体、齿轮、轴承、线束</td><td>约 15–20%</td><td>CNC 与注塑产业带密集，打样极快</td></tr>
+        </tbody>
+      </table>
+
+      <p>占比最高的<b>执行器</b>是成本大头，也是性能大头。15 个关节若全用进口高端谐波减速器，单这一项就可能击穿预算；国产行星减速器或谐波减速器的价格可低至进口的 1/3–1/2，精度略降但对 25 厘米的小家伙往往「够用」。这就是供应链选型的艺术：<mark>在「性能过剩」和「成本失控」之间，找到那个「刚好够用」的甜蜜点</mark>。</p>
+
+      <div class="analogy">攒一台游戏电脑：显卡（执行器）最贵、决定性能上限；CPU（主控）够用就好；机箱电源（结构+电池）不能省但别堆料；风扇传感器（IMU）便宜但缺了不行。会配的人不是每件都买最好，而是把钱花在瓶颈上、在其余地方「精准抠门」。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：五大件的「够用 vs 更好」</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">执行器</div><div class="back">够用：国产行星减速关节模组，单关节成本可压到 5–8 美元。更好：进口谐波减速器，精度高但贵 2–3 倍。对 25cm 微型机，前者通常够。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">主控</div><div class="back">够用：国产 ARM SoC（如瑞芯微/全志中端），几十元人民币。更好：英伟达 Jetson 系列，算力强但贵 5–10 倍且功耗高。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">传感器</div><div class="back">够用：消费级 MEMS IMU（几元）+ 低成本 ToF + OV 系相机模组。更好：工业级 IMU 与深度相机，贵一个数量级，微型机用不上。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">电池</div><div class="back">够用：国产 18650/21700 圆柱电芯 + 公版 BMS。更好：定制软包高倍率电芯，更轻但起订量与成本高。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">为什么 25 厘米的微型双足，国产行星减速器往往比进口谐波减速器「更划算」？</p>
+        <button class="opt" data-fb="对。谐波减速器的优势在精度与背隙，但微型机负载小、行程短，行星减速器已够；省下的成本可投入算力或电池——「够用」是消费级选型的第一美德。">微型机负载小、精度要求相对低，行星减速器已能满足，且便宜 2–3 倍</button>
+        <button class="opt" data-fb="谐波减速器恰恰在精度上更强，不是「精度不够」；是「精度对微型机过剩，成本不划算」。">谐波减速器精度反而不如行星，只是更贵</button>
+        <button class="opt" data-fb="可靠性是工艺问题而非品类问题；国产行星减速器在消费级工况下可靠性完全可接受。">谐波减速器可靠性差，容易坏</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">五大件：执行器是大头，主控看生态，传感器别堆料，电池用公版，结构件靠产业带。每一类都有「够用」档——找到它，就找到了毛利。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="电机与减速器选型">
+      <h2>电机与减速器选型</h2>
+      <p class="tldr">关节的「力气」= 电机扭矩 × 减速比；减速器是拿「速度」换「力气」的杠杆。选对减速比，小电机也能扛起全身重量——选错，要么没力气要么慢吞吞。</p>
+
+      <p>电机本身的扭矩很小（微型伺服电机可能只有几 mN·m），直接驱动腿根本抬不起来。解决办法是串一个<b>减速器</b>：输出扭矩放大约等于减速比 $N$ 倍，同时输出转速降为约 $1/N$。核心关系：</p>
+
+      <p style="text-align:center">$$\tau_{\text{out}} \approx N \cdot \tau_{\text{motor}}, \qquad \omega_{\text{out}} \approx \frac{\omega_{\text{motor}}}{N}$$</p>
+
+      <p>选型是一道物理题：算出一个关节在最坏工况下需要的峰值扭矩 $\tau_{\text{need}}$（比如单腿支撑全身、下蹲起身），除以电机额定扭矩 $\tau_{\text{motor}}$，就得到最低减速比 $N_{\min} = \tau_{\text{need}} / \tau_{\text{motor}}$。但减速比不是越大越好——<mark>它同时还决定了关节能转多快</mark>：鸭子想迈快腿，输出转速不能太低。所以要在「力气」与「速度」之间取平衡。</p>
+
+      <div class="analogy">自行车的变速：爬坡挂低速挡（大减速比）——踩一圈轮子转半圈，费力但有力；平路挂高速挡（小减速比）——踩一圈轮子转几圈，轻快但没后劲。关节选型就是给每条「腿」找到合适的「挡位」。</div>
+
+      <div class="warn">最常见误区：只看扭矩不看<b>峰值扭矩/堵转</b>。电机铭牌上的额定扭矩是「可持续输出」，而起身、被绊时的瞬时需求往往是额定的 2–3 倍。选型时要么按峰值扭矩留 50% 余量，要么确认控制器允许短时过流——否则第一次下蹲起身就可能烧毁驱动。</div>
+
+      <details class="reveal">
+        <summary>延伸：减速器的「背隙」为什么影响步态质量？</summary>
+        <p>背隙（backlash）是减速器输入反转时，输出端短暂「空转」的角度。背隙大，关节换向时会「哐当」一下——表现为步态抖动、落地冲击、噪声。谐波减速器的优势之一就是近零背隙；行星减速器背隙相对大（几分到十几分弧）。对 25cm 微型机，可通过控制端「换向缓冲」（减小换向速度）部分弥补，但精度敏感场景（抓取）仍需谨慎。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">关节需要 0.6 N·m 的输出扭矩，手头的微型电机额定扭矩 0.02 N·m。理论上最低需要多大的减速比？</p>
+        <button class="opt" data-fb="0.02 除以 0.6 是「电机占需求的比重」，方向反了；减速比应放大电机扭矩去覆盖需求。">约 0.03</button>
+        <button class="opt" data-fb="6 倍只能提供 0.12 N·m，远不够 0.6——差了一个数量级。">约 6</button>
+        <button class="opt" data-fb="对。N = 需求扭矩 ÷ 电机扭矩 = 0.6 / 0.02 = 30；考虑峰值扭矩与效率损耗，实际还要再留 30–50% 余量。">约 30（实际还应留余量）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：减速比 $N$ 把输出扭矩放大约 <input data-answer="N|减速比"> 倍，同时把输出转速降为约 <input data-answer="1/N|N分之一|1 除 N">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">选电机三问：最坏工况扭矩多少？速度要转多快？峰值扭矩留没留余量？减速比就是连接前两问的杠杆。下一章看主控——鸭子的「大脑」怎么选。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="主控与算力平台">
+      <h2>主控与算力平台</h2>
+      <p class="tldr">主控芯片要在「算力、功耗、生态、价格」四者间走钢丝：跑不动 VLA 是废物，功耗太高烫手，生态太差开发慢，价格太高没毛利——国产 SoC 把后三样都做到了「可用」。</p>
+
+      <p>第 10 课的 VLA 模型再小，也要一颗芯片来跑。选型看四个维度：</p>
+      <ul>
+        <li><b>算力</b>：至少要能跑蒸馏后的小 VLA（几兆到几十兆参数），以及视觉编码器。NPU 的 INT8 算力比 CPU 的浮点算力更关键。</li>
+        <li><b>功耗</b>：鸭子靠电池供电，主控功耗每多 1W，续航就缩水一截；且被动散热的小机身容不得发热大户。</li>
+        <li><b>生态</b>：有没有现成的 ROS/ROS 2 移植？驱动社区活不活跃？文档是否齐全？生态差意味着开发周期翻倍。</li>
+        <li><b>价格</b>：消费级出货量以万台计，单颗芯片差价 5 美元，一万台就是 5 万美元——主控是「单价敏感」的极端品类。</li>
+      </ul>
+
+      <table>
+        <thead><tr><th>平台</th><th>代表</th><th>算力（NPU INT8）</th><th>价格量级</th><th>适合场景</th></tr></thead>
+        <tbody>
+          <tr><td>国产 ARM SoC</td><td>瑞芯微 RK3588 / RK3576</td><td>约 6–10 TOPS</td><td>数十美元</td><td>主力推荐：算力够、生态成熟</td></tr>
+          <tr><td>国产低功耗 SoC</td><td>全志、晶晨等中端</td><td>约 1–3 TOPS</td><td>十几美元</td><td>极简版：只跑本地小策略</td></tr>
+          <tr><td>英伟达 Jetson</td><td>Orin Nano</td><td>数十 TOPS</td><td>数百美元</td><td>开发原型好，量产成本过高</td></tr>
+        </tbody>
+      </table>
+      <p class="tldr" style="font-size:14px;color:var(--muted)">上表为公开资料的教学量级整理，具体型号与价格随市场波动，采购前请以官方渠道与代理商询价为准。</p>
+
+      <div class="analogy">选手机芯片：旗舰芯性能炸裂但贵且耗电，百元机芯便宜但卡——真正的销量主力是「中端神 U」：性能够用、功耗稳、价格甜。RK3588 之于国产机器人，就是那颗「中端神 U」。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么 Jetson 系列常被用于原型开发，却很少出现在量产消费级机器人上？</p>
+        <button class="opt" data-fb="Jetson 功耗确实高于国产 SoC，但这不是主因；主因是量产上万台时，单颗数百美元的差价会直接吞掉全部毛利。">因为它算力太弱，跑不了大模型</button>
+        <button class="opt" data-fb="对。原型阶段「贵一点没关系，开发快最重要」；量产阶段「每台贵 200 美元，一万台就是 200 万」——成本敏感度的质变，决定了选型的切换。">原型阶段重开发效率，量产阶段单颗差价会被万台规模放大成毛利灾难</button>
+        <button class="opt" data-fb="功耗确实是考虑因素，但国产 SoC 生态这些年进步极快；核心矛盾仍是成本结构。">因为国产 SoC 的生态已经全面超越 Jetson</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：主控选型四维度——<input data-answer="算力">、<input data-answer="功耗">、<input data-answer="生态">、<input data-answer="价格|成本">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">主控选型 = 算力够用的最低价位。原型可上 Jetson，量产必换国产 SoC——这是成本结构决定的必然，不是情怀。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="单件成本曲线">
+      <h2>单件成本曲线</h2>
+      <p class="tldr">BOM 成本不是线性的：1 台、100 台、10000 台的单价可以差 3 倍——模具费、最小起订量、议价权三条曲线叠加，决定了「小批量复刻」与「量产创业」是两个世界。</p>
+
+      <p>打样阶段你按「单件零售价」买器件：一个电机 15 美元、一个外壳 CNC 80 美元。量产 1 万台时，电机可能降到 6 美元、外壳改注塑后只要几美元——<mark>量，就是议价权</mark>。反过来，有些东西在小批量时贵得离谱：开一套注塑模具要 3–8 万元，只产 100 台时每台摊 300–800 美元，比 CNC 还贵；产 10 万台时摊到几美元，瞬间划算。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">成本曲线实验台：拖动产量，看单件 BOM 成本如何从「天文数字」降到「量产甜蜜点」</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>目标产量（对数刻度） <span class="val" data-for="qty"></span><input type="range" name="qty" min="0" max="5" step="0.01" value="2.5"></label>
+          <label>模具与研发摊销（万元） <span class="val" data-for="nre"></span><input type="range" name="nre" min="5" max="100" step="1" value="30"></label>
+          <label>量产折扣率（每翻十倍量，零件单价降到） <span class="val" data-for="disc"></span><input type="range" name="disc" min="0.5" max="0.95" step="0.01" value="0.75"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>试着验证三个典型产量下的成本命运：</p>
+      <ul>
+        <li><b>10 台（手工作坊）</b>：NRE 摊销吃掉大头，单件成本可能是量产价的 5–10 倍——这一阶段目标不是赚钱，是验证。</li>
+        <li><b>1000 台（小规模量产）</b>：模具摊薄、议价权初现，成本开始接近可定价区间。</li>
+        <li><b>100000 台（消费级爆款）</b>：零件单价触底，NRE 可忽略——Microduck 4 天 10500 台订单，正处在这个甜蜜点上。</li>
+      </ul>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">为什么注塑模具在小批量时反而不如 CNC 划算？</p>
+        <button class="opt" data-fb="对。模具费是固定成本：产 100 台时每台摊几百美元，远超 CNC 单件价；只有产量大到摊薄后，注塑的「单件边际成本极低」优势才显现出来。">模具是固定成本，产量太低时摊到单件上的成本太高</button>
+        <button class="opt" data-fb="注塑精度通常高于 CNC——它的问题是前期固定投入，不是质量。">注塑精度低于 CNC，所以不划算</button>
+        <button class="opt" data-fb="注塑材料成本通常更低——不划算只发生在「固定成本摊不薄」的阶段。">注塑材料太贵，单件成本高于 CNC</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：成本随产量下降主要靠三股力——固定成本 <input data-answer="摊薄|摊销|分摊">、零件单价 <input data-answer="下降|降低|折扣|议价">、以及工艺切换（CNC → <input data-answer="注塑">）。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">成本曲线的敌人是固定成本，朋友是量。复刻前先想清楚自己在曲线的哪个位置：验证期别纠结单件成本，量产期每一分钱都值得抠。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="认证与合规">
+      <h2>认证与合规</h2>
+      <p class="tldr">硬件不是造出来就能卖的：3C 认证、CE/FCC、电池运输、无线模块核准……每一张证书都是钱和时间；漏掉任何一张，产品可能临门一脚被拦在门外，甚至召回。</p>
+
+      <p>复刻者最容易低估的一环。在中国销售带电池、带无线通信的消费电子产品，至少要面对：</p>
+      <ul>
+        <li><b>3C 认证</b>（中国强制性产品认证）：电源、锂电池相关产品的国内销售通行证，周期约 2–3 个月，费用数万元起。</li>
+        <li><b>无线电型号核准</b>（SRRC）：WiFi/蓝牙模块需要单独核准，用已核准的模组可简化流程。</li>
+        <li><b>CE / FCC</b>（出口欧/美）：电磁兼容（EMC）与安全测试，费用随测试项叠加。</li>
+        <li><b>电池 UN38.3</b>：锂电池运输的安全测试，空运海运都需要。</li>
+      </ul>
+
+      <p>认证对 BOM 的反噬常被忽视：EMC 测试不通过，可能要加屏蔽罩、换电源方案——单件成本再涨 2–5 美元；电池要过运输认证，电芯选型就被限制在「有 UN38.3 报告的型号」里。<mark>合规不是上市后的手续，而是设计阶段的约束条件</mark>。</p>
+
+      <div class="analogy">装修房子：甲醛检测、消防验收、物业报备——没动工前觉得都是「事后手续」，等装完才发现材料选错了（用了不防火的板材）、结构违规（拆了承重墙），返工成本十倍于当初按规选材。认证之于硬件，就是「按规选材」的那个「规」。</div>
+
+      <div class="warn">最常见误区：用「已认证的现成模块」就以为万事大吉。模块有认证≠整机有认证：整机 EMC、整机安全、外壳阻燃等级都要重新测；且「模块认证」往往附带「天线必须按原厂设计」等约束，改了 PCB 布局就可能失效。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么硬件项目应该在设计阶段（而不是样机完成后）就考虑认证要求？</p>
+        <button class="opt" data-fb="认证费用主要花在测试机构，与设计早晚关系不大——但「改设计的成本」与设计早晚关系巨大。">因为认证机构档期紧，晚了要排队</button>
+        <button class="opt" data-fb="对。EMC 不过要加屏蔽/改电源，电池要选有报告的型号——这些都是「选型层面」的决策，等样机完成再返工，改板、重开模、重测的成本是数倍。">认证会反向约束选型（电芯、屏蔽、电源方案），后期返工成本远高于前期预防</button>
+        <button class="opt" data-fb="关系正好相反：设计与认证并行才是常态，「先设计后合规」才是瀑布式误区。">认证与设计可以完全并行，互不影响</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：锂电池运输需要 <input data-answer="UN38.3"> 测试报告；在中国销售带电产品通常需要 <input data-answer="3C|CCC"> 认证。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">认证是设计约束，不是事后手续。复刻前把目标市场的认证清单列出来，对着它选电芯、画 PCB、做外壳——一次过测，省下的是几个月和几万块。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="供应商谈判与量产爬坡">
+      <h2>供应商谈判与量产爬坡</h2>
+      <p class="tldr">找到「够用的零件」只是上半场；下半场是谈判（阶梯报价、账期、独家协议）与爬坡（小批量试产 → 直通率 → 爬坡曲线）——供应链不是清单，是关系与节奏。</p>
+
+      <p>采购艺术的三张牌：</p>
+      <ul>
+        <li><b>阶梯报价</b>：不要问「一个多少钱」，要问「1k/5k/20k/100k 各多少钱」——把未来增长写进合同，锁定降价路径。</li>
+        <li><b>账期</b>：量产后争取 30–60 天账期，等于供应商免费垫资，现金流比毛利率更能杀死初创公司。</li>
+        <li><b>双供应商策略</b>：关键件（主控、电机）至少两家备份——单一供应商断供或涨价时，你有切换的余地；代价是认证与适配要做两遍。</li>
+      </ul>
+
+      <p>谈判之后是量产爬坡：首批 100 台试产（Pilot Run），统计「直通率」（First Pass Yield，一次通过全部测试的比例）；直通率低于 90% 就停下来改工艺，不要硬爬坡——<mark>每一台不良品都是双输：你赔钱，用户失望</mark>。爬坡曲线通常呈 S 形：前 500 台最痛，之后随着工装、培训、检测自动化到位，直通率逐渐爬到 97% 以上，这才算「量产成熟」。</p>
+
+      <div class="widget">
+        <div class="widget-title">分步走完从谈判到量产成熟的爬坡路径</div>
+        <div class="steps">
+          <div class="step"><b>① 询价与打样</b> —— 多家供应商比价比质，拿到样品做验证；不要急于承诺量。</div>
+          <div class="step"><b>② 阶梯报价谈判</b> —— 把 1k/5k/20k/100k 的降价路径写入合同，同时谈账期与独家/非独家条款。</div>
+          <div class="step"><b>③ 小批量试产（Pilot）</b> —— 产 50–200 台，统计直通率；低于 90% 就停下改进工艺。</div>
+          <div class="step"><b>④ 爬坡（Ramp）</b> —— 直通率爬到 95% 以上再放量；期间引入自动化测试工装，把「人测」变「机测」。</div>
+          <div class="step"><b>⑤ 量产成熟</b> —— 直通率稳定在 97%+，建立 IQC（来料检）+ OQC（出厂检）双闸；此时才算「供应链」建成。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="analogy">开餐馆：谈判是找供应商定菜价、谈账期（月底结）；爬坡是试营业——前 100 桌客人就是来帮你发现「哪道菜总炒糊」的。试营业直通率（不返工的比例）不到 90% 就敢开业放量，等于把顾客当质检员，口碑必崩。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">为什么关键零部件（如主控 SoC、关节电机）要维持至少两家供应商？</p>
+        <button class="opt" data-fb="双供应商主要不是为压价（虽然顺带），而是为「断供/涨价/质量事故」时的切换余地——是风险管理。">为了让他们互相压价，拿到最低价</button>
+        <button class="opt" data-fb="两家供应商通常需要各自认证与适配，初期成本反而上升——这是保险费，不是免费午餐。">认证只需做一次，两家都能用同一份报告</button>
+        <button class="opt" data-fb="对。单一供应商断供、涨价或出质量事故时，切换成本远大于平时维持双供的认证开销——这是消费级硬件的基本生存法则。">对冲断供、涨价与质量风险，切换余地就是生命线</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">谈判三张牌：阶梯、账期、双供。爬坡一条线：直通率不到 90% 不放量。供应链的本质是「风险管理」——它保证你卖得越多，亏得越少，而不是相反。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道题检验你是否把「BOM 结构、成本曲线、认证约束、供应商管理」串成闭环；过关之后，去看看这只「技术 + 成本」双达标的鸭子，如何在市场上完成冷启动。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">关于微型双足机器人的减速器选型，最合理的策略是？</p>
+        <button class="opt" data-fb="BOM 大头恰恰是执行器（35–45%）；「都用最好」会直接击穿成本红线——消费级的艺术是「够用」。">减速器是精密件，必须用最好的，不计较成本</button>
+        <button class="opt" data-fb="对。微型机负载小、精度要求相对低，国产行星减速器通常已够且便宜 2–3 倍；省下的预算可投给算力或电池——「在瓶颈上花钱，在其余处抠门」。">用负载与精度反推最低需求，国产行星减速器通常已「够用」，把预算留给瓶颈件</button>
+        <button class="opt" data-fb="背隙影响换向平顺性，但可通过控制端缓冲部分弥补；它与「成本红线」相比是次要矛盾。">背隙越小越好，应一律选近零背隙方案</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">为什么认证合规应该在设计阶段就介入，而不是样机完成后才补办？</p>
+        <button class="opt" data-fb="对。电芯要选有 UN38.3 报告的、EMC 要预留屏蔽与布局、外壳要阻燃——这些全是「选型/画板级」决策；事后返工等于重开一轮设计，成本数倍于前期预防。">认证反向约束电芯选型、EMC 设计与外壳材料，事后返工代价远高于前期预防</button>
+        <button class="opt" data-fb="认证周期确实长，但「周期长」只是表象；本质是它会改变设计决策，而不是单纯「等结果」。">因为认证机构收费高，早办可以打折</button>
+        <button class="opt" data-fb="用已认证模组能简化流程，但整机 EMC、安全、外壳阻燃仍需整机级测试——不能一键豁免。">样机完成后再办，可以一次测完全部项目，效率更高</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">量产爬坡阶段，「直通率」（FPY）低于 90% 时最应该做什么？</p>
+        <button class="opt" data-fb="放量只会把不良品率放大成售后灾难——直通率低时放量是「自杀式爬坡」。">加大产量，用规模稀释不良率</button>
+        <button class="opt" data-fb="降价刺激销量与「直通率低」无因果关系；它需要的是工艺改进，不是营销。">立刻降价促销，快速清库存</button>
+        <button class="opt" data-fb="对。直通率低说明工艺/来料/培训有问题，此时放量=把不良品卖给用户；应停下改进工艺，把直通率抬到 95% 以上再爬坡。">停下来改进工艺，把直通率抬到 95% 以上再放量</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">「成本与供应链」模块收官。想巩固智能硬件的电子基础，回顾 <a href="microduck-04-electronics.html">第 04 课：机器鸭电子硬件</a>；下一步去 <a href="microduck-12-launch.html">第 12 课：机器鸭产品化与冷启动</a>——看这只「技术 + 成本」双达标的鸭子，如何在 4 天内拿下 10500 台订单。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ============ 课程定制演示：单件成本曲线实验台 ============
+   模型：
+   - 产量 Q = 10^qty（1 ~ 100,000 台，对数轴）
+   - 零件单价 = 基准价 × disc^(log10(Q/10))，即每翻十倍量，单价 × disc（0.75 = 打 75 折）
+   - 基准 BOM（1 台手工价）= 480 美元（教学估算）
+   - 单件成本 = 零件单价 + NRE（万元）× 10000 / Q */
+demo('#demo1', ({ qty, nre, disc }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cPri = css.getPropertyValue('--primary');
+  const cBad = css.getPropertyValue('--bad'), cOk = css.getPropertyValue('--ok');
+  const cWarn = css.getPropertyValue('--warn');
+
+  const padL = 60, padR = 20, padT = 22, padB = 46;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  // 对数轴：Q 从 1 到 100000（10^0 ~ 10^5）
+  const logMin = 0, logMax = 5;
+  const X = lg => padL + ((lg - logMin) / (logMax - logMin)) * plotW;
+  // 成本轴：对数，从 10 到 1000 美元
+  const yMin = Math.log10(10), yMax = Math.log10(1000);
+  const Y = c => padT + plotH * (1 - (Math.log10(c) - yMin) / (yMax - yMin));
+
+  const basePart = 480;   // 1 台时的零件总价（教学估算）
+  const unitPart = lg => basePart * Math.pow(disc, Math.max(0, lg - 0));  // 每翻十倍量打折
+  const unitTotal = lg => unitPart(lg) + (nre * 10000) / Math.pow(10, lg);
+
+  // 当前选中点
+  const curLg = qty, curQ = Math.pow(10, curLg), curCost = unitTotal(curLg);
+
+  // —— 网格 ——
+  ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+  ctx.font = '11px sans-serif'; ctx.fillStyle = cMut;
+  for (let lg = 0; lg <= 5; lg++) {
+    ctx.beginPath(); ctx.moveTo(X(lg), padT); ctx.lineTo(X(lg), padT + plotH); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.fillText(Math.pow(10, lg).toLocaleString('en-US') + ' 台', X(lg), H - padB + 16);
+  }
+  ctx.textAlign = 'right';
+  for (let c = 10; c <= 1000; c *= 10) {
+    ctx.beginPath(); ctx.moveTo(padL, Y(c)); ctx.lineTo(W - padR, Y(c)); ctx.stroke();
+    ctx.fillText(c + ' 美元', padL - 8, Y(c) + 4);
+  }
+  // 199 美元参考线（量产甜蜜点）
+  ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = cOk; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(padL, Y(199)); ctx.lineTo(W - padR, Y(199)); ctx.stroke();
+  ctx.textAlign = 'left'; ctx.fillStyle = cOk;
+  ctx.fillText('199 美元（可定价区间）', padL + 6, Y(199) - 6);
+  ctx.restore();
+
+  // —— 画曲线：零件单价 与 总单件成本 ——
+  const plotCurve = (fn, color, width, dash) => {
+    ctx.save();
+    if (dash) ctx.setLineDash(dash);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    let started = false;
+    for (let lg = 0; lg <= 5; lg += 0.02) {
+      const c = fn(lg);
+      if (c < 10 || c > 1000) { started = false; continue; }
+      const px = X(lg), py = Y(c);
+      started ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      started = true;
+    }
+    ctx.stroke(); ctx.restore();
+  };
+  plotCurve(unitPart, cMut, 1.5, [4, 4]);
+  plotCurve(unitTotal, cPri, 2.5);
+
+  // —— 当前点标记 ——
+  ctx.fillStyle = cWarn;
+  ctx.beginPath(); ctx.arc(X(curLg), Y(curCost), 5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = cWarn; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(X(curLg), padT + plotH); ctx.lineTo(X(curLg), Y(curCost)); ctx.stroke();
+
+  // 图例
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = cPri; ctx.fillText('—— 单件总成本（零件 + NRE 摊销）', padL + 8, padT + 16);
+  ctx.fillStyle = cMut; ctx.fillText('- - 零件单价（随量打折）', padL + 8, padT + 32);
+
+  // 读数
+  const ro = root.querySelector('.readout');
+  const partNow = unitPart(curLg), nreNow = (nre * 10000) / curQ;
+  let verdict, vColor;
+  if (curCost > 400) {
+    verdict = '❌ 处于「手工作坊区」：NRE 摊不薄，单件成本极高——此阶段目标是验证，不是赚钱。';
+    vColor = cBad;
+  } else if (curCost > 199) {
+    verdict = '⚠️ 接近可定价区间但尚未击穿：继续上量，或回头优化 BOM 结构。';
+    vColor = cWarn;
+  } else {
+    verdict = '✅ 进入量产甜蜜点：NRE 已摊薄，零件单价触底——此时才有「卖一台赚一台」的可能。';
+    vColor = cOk;
+  }
+  ro.textContent = `产量 ${Math.round(curQ).toLocaleString('en-US')} 台：单件成本约 ${curCost.toFixed(0)} 美元（零件 ${partNow.toFixed(0)} + NRE 摊销 ${nreNow.toFixed(0)}）。${verdict}`;
+  ro.style.color = vColor;
+});
+</script>
+</body>
+</html>

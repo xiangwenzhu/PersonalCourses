@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭运动学 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭运动学</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="让脚落到你想要的点">
+      <h2>让脚落到你想要的点</h2>
+      <p class="tldr">走路听起来神秘，拆开看其实只有一件事：把脚按时序、按位置，放到地面的指定点上。关节角是因，脚的位置是果——这就是运动学要解的题。</p>
+
+      <p>上一课我们给鸭子装好了固件与实时循环（<a href="microduck-06-embedded.html">第 06 课</a>）；这一课回到一个更朴素的问题：<b>鸭子的腿，凭什么把脚放到「那里」？</b></p>
+
+      <p>第 02 课埋过一个伏笔：走路的每一步，都是「把支撑点按预定轨迹放到地面的指定位置」。现在把这句话拆开。所谓「指定的点」，在地面上是一个有坐标的位置——离身体多远、偏左还是偏右；而鸭子的腿，只有关节能听指挥——髋转多少度、膝弯多少度。所以走路的本质是一道翻译题：<mark>把「脚要去哪」翻译成「关节该转多少」</mark>。</p>
+
+      <div class="analogy">你拿筷子夹菜时，大脑想的从来不是「手腕转 32 度、食指第二关节弯 15 度」——你想的是「筷子尖去夹那颗花生米」。但你的胳膊和手，只有关节能听指挥。大脑在暗中做翻译：目标位置 → 关节角度。机器鸭的「大脑」也要做同一道翻译，只是它不会含糊——必须算得又快又准。</div>
+
+      <div class="key"><b>核心定义：</b>把「关节角度 → 脚的位置」算出来的过程叫<b>正运动学</b>；反过来，把「脚的目标位置 → 需要的关节角度」反解出来的过程叫<b>逆运动学</b>。走路控制器天天在用的，主要是后者。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：一句话分清两个方向</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">正运动学</div><div class="back">已知：髋多少度、膝多少度。求：脚尖落在哪。方向是「角 → 位置」，像查表：每个姿态对应一个唯一的脚位置。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">逆运动学</div><div class="back">已知：脚尖要去哪。求：髋、膝各转多少度。方向是「位置 → 角」，是走路要反复求解的那道题。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：已知髋、膝两个关节角，算出脚尖坐标，这是 <input data-answer="正运动学|正解">；已知脚尖目标坐标，反解出髋、膝各转多少度，这是 <input data-answer="逆运动学|逆解">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话记住：正解是「给了角度问在哪」，逆解是「定了位置问转多少」。本课后面会亲手把这两个方向的公式都推一遍。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="关节角与脚的位置">
+      <h2>关节角与脚的位置</h2>
+      <p class="tldr">一条腿其实就是两根杆、两个铰链：髋角决定大腿摆向，膝角决定小腿相对大腿弯多少；两个角一组合，脚就被钉死在平面上的一个点。</p>
+
+      <p>把鸭子的腿抽象到最简：忽略脚的厚度、关节的复杂结构，它就是<b>两根刚性杆 + 两个转轴</b>——上面那根是大腿（连着髋），下面那根是小腿（连着膝），脚尖在最末端。这种「两根杆两个铰」的模型，在机器人学里有个标准名字：<b>二连杆模型</b>，它是所有双足腿动学的最小可学单元。</p>
+
+      <p>现在只做定性观察。把髋角固定，只动膝角：脚尖会绕着髋做圆周运动——因为小腿长度不变，膝角每变一点，脚尖就沿圆弧挪一点。把膝角固定，只动髋角：整个二连杆像钟摆一样绕髋转，脚尖走的是以髋为圆心、两腿总长为半径的大圆弧。<mark>两个角各自只能画圆，合起来才能钉住一个点</mark>——这就是为什么二维平面上的腿，最少需要两个关节。</p>
+
+      <div class="analogy">拿两支笔首尾相接摆成折线：一支笔的末端连着另一支的起点，手指捏住连接点就是「膝」。只转下面那支，笔尖走小圆；只转上面那支，笔尖走大圆；两支一起转，笔尖可以够到平面上大片区域里的几乎任何一点。机器人腿的道理一模一样，只是它的「笔」是金属杆，「手指」是电机。</div>
+
+      <div class="key">二维平面上，<b>两个关节角恰好够、也只够钉住一个点</b>：角度太少（一个关节）脚尖只能走圆弧，钉不住任意点；角度更多（三关节、四关节）则能钉住点之外还留有余地——这个「余地」后面叫冗余自由度。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：二连杆的四个关键词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">连杆</div><div class="back">把大腿、小腿各看成一根不会变形的刚性杆。杆的长度在模型里是常数，教学估算取大腿约 6 厘米、小腿约 6 厘米，以厂商规格书为准。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">关节角</div><div class="back">髋角：大腿相对竖直方向前倾多少；膝角：小腿相对大腿弯多少。两个角各管一段杆的方向，合成脚尖位置。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">脚尖</div><div class="back">二连杆的最末端，走路时要被「钉」到地面指定位置的那个点。位置用它在平面上的坐标（x, y）表示。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">冗余</div><div class="back">关节数多于钉住一个点所需的最小数目时，多出来的自由度。冗余有好处（避障、优化姿态）也有代价（逆解不唯一）。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">在二维平面上，一条腿「想钉住一个点」最少需要几个关节？</p>
+        <button class="opt" data-fb="一个关节只够让脚尖走圆弧，钉不住任意指定的点——自由度不够。">1 个</button>
+        <button class="opt" data-fb="三个及以上当然能钉住，但不是「最少」——问题问的是下限，两个就恰好够了。">3 个</button>
+        <button class="opt" data-fb="对。两个角各自决定一段杆的方向，合起来恰好把脚尖钉在平面的一个点上；再多是冗余，再少不够。">2 个</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">二连杆 = 两根杆 + 两个角。两个角各画各的圆，合在一起才能把脚尖钉在点上。下一章给这套几何配上坐标系和公式。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="坐标系与连杆">
+      <h2>坐标系与连杆</h2>
+      <p class="tldr">几何要变成公式，先立坐标系：以髋为原点、竖直向下为 x 轴、水平向前为 y 轴，两条连杆长度固定——有了这三个约定，脚尖位置就有了可以计算的名字。</p>
+
+      <p>「脚尖在哪」这句话太模糊，数学不认。要算它，先得给腿立一个<b>坐标系</b>——简单说就是：在哪量（原点）、朝哪量（坐标轴）、单位是什么。机器人学里有个习惯叫<b>基座坐标系</b>（base frame）：把原点放在腿的根部（对鸭腿就是髋关节中心），再规定两个互相垂直的方向作为轴。</p>
+
+      <p>本课用一套对鸭子特别顺手的约定：原点放在<b>髋关节中心</b>；<b>x 轴竖直向下</b>（站着不动时，腿正好沿 x 轴伸直）；<b>y 轴水平向前</b>（鸭子脸朝的方向为正）。这样腿伸直站立时，脚尖正好落在 x 轴正方向上，公式最干净。两只连杆的<b>长度</b>记为常数：大腿 $l_1$、小腿 $l_2$（教学估算各约 6 厘米，实际以厂商规格书为准）。</p>
+
+      <p>两个关节角也下个准确定义：<b>髋角 $\theta_1$</b> 是大腿与 x 轴（竖直向下）之间的夹角，向前摆为正；<b>膝角 $\theta_2$</b> 是小腿相对大腿的弯曲角——大腿方向已定，小腿再相对它转过 $\theta_2$。有了这套符号，「脚尖在哪」就变成了「给定 $l_1, l_2, \theta_1, \theta_2$，求坐标 $(x, y)$」——这正是下一章正运动学的输入。</p>
+
+      <div class="analogy">坐标系就像给腿拍照前先摆正相机：站直、对齐、量好原点，照片里每个点的位置才有意义。摆歪了也能拍，但每个点的坐标都会跟着歪——后面所有公式都会背着这个「歪」走。</div>
+
+      <div class="key">本课约定（记住即可，后面反复用）：<b>原点 = 髋关节中心；x 轴 = 竖直向下；y 轴 = 水平向前；大腿长 $l_1$、小腿长 $l_2$；髋角 $\theta_1$、膝角 $\theta_2$</b>。所有公式都在这套坐标下展开。</div>
+
+      <div class="widget fill">
+        <p class="q">按本课约定，腿完全伸直站立时（两角都为 0），脚尖坐标约为 <input data-answer="(l1+l2, 0)|l1+l2, 0|l1+l2">，即落在 <input data-answer="x|x 轴|竖直轴"> 轴上。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">坐标系是公式的地基：本课定了「髋为原点、竖直向下为 x、水平向前为 y」，连杆长度和关节角也有了符号。下一章用它们写出正运动学公式。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="二连杆正运动学公式">
+      <h2>二连杆正运动学公式</h2>
+      <p class="tldr">正运动学就两行公式：脚尖的 x 坐标是两段杆竖直分量相加，y 坐标是水平分量相加——本质是把每段杆的投影拆到两根轴上再求和。</p>
+
+      <p>现在把「脚尖在哪」写成公式。思路分两步：先算大腿末端（也就是膝盖）在哪，再把小腿从膝盖处接上去。每一段杆在两个轴上的「贡献」，就是它长度乘以对应方向的三角函数——这是高中直角三角形的投影思想，机器人学只是给它套上了符号。</p>
+
+      <p style="text-align:center">$$x = l_1\cos\theta_1 + l_2\cos(\theta_1 + \theta_2)$$</p>
+      <p style="text-align:center">$$y = l_1\sin\theta_1 + l_2\sin(\theta_1 + \theta_2)$$</p>
+
+      <p>逐项拆开看：</p>
+      <ul>
+        <li>$l_1\cos\theta_1$：大腿在 x 轴（竖直方向）上的投影长度。$\theta_1$ 越大，大腿越往前摆，竖直投影越短——这项随髋角变化。</li>
+        <li>$l_2\cos(\theta_1 + \theta_2)$：小腿在 x 轴上的投影。注意角度是<b>两个角相加</b>——因为膝角是「相对大腿」弯的，小腿的绝对方向等于大腿方向再加一个膝角。</li>
+        <li>两个 y 项完全对称：把余弦换成正弦，就得到水平方向上的投影，相加即是脚尖的 y 坐标。</li>
+      </ul>
+
+      <div class="key">正运动学的本质：<b>每段杆先按各自方向投影到 x 和 y 轴，再把同轴的分量加起来</b>。形式简单，但它是逆运动学、雅可比、轨迹规划的地基——逆运动学就是从这里反解出来的。</div>
+
+      <div class="analogy">像用两根手杖量地面上的一个点：先沿第一根手杖的方向走一段，记下竖直和水平各走了多少；再沿第二根的方向走一段，同样记下两个分量。把两次的竖直分量加起来、水平分量加起来，终点坐标就出来了。公式里的每一项，都是「沿某根杆走的那一小段」在两个方向上的分量。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">正运动学公式里，小腿那一项为什么角度是「两个角相加」而不是单独的膝角？</p>
+        <button class="opt" data-fb="膝角在小腿上的作用体现在系数 l2 里，而不是藏在角度符号里——角度部分就是绝对方向。">因为膝角本身会改变小腿的有效长度</button>
+        <button class="opt" data-fb="对。膝角是「相对大腿」的弯曲，而投影需要的是杆的绝对方向；小腿的绝对方向 = 大腿方向（θ1）+ 相对弯曲（θ2）。">因为膝角是相对大腿定义的，小腿的绝对朝向要把髋角和膝角加起来</button>
+        <button class="opt" data-fb="坐标轴本身不动，动的是杆。两角相加描述的是小腿这根杆的实际指向，与坐标系选在哪无关。">因为坐标系随膝盖移动，必须补偿一个角度</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">取教学估算值 l1 = l2 = 6 厘米。当 θ1 = 0、θ2 = 0（腿伸直站立）时，x = <input data-answer="12|12厘米|12 厘米|12cm"> 厘米，y = <input data-answer="0|0厘米|0 厘米"> 厘米。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">正运动学两行公式：x 把两段杆的竖直投影相加，y 把水平投影相加；小腿的角度是髋膝两角之和。有了它，就能从「腿摆成什么样」算出「脚在哪」。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="二连杆逆运动学">
+      <h2>二连杆逆运动学</h2>
+      <p class="tldr">逆运动学是从目标点反推关节角：先用余弦定理求出膝角，再反推髋角；同一个目标点往往有两种合法姿态——膝前弯还是膝后弯，可切换。</p>
+
+      <p>走路要的是逆方向：给定脚尖目标 $(x, y)$，求 $\theta_1, \theta_2$。好消息是二连杆有解析解（能写出闭式公式），不用数值搜索。推导分三步：</p>
+
+      <p><b>第一步：求膝角。</b>把大腿和小腿、以及从髋到脚尖的连线看成一个三角形：三边分别是 $l_1$、$l_2$ 和 $d = \sqrt{x^2 + y^2}$（髋到脚尖的直线距离）。对这个三角形用<b>余弦定理</b>，就能解出膝角：</p>
+      <p style="text-align:center">$$\theta_2 = \pm \arccos\!\left( \frac{x^2 + y^2 - l_1^2 - l_2^2}{2 l_1 l_2} \right)$$</p>
+      <p>注意正负号：<b>$\theta_2$ 可以取正也可以取负</b>，对应脚尖在膝盖的前侧还是后侧——这就是同一个目标点存在两种合法姿态的原因。实际鸭子有机械限位，通常只用其中一种。</p>
+
+      <p><b>第二步：求髋角。</b>膝角定了之后，髋到脚尖的连线方向已知、三角形形状已知，用正弦定理或几何关系可推出：</p>
+      <p style="text-align:center">$$\theta_1 = \operatorname{atan2}(y, x) \mp \arccos\!\left( \frac{x^2 + y^2 + l_1^2 - l_2^2}{2 l_1 \sqrt{x^2 + y^2}} \right)$$</p>
+      <p>其中 $\operatorname{atan2}(y, x)$ 是「髋到脚尖连线」相对 x 轴的方位角；第二项是这条连线与大腿之间的夹角。两项相减（或加，对应膝角的正负）就得到大腿的绝对方向。</p>
+
+      <p><b>第三步：检查可达性。</b>反余弦的输入必须在 $-1$ 与 $1$ 之间——几何含义很直白：<mark>目标点到髋的距离 $d$ 必须满足「两边之和大于第三边、两边之差小于第三边」</mark>，也就是 $|l_1 - l_2| \le d \le l_1 + l_2$。超出这个范围，腿再努力也够不到，逆解不存在。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">逆解实验台：拖动滑块设定脚尖目标，看二连杆如何反解与翻转</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>目标 x（竖直，厘米） <span class="val" data-for="tx"></span><input type="range" name="tx" min="2" max="12" step="0.1" value="9"></label>
+          <label>目标 y（水平，厘米） <span class="val" data-for="ty"></span><input type="range" name="ty" min="-6" max="6" step="0.1" value="3"></label>
+          <label>大腿 l1（厘米） <span class="val" data-for="l1"></span><input type="range" name="l1" min="4" max="8" step="0.1" value="6"></label>
+          <label>小腿 l2（厘米） <span class="val" data-for="l2"></span><input type="range" name="l2" min="4" max="8" step="0.1" value="6"></label>
+          <label><input type="checkbox" name="flip"> 切换膝姿态（肘翻向另一侧）</label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="analogy">逆运动学就像已知绳长反推风筝姿态：线有多长（d）定了，两段骨架各多长（l1、l2）也定了，三角形形状就定了——但风筝可以在三角形里「肘朝前」或「肘朝后」两种摆法，这就是正负号对应的两组解。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">目标点离髋太远，超出了 l1 + l2（两腿完全伸直也够不着），此时逆运动学会怎样？</p>
+        <button class="opt" data-fb="对。反余弦的输入超出正负 1 的范围，无解——几何上就是三角形三边不满足「两边之和大于第三边」，腿再努力也够不到该点。">逆解不存在：余弦定理无解，腿够不到这个点</button>
+        <button class="opt" data-fb="膝角确实会到 0，但那只是「恰好等于 l1 + l2」的临界情况；超出范围时不是角度取 0，而是根本不存在合法角度。">膝角自动取 0，腿尽量伸直去够</button>
+        <button class="opt" data-fb="髋角没法单独救场——问题出在距离上，不是角度上；先把目标拉回可达域，再谈角度怎么取。">髋角会自动转到最大角度强行去够</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">逆解三板斧：余弦定理求膝角（带正负，两种姿态）、再反推髋角、最后验可达性。把滑块里的目标点拖出腿长范围试试，看红叉怎么告诉你「无解」。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="雅可比与数值迭代">
+      <h2>雅可比与数值迭代</h2>
+      <p class="tldr">雅可比矩阵是「关节速度与脚速度的翻译官」；当腿更复杂、解析解写不出来时，数值迭代用「一小步一小步朝目标挪」的笨办法也能把逆解磨出来。</p>
+
+      <p>二连杆能写出闭式解，但真实机器人的腿往往更复杂——多一个踝关节、膝关节有偏置、连杆带夹角……解析公式会迅速变得又长又脆。这时工程师换一把工具：<b>雅可比矩阵</b>。它回答一个局部问题：<mark>关节角动一点点，脚尖会往哪动？</mark></p>
+
+      <p>数学上，雅可比是脚坐标对关节角的偏导数排成的矩阵：</p>
+      <p style="text-align:center">$$J = \begin{bmatrix} \dfrac{\partial x}{\partial \theta_1} & \dfrac{\partial x}{\partial \theta_2} \\[6pt] \dfrac{\partial y}{\partial \theta_1} & \dfrac{\partial y}{\partial \theta_2} \end{bmatrix}$$</p>
+      <p>它是个<b>翻译官</b>：给它一个「关节速度向量」，它输出「脚的速度向量」；反过来，想要脚以某个速度移动，可以解线性方程组反推关节该怎么动。当矩阵不可逆（腿完全伸直时）就进入<b>奇异位形</b>——这是机器人最怕的姿势之一，因为这时腿 lose 了某个方向的即时移动能力。</p>
+
+      <p>当解析逆解不存在或太复杂时，还有一条更朴素的路线：<b>数值迭代</b>。思路像盲人摸象找门：先随便摆一个姿势，算算脚尖离目标差多少；按雅可比告诉的方向微调关节角，让误差缩小一点；重复几十上百次，直到误差小到可接受。这就是机器学习里「梯度下降」的近亲——都是「朝减小误差的方向一小步一小步走」。</p>
+
+      <div class="analogy">数值迭代就像用手柄微调投影仪画面：先按一下「左」，看图像往左偏了多少；再按「上」，再看；东按一下西按一下，几十次之后画面终于对齐。你没解过任何公式，但画面确实被「磨」到了位——雅可比告诉你「按这个键画面会往哪偏」，迭代就是反复利用这个信息。</div>
+
+      <div class="key">两条路线各管一段：<b>解析解</b>快、准、可预测，适合二连杆这类简单结构；<b>数值迭代</b>慢半拍但万能，复杂腿、带约束、多冗余时都靠它。实际产品往往混用——能用解析就用解析，复杂工况 fallback 到迭代。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">雅可比矩阵最核心的作用是什么？</p>
+        <button class="opt" data-fb="那是逆运动学的工作。雅可比管的是「速度之间的局部翻译」，是微分层面的映射，不是位置到位置的直接映射。">把关节角直接换算成脚尖坐标</button>
+        <button class="opt" data-fb="对。雅可比给出的是「关节动一点，脚往哪动」的局部线性关系；把它当翻译官，既能把关节速度译成脚速度，也能反解「想让脚这样动，关节该怎么转」。">建立关节速度与脚速度之间的局部线性映射</button>
+        <button class="opt" data-fb">它只负责判断腿有没有超出工作空间</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：当雅可比矩阵不可逆时，腿处于 <input data-answer="奇异位形|奇异|奇异位姿">，常见于腿完全 <input data-answer="伸直|拉直|绷直"> 的姿态。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">雅可比 = 速度翻译官 + 数值迭代的指南针。解析解管简单腿，迭代管复杂腿；遇到奇异位形（腿绷直）都要格外小心。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="落脚点规划">
+      <h2>落脚点规划</h2>
+      <p class="tldr">关节会算了，还要算「脚该往哪踩」：步幅决定迈多远，抬脚高度决定越障能力，摆动轨迹决定落地是否平顺——落脚点还得避开支撑边界，否则下一步就是摔倒。</p>
+
+      <p>逆运动学解决「怎么把脚放到指定点」，但走路前还得先回答「指定点选在哪」。这一层叫<b>落脚点规划</b>，它把「我想向前走」翻译成一连串具体的地面坐标。三个参数最重要：</p>
+
+      <ul>
+        <li><b>步幅</b>：相邻两步脚尖在前进方向上的距离。步幅太小走得慢、像碎步；太大则重心投影容易跑出支撑面，下一步就摔——后面第 08 课的 ZMP 判据会严格给出上限。</li>
+        <li><b>抬脚高度</b>：摆动相里脚尖离地的最大高度。要越过地毯边、线缆就得抬够高；抬太高又浪费能量、拉长单支撑时间，同样不稳。常见做法是按地形自适应，平路低抬、障碍高抬。</li>
+        <li><b>摆动轨迹</b>：从起点到终点，脚尖在空中走一条什么线。最朴素的是抛物线；更顺滑的做法是用<b>贝塞尔曲线</b>或多项式插值，保证起点、终点的速度和高度都连续，落地瞬间没有「砸地」感。</li>
+      </ul>
+
+      <p>落脚点不是随便选的，有一个硬约束来自<b>支撑多边形</b>——脚掌接触点连成的凸多边形。走路时身体重心在地面的投影，要尽量留在支撑多边形内部；单脚支撑时支撑面骤减为一个脚掌的大小，此时新落脚点若离身体太远，重心就会被迫压到边界外。</p>
+
+      <div class="warn">最常见误区：把落脚点选得太靠近甚至超出<b>可达域的远边界</b>——腿绷直去够一个勉强的点，看似迈得大步子稳，实则进入奇异位形，控制和驱动都最吃力；一旦地面有微小起伏，脚尖落点偏移就会连锁放大成摔倒。复刻时给落脚点规划留「安全余量」：步幅宁小勿大，落点宁近勿远。</div>
+
+      <details class="reveal">
+        <summary>延伸：Microduck 的 15 个电机如何分配自由度？</summary>
+        <p>官方未公开逐关节自由度的完整分配，教学估算：每条腿约 5 个自由度（髋 3、膝 1、踝 1），双臂共 4 个，颈部 1 个，合计 15。腿的五自由度让它在三维空间里不止能钉住脚尖位置，还能额外调整脚踝姿态和躯干朝向——这正是「冗余自由度」的价值：多出来的维度可以用来避障、优化能耗或让动作更拟人。</p>
+      </details>
+
+      <div class="widget">
+        <div class="widget-title">分步走一遍一个完整步态周期里的落脚点规划</div>
+        <div class="steps">
+          <div class="step"><b>① 定步幅与方向</b> —— 根据期望速度算出这一步的落点范围：想快则步幅大，但有上限；地面不平或转弯时主动收窄。</div>
+          <div class="step"><b>② 选抬脚高度</b> —— 扫描前方地形：有地毯边、线缆就抬高；平路就压低省能量。</div>
+          <div class="step"><b>③ 生成摆动轨迹</b> —— 用贝塞尔或多项式在「起点—终点」之间插值，保证起终点的速度与高度连续，落地不砸地。</div>
+          <div class="step"><b>④ 校验可达与安全</b> —— 用上一章的逆解检查目标点是否在可达域内、是否离奇异位形有足够余量；不满足就收缩步幅重来。</div>
+          <div class="step"><b>⑤ 执行并闭环修正</b> —— 摆动相里持续用视觉/IMU 修正轨迹，落地后进入支撑相，规划下一个落脚点。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">为什么落脚点「宁近勿远、宁小勿大」是更稳的工程策略？</p>
+        <button class="opt" data-fb="小步幅确实能耗略低，但「省能量」不是这条策略的主因——主因是稳定与控制裕度。">因为小步幅走得更快，能耗更低</button>
+        <button class="opt" data-fb">落脚点远近和奇异位形没有直接关系，不用考虑</button>
+        <button class="opt" data-fb="对。落点太远会把腿拉向绷直的奇异位形，控制和驱动都最吃力；留安全余量能让地面对扰动有容错，微小落点偏移不至于连锁成摔倒。">因为落点过远会接近腿完全伸直的奇异位形，控制与驱动裕度最小，抗扰动能力最差</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">落脚点规划 = 步幅 + 抬脚高度 + 摆动轨迹 + 安全校验。参数选得保守一点，鸭子就稳一点；把「迈大步」的冲动留给仿真里验证过的场景。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道题检验你是否把「正逆解、雅可比、落脚点」串成了闭环；过关之后，去看看脚的轨迹如何被控制律变成稳定不摔的步态。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">走路控制器里反复求解、把「脚尖目标位置」翻译成「关节角」的是？</p>
+        <button class="opt" data-fb="正运动学是「角→位置」，方向反了；走路要的是从目标位置反推关节角，是逆运动学。">正运动学</button>
+        <button class="opt" data-fb="对。逆运动学把目标点 (x, y) 反解为髋、膝角；二连杆可用余弦定理闭式求解，复杂腿则用数值迭代。">逆运动学</button>
+        <button class="opt" data-fb="雅可比管速度映射，不给位置到角度的直接换算——它是逆解的工具之一，不是翻译本身。">雅可比矩阵</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">腿完全伸直时，雅可比矩阵接近奇异，此时会发生什么？</p>
+        <button class="opt" data-fb="对。奇异位形下雅可比不可逆，腿在某个方向上「瞬时动不了」；控制上表现为该方向驱动要吃极大扭矩，抗扰动能力骤降——所以落脚点规划要避开这种姿态。">腿在某个方向上的即时移动能力丧失，控制与驱动裕度急剧恶化</button>
+        <button class="opt" data-fb="奇异不是「够得更远」：它标记的是控制的失效边界，不是工作空间的扩大。">腿能触及更大的工作空间，是好事</button>
+        <button class="opt" data-fb">奇异与能耗无直接关系，它影响的是可控性而非效率。">只是能耗略高，其他一切正常</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">关于摆动相轨迹（脚尖在空中走的线），正确的设计原则是？</p>
+        <button class="opt" data-fb">折线在起点和终点处有速度突变，落地会「砸地」，既损机构又损稳定。">尽量走直线折线，路径最短最省能</button>
+        <button class="opt" data-fb">抬脚高度只看越障需求，不看落地平顺性——但落地冲击是步态稳定的大敌，必须一并优化。">只由越障需求决定，与落地平顺无关</button>
+        <button class="opt" data-fb="对。贝塞尔或多项式插值能让起终点的速度、高度都连续，落地瞬间平顺不砸地；同时还要按地形自适应抬脚高度。">用贝塞尔或多项式插值，保证起终点速度与高度连续，落地平顺</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">至此，「脚该怎么动」的数学工具齐了。想巩固固件与实时循环的上下文，回顾 <a href="microduck-06-embedded.html">第 06 课：机器鸭嵌入式固件与实时控制</a>；下一步去 <a href="microduck-08-control.html">第 08 课：机器鸭经典控制与步态</a>——看看脚的轨迹如何被 PID、ZMP 与步态时间轴变成稳定不摔的完整步态。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：二连杆逆运动学实验台 ================= */
+demo('#demo1', ({ tx, ty, l1, l2, flip }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cBone = css.getPropertyValue('--primary');
+  const cBad = css.getPropertyValue('--bad'), cOk = css.getPropertyValue('--ok');
+
+  // 画布映射：把「厘米」坐标映射到像素（原点在画布左上区域，x 向下、y 向右，缩放 22 px/cm）
+  const S = 22, OX = 130, OY = 60;
+  const px = (x, y) => [OX + y * S, OY + x * S];
+
+  // 可达性检查
+  const d = Math.hypot(tx, ty);
+  const dMax = l1 + l2, dMin = Math.abs(l1 - l2);
+  const reachable = d >= dMin - 1e-9 && d <= dMax - 1e-9;
+
+  // 画网格与坐标轴
+  ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+  for (let gx = 0; gx <= 12; gx += 2) {
+    const [ax, ay] = px(gx, 0);
+    ctx.beginPath(); ctx.moveTo(ax, OY); ctx.lineTo(ax, OY + 12 * S); ctx.stroke();
+    ctx.fillStyle = cMut; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(gx + '', ax, OY + 12 * S + 14);
+  }
+  for (let gy = -6; gy <= 6; gy += 2) {
+    const [ax, ay] = px(0, gy);
+    ctx.beginPath(); ctx.moveTo(OX, ay); ctx.lineTo(OX + 6 * S, ay); ctx.stroke();
+    if (gy !== 0) { ctx.fillStyle = cMut; ctx.fillText((gy > 0 ? '+' : '') + gy, OX - 16, ay + 3); }
+  }
+  // x 轴（竖直向下）箭头
+  const [xa, ya] = px(12.6, 0);
+  ctx.strokeStyle = cMut; ctx.beginPath(); ctx.moveTo(px(12,0)[0], px(12,0)[1]); ctx.lineTo(xa, ya); ctx.stroke();
+  ctx.fillStyle = cMut; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('x（竖直向下）cm', OX - 6, OY + 12 * S + 28);
+  ctx.fillText('y（水平向前）cm →', OX + 6 * S + 8, OY - 10);
+
+  // 可达域边界（两个圆）
+  ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = cMut; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(...px(0,0), dMax * S, 0, Math.PI * 2); ctx.stroke();
+  if (dMin > 0.01) { ctx.beginPath(); ctx.arc(...px(0,0), dMin * S, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.restore();
+
+  const [hx, hy] = px(0, 0);
+
+  if (!reachable) {
+    // 目标不可达：画红叉
+    const [gx, gy] = px(tx, ty);
+    ctx.strokeStyle = cBad; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(gx - 10, gy - 10); ctx.lineTo(gx + 10, gy + 10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx + 10, gy - 10); ctx.lineTo(gx - 10, gy + 10); ctx.stroke();
+    ctx.fillStyle = cBad; ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('目标不可达：超出腿长范围', gx + 16, gy + 4);
+    // 仍画出指向目标的虚线提示
+    ctx.save(); ctx.setLineDash([3,3]); ctx.strokeStyle = cMut;
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(gx, gy); ctx.stroke(); ctx.restore();
+  } else {
+    // 逆解（与正文公式一致）
+    const cosT2 = (tx*tx + ty*ty - l1*l1 - l2*l2) / (2 * l1 * l2);
+    const t2 = (flip ? -1 : 1) * Math.acos(Math.max(-1, Math.min(1, cosT2)));
+    const phi = Math.atan2(ty, tx);
+    const psi = Math.acos(Math.max(-1, Math.min(1, (tx*tx + ty*ty + l1*l1 - l2*l2) / (2 * l1 * d))));
+    const t1 = phi - Math.sign(t2 || 1) * psi;
+
+    const kx = l1 * Math.cos(t1), ky = l1 * Math.sin(t1);
+    const [kpx, kpy] = px(kx, ky);
+    const [fx, fy] = px(tx, ty);
+
+    // 画两段杆
+    ctx.strokeStyle = cBone; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(kpx, kpy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(kpx, kpy); ctx.lineTo(fx, fy); ctx.stroke();
+    // 关节点
+    ctx.fillStyle = cTxt;
+    ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(kpx, kpy, 4, 0, Math.PI * 2); ctx.fill();
+    // 脚尖
+    ctx.fillStyle = cOk;
+    ctx.beginPath(); ctx.arc(fx, fy, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('脚尖', fx + 9, fy - 8);
+    ctx.fillText('膝', kpx + 8, kpy - 6);
+    ctx.fillText('髋', hx + 8, hy + 4);
+  }
+
+  // 读数
+  const ro = root.querySelector('.readout');
+  if (!reachable) {
+    ro.textContent = `❌ 目标 (${tx.toFixed(1)}, ${ty.toFixed(1)}) 超出可达域：髋到目标距离 ${d.toFixed(1)} cm，需介于 ${dMin.toFixed(1)} 与 ${dMax.toFixed(1)} cm 之间。`;
+  } else {
+    const cosT2 = (tx*tx + ty*ty - l1*l1 - l2*l2) / (2 * l1 * l2);
+    const t2 = (flip ? -1 : 1) * Math.acos(Math.max(-1, Math.min(1, cosT2)));
+    const phi = Math.atan2(ty, tx);
+    const psi = Math.acos(Math.max(-1, Math.min(1, (tx*tx + ty*ty + l1*l1 - l2*l2) / (2 * l1 * d))));
+    const t1 = phi - Math.sign(t2 || 1) * psi;
+    const deg = r => (r * 180 / Math.PI).toFixed(1);
+    ro.textContent = `✅ 可达。逆解结果：髋角 θ1 = ${deg(t1)}°，膝角 θ2 = ${deg(t2)}°（${flip ? '膝后弯（负）' : '膝前弯（正）'}）。目标距离 ${d.toFixed(1)} cm，安全余量 ${(dMax - d).toFixed(1)} cm。`;
+  }
+});
+</script>
+</body>
+</html>

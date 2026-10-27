@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭传感器系统 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭传感器系统</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="给鸭子装上眼睛、耳朵和内耳">
+      <h2>给鸭子装上眼睛、耳朵和内耳</h2>
+      <p class="tldr">双足机器人每走一步都站在「即将摔倒」的边缘上——传感器就是它不摔倒的全部依仗：IMU 感知自己在歪，ToF 感知前方多远，摄像头感知那是什么。</p>
+
+      <p>上一课（<a href="microduck-04-electronics.html">第 04 课：机器鸭主控电路与电源</a>）我们给鸭子装好了「心脏和神经」；这一课来装「感官」。先想一个问题：为什么轮式机器人不太需要传感器，双足机器人却离不开它？</p>
+
+      <p>答案在稳定性结构里。轮子着地，车身趴在几个接触点上，<b>你不推它，它自己不会倒</b>；而双足机器人是一只「倒立摆」——重心高、支撑面只有两只脚掌那么小，静止时勉强站得住，一抬腿就进入单脚支撑，<mark>每一步其实都是一次「被控制住的摔倒」</mark>。要控制住摔倒，就得在摔倒发生之前知道三件事：</p>
+
+      <div class="key"><b>传感器的三大任务：</b>① <b>摔倒感知</b>——我现在是不是正在歪、歪多快（内部状态）；② <b>地形判断</b>——脚下和前方还有多远、能不能落脚（几何信息）；③ <b>目标定位</b>——我要去找的那个东西是什么、在哪（语义信息）。三个问题，缺一个鸭子都走不稳。</div>
+
+      <div class="analogy">这套分工你身上就有一份：<b>眼睛</b>负责看世界、认东西；<b>内耳前庭</b>负责平衡——不信你闭上眼单脚站立试试，身体一歪，内耳立刻报警，根本不需要看地面；<b>脚底和皮肤</b>负责触觉，告诉你踩到的是地毯还是台阶。机器鸭做的事一模一样：<b>IMU 是内耳，ToF 激光雷达是伸出去量距离的手，摄像头是眼睛</b>。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，认识这只鸭子的三大感官</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">IMU 惯性传感器</div><div class="back">机器鸭的「内耳」。测量身体的旋转快慢与受力方向，实时回答「我是不是歪了」。双足平衡的第一手信息，毫秒级响应。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">ToF 激光雷达</div><div class="back">机器鸭的「量尺」。向物体发射光脉冲、测量光返回的时间，直接算出距离。不依赖环境光，黑暗里照样工作。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">摄像头</div><div class="back">机器鸭的「眼睛」。拍摄彩色画面，交给算法认出「这是袜子、那是桌腿」。三件感官里唯一能回答「那是什么」的。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">轮式机器人对传感器的依赖远低于双足机器人，最根本的原因是？</p>
+        <button class="opt" data-fb="轮子和腿的成本差异与感知需求无关——轮式车没了测距传感器照样开不了。">轮子比腿便宜，省下的钱可以多买传感器</button>
+        <button class="opt" data-fb="对。轮式结构天然稳定，静止时不需要主动平衡；双足是倒立摆，每一刻都要靠传感器感知姿态、及时纠正，否则立刻摔倒。">轮式天生稳定，不推它不会倒；双足每一步都在受控摔倒，必须实时感知姿态</button>
+        <button class="opt" data-fb="恰恰相反，轮式往往跑得更快。速度不是关键，稳定性才是：越不稳定，越依赖传感器实时反馈。">轮式速度慢，有充足时间反应</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">双足 = 倒立摆 = 时刻在摔。摔倒感知、地形判断、目标定位三大任务，分别由 IMU、ToF、摄像头扛起来——这就是机器鸭感官系统的总地图。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="三种感官各管什么">
+      <h2>三种感官各管什么</h2>
+      <p class="tldr">三种感官回答三个不同的问题——IMU 答「我是不是歪了」，ToF 答「前面有多远」，摄像头答「那是什么」；问题配错传感器，再贵的硬件也白搭。</p>
+
+      <p>用一个生活场景把分工讲透：你端着一碗滚烫的汤穿过客厅，去拿沙发上的遥控器。一路上你其实同时在干三件事——<b>端稳汤</b>：身体稍微一歪，内耳和肌肉立刻感知并纠正，靠的是「自身姿态」；<b>绕开茶几</b>：目测还剩几步、该往哪偏，靠的是「距离」；<b>找到遥控器</b>：扫一眼沙发，认出那个黑色小方块，靠的是「识别」。</p>
+
+      <p>机器鸭走向目标时也是这三条线并行：IMU 像端汤的内耳，管「身体内部」；ToF 像目测距离，管「我和世界的几何关系」；摄像头像认东西的眼睛，管「世界里的东西是什么」。注意一个关键区别：<mark>IMU 测的是自己，ToF 和摄像头看的是外面</mark>——前者是内部状态量，后两者是外部环境量，谁也替代不了谁。</p>
+
+      <div class="analogy">把三种感官想成快递分拣站的三位员工：<b>IMU 是体检仪</b>，只量分拣员自己的心率体温，外面的包裹一概不知；<b>ToF 是卷尺</b>，只回答「包裹离我几米」，至于是什么包裹它不关心；<b>摄像头是识别员</b>，看一眼就知道包裹上写的是什么，但你问「它离我多远」，它答不准。三人各管一摊，问错人 = 白跑一趟。</div>
+
+      <div class="widget fill">
+        <p class="q">情景填空：鸭子从客厅这头走向沙发上的袜子——它靠 <input data-answer="IMU|imu|惯性测量单元|惯性传感器"> 知道「我是不是歪了」，靠 <input data-answer="ToF|tof|ToF 雷达|ToF雷达|激光雷达"> 知道「前面还有多远」，靠 <input data-answer="摄像头|相机|camera|视觉传感器"> 知道「那是不是袜子」。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">鸭子被你轻轻推了一下、身体开始前倾，最先发现这件事并触发纠正动作的是？</p>
+        <button class="opt" data-fb="摄像头看的是外部画面，身体倾斜时画面确实会晃，但那既缓慢又间接——用它感知自身姿态又慢又不准。">摄像头</button>
+        <button class="opt" data-fb="ToF 量的是「我与障碍物差多远」，跟自己的身体歪没歪完全是两回事。">ToF 激光雷达</button>
+        <button class="opt" data-fb="对。IMU 直接测量角速度与倾角，毫秒级就能察觉身体在倒，这正是它存在的意义——其他两件感官管的是外面。">IMU 惯性传感器</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句口诀：<b>IMU 管自己，ToF 管远近，摄像头管是什么</b>。设计感知系统第一步，就是把每个问题分派给对的传感器。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="IMU：鸭子的内耳">
+      <h2>IMU：鸭子的内耳</h2>
+      <p class="tldr">IMU 把两颗小传感器装进同一颗芯片：陀螺仪测「转得多快」，加速度计测「重力朝哪边」；六轴各司其职，但单独用都有毛病——这正是后面要做融合的原因。</p>
+
+      <p>IMU 的全称是<b>惯性测量单元</b>（Inertial Measurement Unit）。Microduck 这类小型机器人常用的是「六轴 IMU」，据官方规格它配备了两枚 IMU（具体型号官方未公开）。先把两个术语掰开：</p>
+
+      <p><b>陀螺仪</b>，测的是<b>角速度</b>——每条轴上身体转得多快，单位「度/秒」。注意它<b>不直接输出角度</b>：要把角速度按时间累加（积分）才能得到「歪了多少度」。<b>加速度计</b>，测的是每条轴上受到的加速度；静止或匀速时，它读到的就是<b>重力</b>（约 9.8 米/秒²，方向永远竖直向下）——既然重力方向已知，反推一下就能算出身体相对竖直方向歪了几度。</p>
+
+      <div class="analogy">「六轴」容易误会：它不是说鸭子能朝六个方向转，而是<b>三条轴（前后滚、左右翻、水平转）× 两种量（角速度 + 加速度）= 6 路数据</b>。就像体检报告分两栏，一栏记「转得多快」，一栏记「重力偏向哪边」。</div>
+
+      <p>那为什么两颗传感器要一起用？因为<b>各自都有致命短板</b>。陀螺仪有个与生俱来的误差叫<b>零偏</b>：完全静止时读数也不为零，剩下一个小的固定偏值。积分是最公平也最无情的算术——多小的误差，乘以时间都会滚成大错：每秒 1 度的零偏，一分钟后估计角度已经歪了 60 度，这叫<b>漂移</b>。加速度计没有漂移（重力方向不会变），但它太「老实」——鸭子一起步、一震动，运动加速度混进来，读数瞬间被污染。</p>
+
+      <div class="key"><b>一句话记住分工：</b>陀螺仪短期准、长期漂；加速度计长期稳、短期抖。一个管当下，一个管长远——天生互补，所以必须融合（第 05 章讲公式）。</div>
+
+      <div class="analogy">加速度计像一杯端在手里的水：<b>静止时水面平得能当水平仪用</b>（这就是它测重力的原理）；可你一走动，水面晃得七荤八素，此刻问它「歪了多少」，它只会给你一个抖成一团的答案。陀螺仪则像你转头的速度感——瞬间很灵敏，但让你闭眼匀速慢转一分钟，你已经完全不知道自己面朝哪了。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：IMU 的四个关键词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">陀螺仪</div><div class="back">测角速度（度/秒）。积分后得到角度：快、平滑，但零偏会让结果随时间漂移。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">加速度计</div><div class="back">测各轴加速度。静止时读重力方向、反解倾角：不漂移，但运动时读数被污染、抖动大。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">零偏</div><div class="back">静止时角速度读数不为零的固定误差。它经积分持续放大，是姿态漂移的主要来源，开机时要专门校掉。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">六轴</div><div class="back">3 条轴 × 2 种测量（角速度 + 加速度）= 6 路数据，不是「六个转动方向」。Microduck 配两枚 IMU，具体分工官方未公开。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">陀螺仪直接测量的物理量是 <input data-answer="角速度|角速率">，积分后才得到 <input data-answer="角度|姿态角|倾角">；而加速度计在静止时测的是 <input data-answer="重力|重力加速度|g"> 的方向。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">IMU = 陀螺仪（转得多快）+ 加速度计（重力朝哪）。一个怕积分漂移，一个怕运动噪声——理解这两个短板，下一章的「互补」就顺理成章。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="ToF 与摄像头：鸭子的眼睛">
+      <h2>ToF 与摄像头：鸭子的眼睛</h2>
+      <p class="tldr">ToF 用「光跑一圈的时间」直接量距离，摄像头用「一张张像素帧」看懂世界——一个准、一个懂，缺了谁这只鸭子都是残缺的。</p>
+
+      <h3>ToF：用光当卷尺</h3>
+      <p>ToF 的全称是<b>飞行时间</b>（Time of Flight），原理一句话就能说完：<b>向物体发出一束极短的光脉冲，等它反射回来，测出往返用了多久，乘以光速再除以二</b>：</p>
+      <p style="text-align:center">$$d = \dfrac{c \times \Delta t}{2}$$</p>
+      <p>其中 $d$ 是目标距离，$c$ 是光速（约 $3 \times 10^{8}$ 米/秒），$\Delta t$ 是光往返一圈的耗时。为什么要除以 2？因为光走的是「去 + 回」双程，而你要的是单程距离。</p>
+
+      <p>对这个公式有点数字感受很重要：光 1 纳秒只走 30 厘米。想量出 30 厘米外的桌腿，光往返 0.6 米，全程约 <b>2 纳秒</b>——所以 ToF 芯片的核心本事是<b>皮秒、纳秒级的超高精度计时</b>（具体计时精度与测距规格以厂商规格书为准，官方未公开 Microduck 所用型号）。好消息是整个过程<b>主动发光、自己打光自己收</b>，环境再暗也照测不误。</p>
+
+      <h3>摄像头：一帧一帧看世界</h3>
+      <p>摄像头输出的东西朴素得多：<b>像素帧</b>——每隔一段时间交出一整张由几十万到上百万个彩色小点组成的图片。单看一帧没什么神奇，但帧连成串，算法就能从里面认出「袜子」「人手」「桌腿边缘」，甚至追踪它们的移动。摄像头是三件感官里<b>唯一能回答「那是什么」</b>的，这叫语义信息。但普通单目摄像头有个先天短板：<b>像素里没有距离</b>——一张照片只能告诉你袜子在哪边，不能告诉你它离你几米（除非借助双目、结构光或额外算法去估计）。</p>
+
+      <table>
+        <tr><th>维度</th><th>ToF 激光雷达</th><th>摄像头</th></tr>
+        <tr><td>回答的问题</td><td>前面有多远</td><td>那是什么、在哪边</td></tr>
+        <tr><td>测距能力</td><td>直接、精确（飞行时间）</td><td>单目无绝对距离，需算法估计</td></tr>
+        <tr><td>依赖环境光</td><td>不依赖，黑暗可用</td><td>依赖，昏暗即失效</td></tr>
+        <tr><td>输出数据量</td><td>很小（距离值）</td><td>很大（整帧像素）</td></tr>
+      </table>
+
+      <div class="analogy">你半夜摸黑起身，伸手去摸床头柜的边——「还有 20 厘米」这个信息是你<b>碰</b>出来的，又准又直接，这是 ToF；而白天你扫一眼茶几就知道「这是茶几、上面有水杯」，这是摄像头。<b>盲人的手杖与你的眼睛，谁也替代不了谁</b>——一个给几何，一个给语义。</div>
+
+      <div class="widget fill">
+        <p class="q">算一算：目标在 30 厘米外，光往返路程 0.6 米，除以光速 $3 \times 10^{8}$ 米/秒，往返时间约 <input data-answer="2纳秒|2 纳秒|2ns|2 ns|2 纳秒左右">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">ToF 测距公式里，光速乘以时间之后为什么要除以 2？</p>
+        <button class="opt" data-fb="不成立：光在空气中的速度与真空几乎相同，衰减远不到一半，这个除法跟光速本身无关。">因为光速在空气中会衰减一半</button>
+        <button class="opt" data-fb="对。计时器测到的是光「去 + 回」的往返总时间，而距离公式要的是单程，所以必须除以 2。">因为测到的时间是往返双程的，除以 2 才是单程距离</button>
+        <button class="opt" data-fb="与测量次数无关：哪怕只测一次，几何关系也摆在那——时间对应的是往返路程，不是两次测量取平均。">因为传感器内部做了两次测量取平均</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">ToF 给几何、摄像头给语义：一个主动发光量得准，一个被动成像懂得多。复刻时别纠结「二选一」——它们是搭档，不是对手。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="姿态解算与互补滤波">
+      <h2>姿态解算与互补滤波</h2>
+      <p class="tldr">陀螺仪积分会漂移、加速度计瞬时全是噪声——互补滤波用一行公式让二者互相补台：短期信陀螺仪，长期信加速度计。拖动滑块，亲手找折中点。</p>
+
+      <p>「姿态解算」就是从传感器原始读数里算出「鸭子现在歪了几度」。第 03 章说了两颗传感器各有短板，现在把机制拆成三步：</p>
+
+      <p><b>第一步</b>：陀螺仪给出当前角速度 $\omega$，乘以采样间隔 $\Delta t$（两次读数之间隔了多少秒），累加到上一次的估计角上——这是「快而会漂」的短期预测；<b>第二步</b>：加速度计用重力方向直接反解出一个倾角 $\theta^{\text{acc}}$——这是「稳而很抖」的长期基准；<b>第三步</b>：每个控制周期，把两者按固定比例加权平均，得到本次的姿态估计：</p>
+
+      <p style="text-align:center">$$\theta_k \;=\; \alpha \left( \theta_{k-1} + \omega_k \, \Delta t \right) \;+\; (1 - \alpha)\, \theta^{\text{acc}}_k$$</p>
+
+      <p>逐项拆开看：</p>
+      <ul>
+        <li>$\theta_k$：本次的姿态角估计；$\theta_{k-1}$：上一次的估计——滤波是有记忆的，每一拍都在旧答案上修一小步。</li>
+        <li>$\omega_k \, \Delta t$：这一小段时间里转过的角度（角速度 × 时间），由陀螺仪提供，负责<b>短期平滑</b>。</li>
+        <li>$\theta^{\text{acc}}_k$：加速度计这一拍反解出的瞬时倾角，负责<b>长期拉回</b>——它不漂移，误差不会累积。</li>
+        <li>$\alpha$：融合系数，取值在 0 与 1 之间。<b>α 越接近 1 越信陀螺仪</b>（平滑但漂移），<b>越接近 0 越信加速度计</b>（不漂但抖）。</li>
+      </ul>
+
+      <div class="key">这个公式的名字叫<b>互补滤波</b>：它不追求高深的数学，只承认一个事实——两个传感器一个高频准、一个低频准，加权平均刚好各取所长。α 就是这台天平上的砝码。</div>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">互补滤波实验台：拖动滑块，看 α 如何在漂移与噪声之间折中</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>融合系数 α <span class="val" data-for="alpha"></span><input type="range" name="alpha" min="0.5" max="0.999" step="0.001" value="0.95"></label>
+          <label>陀螺仪零偏（度/秒） <span class="val" data-for="bias"></span><input type="range" name="bias" min="0" max="5" step="0.5" value="2"></label>
+          <label>加速度计噪声（度） <span class="val" data-for="noise"></span><input type="range" name="noise" min="0" max="20" step="1" value="8"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>图中模拟一只鸭子前后摇摆（虚线是真值，幅度 8 度）：橙色是<b>陀螺仪积分</b>——零偏被时间放大，整条线慢慢「漂」离真值；红色是<b>加速度计瞬时角</b>——贴着真值上下抖成毛毛虫；紫色粗线是<b>互补滤波输出</b>。把 α 拉到最大试试：曲线平滑了，但跟着橙线一起漂走；把 α 调小试试：不漂了，毛刺全钻了进来。教学演示中参数做了夸张处理，真实器件的零偏与噪声量级以厂商规格书为准。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">把互补滤波系数 α 调到非常接近 1，最可能出现的后果是？</p>
+        <button class="opt" data-fb="抖动来自太信加速度计——那是 α 调小才会出现的现象，方向反了。">姿态估计立刻变得非常抖动</button>
+        <button class="opt" data-fb="对。α 接近 1 意味着几乎全信陀螺仪：短期确实平滑，但零偏被持续积分，估计角度会慢慢偏离真值——漂移赢了。">短期很平滑，但陀螺仪零偏被长期积分，估计角度慢慢漂离真值</button>
+        <button class="opt" data-fb="互补滤波只是加权平均，它没有任何「自动纠错」机制——零偏是系统性误差，只能靠标定解决（下一章）。">两种传感器会自动互相校准，误差归零</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">互补滤波 = 陀螺仪管短期 + 加速度计管长期，α 是二者的分配比例。它便宜、好用，但有个天敌：零偏——滤波救不了零偏，标定才行，请看下一章。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="融合与标定">
+      <h2>融合与标定</h2>
+      <p class="tldr">再好的滤波也救不了没标定的传感器——零偏、安装误差、时间戳错位，是数据进入融合器之前必须清掉的三笔「糊涂账」。</p>
+
+      <h3>第一笔账：零偏校准</h3>
+      <p>陀螺仪的零偏从哪来？制造公差与温度。它有个讨厌的特性——<b>随温度变化</b>（温漂），所以不能出厂标一次用一辈子。工程上的标准做法简单得出奇：<b>上电后让鸭子完全静置几秒</b>。静置时真实角速度必然为零，此时陀螺仪读出来的全部读数都是误差，采几百帧求个平均，就得到了当前温度下的零偏；之后每次读数都减掉它。很多消费电子每次开机都会自动做一遍——你手机上「拿稳别动」的提示，多半就是它在校准。</p>
+
+      <h3>第二笔账：安装误差与外参</h3>
+      <p><b>外参</b>（外部参数）指的是「传感器自己的坐标系」和「机身坐标系」之间的旋转与平移关系。你不可能把 IMU 贴得分毫不差：歪了 3 度，它眼里的「前后」就不是机身的前后，这份误差会原封不动传进姿态解算。标定办法是做<b>已知姿态实验</b>：比如让鸭子绕竖直轴精确转 90 度，对比传感器输出与已知真值的差异，把旋转差求出来，之后每次读数先做坐标系变换再参与融合。</p>
+
+      <h3>第三笔账：时间戳对齐</h3>
+      <p>三件感官的「心跳」完全不同步：IMU 可以跑到几百甚至上千赫兹，ToF 和摄像头通常只有几十赫兹（此为常见量级的教学估算，Microduck 各传感器的实际采样率官方未公开）。融合时若拿着「这一拍的陀螺仪」去配「半拍之前的加速度计」，等于让不同时刻的数据说同一句话——动态场景下相位误差足以毁掉姿态估计。对策有两档：<b>硬件同步</b>（用一个时钟信号统一触发采样）或<b>软件对齐</b>（给每帧数据打时间戳，融合前插值到同一时刻）。</p>
+
+      <div class="widget">
+        <div class="widget-title">分步走一遍传感器标定流程</div>
+        <div class="steps">
+          <div class="step"><b>① 上电静置</b> —— 把鸭子平放稳定桌面，几秒内不要碰它。这一步是后面一切的前提：静置时真实角速度为零，读数才纯粹是误差。</div>
+          <div class="step"><b>② 采均值求零偏</b> —— 连续采集几百帧陀螺仪与加速度计读数，求平均得到当前温度下的零偏，写进配置，之后每次读数减去它。</div>
+          <div class="step"><b>③ 已知姿态实验求外参</b> —— 绕竖直轴精确旋转固定角度（如 90 度），对比传感器输出与真值，拟合出传感器坐标系相对机身坐标系的旋转，即安装误差。</div>
+          <div class="step"><b>④ 时间戳对齐</b> —— 用同一时钟为各传感器数据打时间戳；频率不同的数据在融合前插值到同一时刻，硬件触发同步则更佳。</div>
+          <div class="step"><b>⑤ 验收</b> —— 静置观察零漂是否收敛在阈值内、动态转动时估计是否无明显滞后（阈值为教学示例值，具体以你的整机设计为准）。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">做陀螺仪零偏校准时，为什么必须让鸭子静置几秒？</p>
+        <button class="opt" data-fb="校准测的是传感器读数，跟电池电量没有关系；静置的原因在物理上：要让真实角速度为零。">为了让电池充满电，读数更稳定</button>
+        <button class="opt" data-fb="对。静置时真实角速度为零，此时读出来的每一个数都是零偏，取均值就能把它准确量出来——这是「用已知真值反推误差」的标定思想。">静置时真实角速度为零，读数全部来自零偏，取均值即可把它量出来</button>
+        <button class="opt" data-fb="恰恰相反：校准要采几百帧求平均，是拿算力换精度的操作，绝非为了省算力。">为了让芯片休息，节省算力</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">标定三板斧：<b>静置校零偏、已知姿态求外参、时间戳对齐</b>。数据不干净，后面再华丽的融合算法都是在给噪声盖楼。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="安装位置与工程权衡">
+      <h2>安装位置与工程权衡</h2>
+      <p class="tldr">传感器不是装上就完事——装在哪、镜头朝哪、线怎么走，每一条都是权衡：振动、遮挡、电磁干扰，都会让纸面参数在真机上打折。</p>
+
+      <h3>IMU 装哪：往质心凑</h3>
+      <p>有个反直觉的事实：在<b>理想刚体</b>上，任何一点的角速度都相同——那 IMU 是不是装哪都行？不是。因为鸭子不是刚体：<b>腿在冲击中振动、外壳在电机激励下形变</b>，离质心越远，安装点被结构振动放大得越厉害；而且加速度计还怕「旋转带来的离心加速度」——离转轴越远它越大，这些假信号会污染倾角解算。常见工程做法是：<b>IMU 贴近质心安装、远离电机与减速机构，必要时加减振垫</b>（具体布局以整机实测为准）。</p>
+
+      <h3>镜头朝哪：视野与遮挡的拉锯</h3>
+      <p>摄像头和 ToF 的安装是一组权衡：<b>视场角</b>（FOV，镜头能「看」到的角度范围）固定后，朝下多一点，脚下地形看得清、但远处盲区大；朝前多一点，目标找得远、脚边容易「视而不见」。对一只 25 厘米高的小鸭子，视点本来就贴地，<b>鸭嘴和前伸的机身还会切掉画面下缘一大块</b>——安装俯仰角、镜头高度、鸭嘴轮廓，三者要一起仿真验证，而不是装上再看。</p>
+
+      <h3>线怎么走：安静的信号怕吵的电线</h3>
+      <p>IMU 输出的是毫伏级电压、毫 g 级加速度的微弱信号，而隔壁电机驱动线上的电流在毫秒级通断——这种<b>电磁干扰（EMI）</b>会通过邻近走线和公共地线耦合进传感器读数，症状很迷惑：单看数据「像噪声」，电机一停「噪声消失」。对策是物理层面的：<b>信号线远离功率线、用屏蔽线或双绞线、传感器与功率电路分开接地</b>，再配合软件低通滤波兜底。</p>
+
+      <div class="warn">三个高频误区：① 「传感器越多越好」——每多一路传感器，就多一份标定、同步与融合的复杂度，出错面随数量上涨，够用且可靠才是好设计；② 「IMU 装哪都一样，刚体上角速度处处相同」——前提是刚体，真机有振动与形变；③ 「ToF 装得越高看得越远越好」——视点抬高会加剧鸭嘴遮挡与近地盲区，测距范围也要和处理器算力、功耗一起权衡。</div>
+
+      <details class="reveal">
+        <summary>延伸：官方规格里的两枚 IMU，通常是怎么用的？</summary>
+        <p>Microduck 官方规格列出 IMU ×2，但<b>两枚各自装在哪、如何分工，官方未公开</b>。业内的常见做法有三种：一枚装机身主控板附近做姿态解算、另一枚靠近腿部感知着地冲击；或者双 IMU 互为备份，数据打架时互检故障；也可以做空间平均，压低单点振动噪声。复刻时不必照抄，按自己的控制需求选即可。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">关于 IMU 的安装位置，下面说法正确的是？</p>
+        <button class="opt" data-fb="「刚体上角速度处处相同」只在理想刚体成立；真机会振动、会形变，随便装会放大结构振动与离心加速度，直接污染读数。">装在哪都一样，理想刚体上各点角速度相同</button>
+        <button class="opt" data-fb="方向反了：离电机越近，机械振动与电磁干扰越强，而 IMU 恰恰是最怕干扰的小信号器件。">贴近电机安装，离信号源近、读数更强</button>
+        <button class="opt" data-fb="对。贴近质心可削弱结构振动与离心加速度，远离电机驱动线、短走线或屏蔽线能压制 EMI——位置、朝向、走线是一套组合拳。">尽量靠近质心、远离电机驱动线，用短走线或屏蔽线降低振动与电磁干扰</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">安装即设计：IMU 靠质心抗振动、镜头躲鸭嘴保视野、信号线离功率线防 EMI。纸面参数是上限，安装质量决定你能拿到几成。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道综合题检验你是否真正打通了「感知」这一环；过关之后，去看看固件是怎么一口一口吃掉这些传感器数据的。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">鸭子在昏暗的客厅里稳稳走向你的脚边，下面「传感器 → 职责」的搭配全对的是？</p>
+        <button class="opt" data-fb="正好配反了：认出「那是什么」靠摄像头，量出「还有多远」靠 ToF——语义和几何不能互换。">摄像头测距、ToF 认物、IMU 看姿态</button>
+        <button class="opt" data-fb="对。ToF 主动发光测距、黑暗可用；摄像头负责语义识别；IMU 全程监测自身姿态——昏暗环境正是三件感官分工的试金石。">ToF 测距、摄像头认物、IMU 管自身姿态</button>
+        <button class="opt" data-fb="IMU 感知不到外部距离，ToF 也量不出自身倾斜——这两个「外向」和「内向」的感官不能串岗。">IMU 测距、ToF 看姿态、摄像头认物</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">互补滤波里，加速度计扮演的角色，下面理解正确的是？</p>
+        <button class="opt" data-fb="反了：加速度计瞬时噪声大，短期精度恰恰不如陀螺仪；它的强项在长期。">主要负责短期高精度测量</button>
+        <button class="opt" data-fb="对。静止时它测的就是重力方向，这个基准不随时间漂移——正因如此它能负责「长期」，把陀螺仪积分攒下的漂移一点点拉回来。">长期可靠：测的是重力方向、不会漂移，负责把陀螺仪的漂移拉回真值</button>
+        <button class="opt" data-fb="加速度计全程参与姿态解算，每一拍都在为融合提供基准——摔倒检测只是它的众多应用之一，不是专职。">只在检测摔倒的那一瞬间才起作用</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">把标定流程排进复刻计划，正确的说法是？</p>
+        <button class="opt" data-fb="未标定的零偏与安装误差会原封不动传进姿态估计，双足控制最怕这种系统性误差——标定不是可选项。">传感器买来即插即用，标定可有可无</button>
+        <button class="opt" data-fb="零偏会随温度漂移，摔碰也可能改变安装角——可靠的产品每次开机都要自检或重标，一次标定管一辈子不现实。">标定只做一次，之后永远有效</button>
+        <button class="opt" data-fb="对。开机静置校零偏、装机后做已知姿态实验求外参、融合前对齐时间戳——标定是传感器系统的常规动作，不是一次性仪式。">每次开机先静置校零偏，装机后标外参，融合前对齐时间戳</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">至此，鸭子的「感官」齐了。想巩固电路与供电的上下文，回顾 <a href="microduck-04-electronics.html">第 04 课：机器鸭主控电路与电源</a>；下一步去 <a href="microduck-06-embedded.html">第 06 课：机器鸭嵌入式与固件</a>——看看 IMU 中断、滤波链与控制环如何把这些原始数据变成每秒上千次的姿态决策，也就是「传感器数据如何被固件消费」。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示 ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空 ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调 ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：互补滤波实验台 ================= */
+demo('#demo1', ({ alpha, bias, noise }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, padL = 46, padR = 14, padT = 44, padB = 30;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cFuse = css.getPropertyValue('--primary');
+  const cGyro = '#f59e0b', cAcc = '#ef4444';
+
+  // 场景：鸭子前后摇摆（真值 = 8 度、0.4Hz 正弦）；陀螺仪带零偏与小噪声，加速度计带大噪声
+  const T = 10, dt = 0.008, AMP = 8, w0 = 2 * Math.PI * 0.4;
+  let seed = 7;
+  const rand = () => (seed = seed * 16807 % 2147483647) / 2147483647 - 0.5;
+  const trueAng = t => AMP * Math.sin(w0 * t);
+  const trueVel = t => AMP * w0 * Math.cos(w0 * t);
+
+  let thG = trueAng(0), thF = 0, first = true;
+  const tPts = [], gPts = [], aPts = [], fPts = [];
+  for (let t = 0; t <= T; t += dt) {
+    const tv = trueAng(t);
+    const om = trueVel(t) + bias + rand() * 0.6;      // 陀螺仪输出：真值角速度 + 零偏 + 小噪声
+    const acc = tv + noise * 2 * rand();              // 加速度计反解角：真值 + 大噪声
+    thG += om * dt;                                   // 陀螺仪积分 → 零偏随时间滚成漂移
+    thF = first ? acc : alpha * (thF + om * dt) + (1 - alpha) * acc;  // 互补滤波
+    first = false;
+    tPts.push([t, tv]); gPts.push([t, thG]); aPts.push([t, acc]); fPts.push([t, thF]);
+  }
+
+  // 后 2 秒统计：贴合误差（漂移）与逐拍毛刺（噪声）
+  let errSum = 0, errN = 0, jitSum = 0, jitN = 0;
+  for (let i = 1; i < fPts.length; i++) {
+    const t = fPts[i][0];
+    if (t >= T - 2) {
+      errSum += Math.abs(fPts[i][1] - trueAng(t)); errN++;
+      jitSum += Math.abs(fPts[i][1] - fPts[i - 1][1]); jitN++;
+    }
+  }
+  const err = errSum / errN, jit = jitSum / jitN;
+
+  const yOf = deg => padT + (80 - deg) / 160 * (H - padT - padB);
+  const xOf = t => padL + t / T * (W - padL - padR);
+
+  // 网格与坐标
+  ctx.font = '11px sans-serif';
+  [-60, -40, -20, 0, 20, 40, 60].forEach(d => {
+    ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, yOf(d)); ctx.lineTo(W - padR, yOf(d)); ctx.stroke();
+    ctx.fillStyle = cMut; ctx.textAlign = 'right';
+    ctx.fillText(d + '°', padL - 6, yOf(d) + 4);
+  });
+  ctx.textAlign = 'center';
+  for (let s = 0; s <= T; s += 2) ctx.fillText(s + 's', xOf(s), H - 12);
+
+  const draw = (pts, color, width, dash) => {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    pts.forEach(([t, d], i) => { const x = xOf(t), y = yOf(Math.max(-80, Math.min(80, d))); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke(); ctx.restore();
+  };
+  draw(gPts, cGyro, 1.6);          // 陀螺仪积分：漂移
+  draw(aPts, cAcc, 1);             // 加速度计瞬时角：噪声
+  draw(tPts, cMut, 1.2, [5, 4]);   // 真值
+  draw(fPts, cFuse, 2.6);          // 互补滤波输出
+
+  // 图例
+  ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+  let lx = padL;
+  [['融合输出', cFuse], ['陀螺仪积分', cGyro], ['加速度计瞬时角', cAcc], ['真值（虚线）', cMut]].forEach(([name, col]) => {
+    ctx.fillStyle = col; ctx.fillRect(lx, 12, 14, 4);
+    ctx.fillStyle = cTxt; ctx.fillText(name, lx + 20, 17);
+    lx += ctx.measureText(name).width + 52;
+  });
+
+  const ro = root.querySelector('.readout');
+  if (err > 8) ro.textContent = `❌ 明显漂移：α 太接近 1，几乎全信陀螺仪，零偏被积分放大，后段平均偏离真值约 ${err.toFixed(1)}°。调低 α，或用下一章的零偏校准把 bias 降下来。`;
+  else if (jit > 1.2) ro.textContent = `⚠️ 毛刺明显：α 偏小，太信加速度计，瞬时噪声直接钻进了姿态角（逐拍抖动约 ${jit.toFixed(2)}°）。调高 α，让陀螺仪主导短期。`;
+  else ro.textContent = `✅ 折中良好：短期靠陀螺仪保持平滑（逐拍抖动约 ${jit.toFixed(2)}°），长期靠加速度计拉回（后段平均误差约 ${err.toFixed(1)}°）。`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭产品化与冷启动 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭产品化与冷启动</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+  <!-- ============ 第 1 章 L1 ============ -->
+  <section class="chapter" id="ch1" data-level="1" data-title="为什么技术好不等于卖得好">
+    <span class="badge l1">L1 入门</span>
+    <h2>为什么技术好不等于卖得好</h2>
+    <p class="tldr">Microduck 的爆火不是因为它「技术最先进」，而是因为它第一次把双足机器人做成了「普通人敢买、愿意晒、买得起」的玩具。本章先拆掉一个幻觉：好产品自己会说话。</p>
+
+    <p>在实验室里，评价一台机器人好不好，看的是论文、指标、复现难度；在市场上，评价它好不好，只看一件事——<mark>用户愿不愿意把它拍下来发到朋友圈</mark>。Microduck 团队做了三件「工程之外」的事：把价格打到 399 美元这个「不心疼」区间、把外观做成一眼能认出的鸭子、把动作设计成「摔倒自己会爬起来的喜剧效果」。这三件事没有一件靠强化学习。</p>
+
+    <div class="analogy">技术是入场券，传播才是放大器。一道菜好不好吃由厨师决定，能不能火由「值不值得拍照发出来」决定——很多餐厅先设计摆盘再研究味道，因为传播决定了有多少人能尝到味道。</div>
+
+    <h3>复刻者最常见的死法</h3>
+    <ul>
+      <li><strong>堆料陷阱</strong>：用了更好的电机、更强的算力，成本翻倍，价格失去「不心疼」属性，销量掉一个数量级。</li>
+      <li><strong>参数陷阱</strong>：发布会被同行点赞，普通用户看不懂也不关心——买家要的是「可爱」「会逗猫」「孩子喜欢」。</li>
+      <li><strong>完美陷阱</strong>：觉得还不够好，迟迟不发——冷启动的时间窗口是极短的，先手吃掉了社区注意力。</li>
+    </ul>
+
+    <div class="widget">
+      <div class="widget-title">场景判断：下面哪个做法最能帮助冷启动？</div>
+      <div class="steps">
+        <div class="step">场景 A：再花 3 个月把步态算法误差降低 10%，然后发布。</div>
+        <div class="step">场景 B：先给 100 个科技类创作者免费寄样，约定首发周发视频。</div>
+        <div class="step">场景 C：把售价再压 20%，做成全网最低价。</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+      <details class="reveal"><summary>参考答案与理由</summary>
+        <p>B 优先。算法误差降 10% 用户感知不到；降价 20% 伤害毛利且没有传播抓手；而 100 个创作者的首发视频是<mark>可预期的、可放大的</mark>传播事件。冷启动阶段，注意力比完美重要——技术迭代可以在开售后继续做（这正是 Microduck 开源训练栈的用意：让社区帮你迭代）。</p>
+      </details>
+    </div>
+
+    <div class="tip">产品化的第一性问题不是「我的机器人厉不厉害」，而是「用户拿到手后的第一个小时会做什么、第二周还会不会碰它」。本章之后的每一章，都围绕这两个问题展开。</div>
+  </section>
+
+  <!-- ============ 第 2 章 L1 ============ -->
+  <section class="chapter" id="ch2" data-level="1" data-title="爆品的第一性原理">
+    <span class="badge l1">L1 入门</span>
+    <h2>爆品的第一性原理：可传播性</h2>
+    <p class="tldr">一个产品能自传播，必须同时满足三个条件：<mark>用了有面子（社交货币）、看完想转发（高唤醒情绪）、说一句话就能安利（可讲故事）</mark>。Microduck 三样全占。</p>
+
+    <h3>社交货币</h3>
+    <p>人们分享是为了经营自己的形象。摆在桌上的机器鸭 = 「我关注前沿科技 + 我有童心 + 我付得起 399」。复刻者要刻意设计这种「身份信号」：限定配色、铭牌编号、开源贡献者徽章，都是在制造社交货币。</p>
+
+    <h3>高唤醒情绪</h3>
+    <p>心理学实验（Berger &amp; Milkman, 2012）表明：引发<strong>敬畏、兴奋、愤怒、好笑</strong>的内容转发率最高；而「满足、悲伤」这类低唤醒情绪几乎不传。机器鸭摔倒爬起来恰恰是「好笑 + 心疼」的高唤醒组合——这就是为什么官方演示视频里永远有它摔倒的镜头。</p>
+
+    <h3>一句话安利</h3>
+    <p>「一只会自己爬起来的机器鸭」——8 个字说清是什么、为什么有趣。如果你的产品需要 3 句话才能解释，传播链条会在第二句断掉。写下你的产品的一句话版本，是冷启动前的必做功课。</p>
+
+    <div class="widget quiz" data-answer="2">
+      <p class="q">下面哪种视频内容在冷启动期最值得优先做？</p>
+      <button class="opt" data-fb="纯参数罗列只能打动同行，用户刷到会划走。">① 一条 5 分钟的视频，完整讲解 15 个电机的扭矩参数</button>
+      <button class="opt" data-fb="教程类内容价值高，但属于「搜索流量」，不是冷启动要的「推荐流量」。">② 一条逐步搭建的开发教程，面向想复刻的极客</button>
+      <button class="opt" data-fb="高唤醒情绪 + 一句话可描述的场景，最容易被转发。">③ 一条 15 秒视频：机器鸭被猫一巴掌拍倒，踉踉跄跄爬起来继续走</button>
+      <button class="opt" data-fb="情怀内容唤醒度中等，且无法说清产品是什么。">④ 一条品牌纪录片，讲述团队三年研发的心路历程</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">翻卡练习：这个设计在制造哪种传播燃料？</div>
+      <div class="cards">
+        <div class="flip"><div class="inner">
+          <div class="front">每只鸭子脚底激光雕刻唯一的编号</div>
+          <div class="back">社交货币——「第 0001/10000 号」让所有者想炫耀，编号靠前者还会产生收藏溢价</div>
+        </div></div>
+        <div class="flip"><div class="inner">
+          <div class="front">官方演示里保留摔倒镜头</div>
+          <div class="back">高唤醒情绪——「好笑 + 心疼」是转发率最高的情绪组合，完美无缺的演示反而没人转</div>
+        </div></div>
+        <div class="flip"><div class="inner">
+          <div class="front">开源全部训练代码与模型</div>
+          <div class="back">可讲故事——「技术人的浪漫」+ 社区二创源源不断产出新内容，等于免费的传播素材生产线</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="key">传播不是营销部门的任务，而是产品设计的约束条件。每一个硬件决策（外观、价格、动作设计、编号）都要问一句：这给传播提供了什么燃料？</div>
+  </section>
+
+  <!-- ============ 第 3 章 L2 ============ -->
+  <section class="chapter" id="ch3" data-level="2" data-title="病毒系数与传播模型">
+    <span class="badge l2">L2 进阶</span>
+    <h2>病毒系数 K 与传播模型</h2>
+    <p class="tldr">病毒系数 K = 每个用户平均带来的新用户数。K 是决定增长曲线形状的<strong>唯一主参数</strong>：K 大于 1 时增长像滚雪球，小于 1 时无论起点多大最终都会停下来。</p>
+
+    <p>把传播看成一个漏斗：每个用户会把自己觉得值得分享的内容发给若干个朋友（邀请数 <code>i</code>），收到的人里有一部分真的会点开甚至购买（转化率 <code>p</code>）。两者相乘就是 K：</p>
+
+    $$K = i \times p$$
+
+    <p>例如：10 个首发用户各发一条视频，平均每人被 300 人看到（i 按「实际触达且产生兴趣的人」折算约 12 人），其中 8% 下单，则 K 约等于 0.96——接近 1 但还没到，意味着投放一停增长就会衰减。冷启动的核心任务，就是想办法把 K 从 0.96 抬过 1 这个生死线。</p>
+
+    <div class="analogy">K 大于 1 像核裂变：一个中子撞出两个，两个撞出四个——反应自持；K 小于 1 像烧柴：火能烧得很旺，但你得不停添柴（花钱买流量），柴一停火就灭。两条路都能烧开一锅水，成本结构完全不同。</div>
+
+    <h3>三个常被忽略的杠杆</h3>
+    <ul>
+      <li><strong>邀请数 i 的上限由「内容可晒度」决定</strong>：用户拍一条机器鸭视频是零成本的，但用户愿不愿意拍、拍什么角度，是你在产品设计时就注定的。</li>
+      <li><strong>转化率 p 的大头是「看到价格后还点购买」</strong>：p 的瓶颈往往不在曝光而在临门一脚——这就是为什么 Microduck 的演示视频全程不提参数，只在结尾甩出 399 美元。</li>
+      <li><strong>留存会二次放大 K</strong>：一个用了一周还喜欢、继续发二条视频的用户，等于把他的 i 提高了。K 不是静态参数，是产品与内容的复合函数。</li>
+    </ul>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">你测得 K 等于 1.15，但两周后增长还是停滞了，最可能的原因是什么？</p>
+      <button class="opt" data-fb="K 大于 1 时雪球应当越滚越大——若有停滞，瓶颈在别处。">① K 算错了，应该小于 1，建议重测</button>
+      <button class="opt" data-fb="对：人口池会耗尽，K 只是在有限池内的局部近似，所以增长总是 S 形而非无限指数。">② 目标人群被「收割」完了——K 只在人群池内成立，早 adopters 用完后 K 回落</button>
+      <button class="opt" data-fb="优化转化率有用，但若人群池已耗尽，单点提升救不了大盘。">③ 转化率 p 下降了，应该加大广告投放补转化率</button>
+      <button class="opt" data-fb="时间参数影响传播速度而非最终规模。">④ 传播周期太长，应该缩短视频时长</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">填空：算一算你的 K</div>
+      <div class="fill">
+        <p>假设 100 个种子用户各发布一条视频，平均每条带来 250 次播放，其中 5% 的观看者点进了商品页，商品页到访者的下单转化率为 10%。那么有效邀请数 i = 250 × 5% = <input data-answer="12.5">，K = i × p = <input data-answer="0.125|1.25%">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+      <details class="reveal"><summary>提示</summary><p>注意「下单」是相对「商品页到访者」而言，所以 p = 10%。i 与 p 必须用同一层级的口径相乘——这是新手最容易算错的地方。</p></details>
+    </div>
+
+    <div class="warn">教科书的 K 模型假设每次传播周期 K 恒定。真实世界里 K 随时间衰减：新奇感消退、人群渗透、内容模板被复制。所以永远按「K 会掉」来做计划，把 K 大于 1 当作窗口期而不是常态。</div>
+  </section>
+
+  <!-- ============ 第 4 章 L2 ============ -->
+  <section class="chapter" id="ch4" data-level="2" data-title="定价心理学">
+    <span class="badge l2">L2 进阶</span>
+    <h2>定价心理学：锚定、尝鲜与「不心疼」区间</h2>
+    <p class="tldr">399 美元不是算出来的成本加成，而是一个心理锚点：足够低到「不心疼」，又足够高到「有面子」。定价的本质是给你的目标用户一个可以立刻讲给别人的数字。</p>
+
+    <h3>锚定效应</h3>
+    <p>人对价格的判断是相对的。Microduck 发布时的语境里，一台能走路的桌面双足机器人「应该」值上千美元——先有贵锚点，399 才显得像捡漏。复刻者在发布前不妨先让媒体讨论「桌面机器人为什么都卖 1500 美元」，你的 799 元人民币才有冲击力。</p>
+
+    <h3>尝鲜价与早鸟结构</h3>
+    <table>
+      <tr><th>档位</th><th>定价策略</th><th>心理机制</th><th>风险</th></tr>
+      <tr><td>早鸟限量</td><td>比正式价低 15% 至 25%，限 500 台</td><td>稀缺 + 损失厌恶，制造首发抢购事件</td><td>黄牛扫货，需绑定账号限购</td></tr>
+      <tr><td>正式价</td><td>锚定的主价格</td><td>价格本身成为传播语：「不到 800 块」</td><td>定太低毛利撑不住售后</td></tr>
+      <tr><td>收藏版</td><td>2 至 3 倍正式价，编号 + 限定配色</td><td>价格锚的另一端：衬托正式价「良心」</td><td>备货失衡，建议按需预订</td></tr>
+    </table>
+
+    <p>尝鲜价的真正价值不是多卖那几百台，而是制造「首发 4 小时售罄」的截图——这个截图本身会进入下一轮传播素材，抬高 K 里的转化率 p。</p>
+
+    <div class="analogy">定价像跳水比赛的入水：入水点（价格）决定了观众的第一声惊呼，但你真正的得分来自空中动作（产品体验）。价格只是 10% 的技术分，却决定了裁判（用户）看动作时的心情。</div>
+
+    <div class="widget quiz" data-answer="2">
+      <p class="q">你的 BOM 成本折合 420 元人民币，同行同类产品定价在 1500 至 2500 元之间。下列哪个首发定价策略最合理？</p>
+      <button class="opt" data-fb="定价高于所有锚点，用户会拿你和成熟产品比做工，对初代复刻品是灾难。">① 定价 1599 元：对标同行下限，毛利最大化</button>
+      <button class="opt" data-fb="亏本定价换来首批口碑没错，但现金流可能撑不到量产爬坡，且低价锚点以后很难涨。">② 定价 299 元：亏本换口碑，先把量冲起来</button>
+      <button class="opt" data-fb="明显低于所有锚点保住「不心疼」属性，同时留出毛利支撑售后与社区运营，为提价留空间。">③ 定价 699 元：锚点的三分之一左右，保住毛利与传播故事</button>
+      <button class="opt" data-fb="付费墙挡住的恰恰是最愿意传播的种子用户——冷启动期注意力比收入值钱。">④ 硬件免费，靠订阅动作包收费</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">翻卡：这些经典定价手法背后的原理</div>
+      <div class="cards">
+        <div class="flip"><div class="inner">
+          <div class="front">页面同时展示「标准版 699 / 收藏版 1699」</div>
+          <div class="back">诱饵与锚定：1699 不是拿来卖的，是让 699 显得理所当然——大多数人会选中间项</div>
+        </div></div>
+        <div class="flip"><div class="inner">
+          <div class="front">「早鸟价 599，首批 500 台，售完恢复 699」</div>
+          <div class="back">稀缺 + 损失厌恶 + 未来锚定：先让你看到「恢复后」的 699，599 就变成了占便宜</div>
+        </div></div>
+        <div class="flip"><div class="inner">
+          <div class="front">标价 699 元，不抹零到 700</div>
+          <div class="back">左位效应：大脑先读百位的 6，弱化了与 700 的实际差距——配合一句话传播「六百多块」</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="key">记住检验标准：用户能不能用一句话把「这是什么 + 多少钱 + 为什么值」讲给朋友听。「一只会自己爬起来的机器鸭，不到 800 块」——这就是满分答案。</div>
+  </section>
+
+  <!-- ============ 第 5 章 L3 ============ -->
+  <section class="chapter" id="ch5" data-level="3" data-title="冷启动增长曲线">
+    <span class="badge l3">L3 深入</span>
+    <h2>冷启动增长曲线：从 0 到 10500 单</h2>
+    <p class="tldr">真实的增长从来不是指数曲线，而是一条 S 形曲线：缓慢起步 → K 过 1 后的爆发 → 人群耗尽后的平台期。下面的实验台让你亲手拨动 K、种子量与留存率，观察三种增长形态的分界。</p>
+
+    <p>我们用带饱和项的离散传播模型来模拟（教学简化模型）：每个周期，现有用户按留存率留下，并按病毒系数 K 拉来新用户，但人群池有限——总潜在人群 M 一旦接近，新增就会放缓：</p>
+
+    $$N_{t+1} = N_t \cdot r + K \cdot N_t \cdot \left(1 - \frac{N_t}{M}\right)$$
+
+    <p>其中 $N_t$ 是第 t 周期的累计用户，r 是留存率，M 是人群池规模（教学估算值）。注意 $K + r > 1$ 且 K 本身足够大时，增长才会自我维持。</p>
+
+    <div class="widget demo" id="demo1">
+      <div class="widget-title">冷启动增长曲线实验台</div>
+      <canvas width="900" height="430"></canvas>
+      <div class="controls">
+        <label>病毒系数 K（0–1.6）<span class="val" data-for="k"></span>
+          <input type="range" name="k" min="0" max="1.6" step="0.05" value="0.9"></label>
+        <label>种子用户（10–500）<span class="val" data-for="seed"></span>
+          <input type="range" name="seed" min="10" max="500" step="10" value="100"></label>
+        <label>留存率 r（0.5–1）<span class="val" data-for="ret"></span>
+          <input type="range" name="ret" min="0.5" max="1" step="0.01" value="0.85"></label>
+      </div>
+      <p class="readout"></p>
+    </div>
+
+    <h3>读图要领</h3>
+    <ul>
+      <li><strong>亚线性（K 低）</strong>：曲线从一开始就趴在地上，种子量再大也只是把平台抬高一点——此时花钱买种子是纯浪费，先回去修 K。</li>
+      <li><strong>病毒式（K 过 1）</strong>：曲线中段出现明显的指数段，斜率越陡说明 K 越高；你会看到不同周期的增长差出一个数量级。</li>
+      <li><strong>衰减型（留存低）</strong>：即使 K 过 1，留存 r 太低也会让曲线在爆发前塌陷——老用户流失速度超过了拉新速度，这就是为什么售后与社区运营直接决定增长曲线。</li>
+    </ul>
+
+    <div class="warn">不要拿这个模型去对投资人承诺「第 N 个月必然 10 万单」。它的价值在于帮你识别：当前瓶颈到底在 K（传播）、r（留存）还是 M（人群池）。对症下药，而不是对着一条假精确的曲线许愿。</div>
+  </section>
+
+  <!-- ============ 第 6 章 L3 ============ -->
+  <section class="chapter" id="ch6" data-level="3" data-title="社区与内容营销">
+    <span class="badge l3">L3 深入</span>
+    <h2>社区与内容营销：让 K 自己长出来</h2>
+    <p class="tldr">Microduck 开源训练栈这一招，等于把「内容生产」外包给了全世界最有热情的 1 万人。社区不是售后渠道，社区是<strong>传播素材的生产车间 + 产品迭代的免费外脑</strong>。</p>
+
+    <h3>为什么开源反而赚钱</h3>
+    <p>直觉上，把代码和模型开源等于把核心竞争力送人。但硬件的护城河从来不在代码，而在<strong>供应链、成本与品牌</strong>。开源换来的是：社区二创视频（免费素材）、更多开发者给你的步态模型贡献训练策略（免费研发）、以及「技术人浪漫」的品牌叙事（免费公关）。代码会被抄走，但 10 万台订单下的零件折扣抄不走。</p>
+
+    <div class="key">开源决策的分界线：开源的是「软件与训练栈」，守住的是「硬件 BOM、模具与供应链关系」。软件越开放，硬件越难被复制——因为社区的贡献会持续拉大软硬件联调的体验差距。</div>
+
+    <h3>内容生产的齿轮组</h3>
+    <ul>
+      <li><strong>官方造模板</strong>：每周一条「15 秒场景」视频（猫拍倒鸭子、鸭子躲扫地机器人），给用户拍什么提供参照——模板比奖品更能驱动 UGC。</li>
+      <li><strong>KOL 分层投放</strong>：头部 5 人谈趋势（造锚点）、腰部 50 人做实测（造转化）、长尾 500 人晒日常（造氛围）。三层预算比例大约 5 : 3 : 2。</li>
+      <li><strong>把用户变成创作者</strong>：固件里内置「一键导出视频」按钮，导出自动带话题标签；每月办一次「最惨摔倒瞬间」大赛——把产品缺陷变成内容资产。</li>
+    </ul>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">预算有限（比如 5 万元人民币）时，下面哪种社区投入方式的长期回报最高？</p>
+      <button class="opt" data-fb="现金抽奖吸引来的是羊毛党，产出的内容质量低且不可持续。">① 办一场大额现金抽奖，要求转发参与</button>
+      <button class="opt" data-fb="对。贡献榜用「限定配件与身份认同」激励真实创作，换来的是持续产出的 UGC 素材和免费的产品外脑——这正是把预算换成 K 的正确姿势。">② 设立「社区贡献榜」：二创视频、步态策略、二创固件都可以换限定配件与编号铭牌</button>
+      <button class="opt" data-fb="投流是花钱买一次性曝光，钱花完流量就停，且与 K 无关。">③ 全部投流买精准曝光，跳过社区冷启动</button>
+      <button class="opt" data-fb="忽视冷启动阶段会引发首批口碑崩塌，长期损失远大于短期收入。">④ 先专注卖货回本，等销量稳定了再做社区</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">排一排：一次发布事件的传播节奏</div>
+      <div class="order" data-answer="2,0,3,1">
+        <div class="item"><span>官方发布 15 秒演示视频与「一句话安利」海报</span><button>↑</button><button>↓</button></div>
+        <div class="item"><span>早鸟开售，限量 500 台，4 小时售罄截图</span><button>↑</button><button>↓</button></div>
+        <div class="item"><span>提前两周向 100 个创作者寄送样机并签 embargo（解禁时间）</span><button>↑</button><button>↓</button></div>
+        <div class="item"><span>UGC 跟进：摔倒瞬间大赛、猫鸭大战合集</span><button>↑</button><button>↓</button></div>
+      </div>
+      <div class="feedback"></div>
+      <details class="reveal"><summary>正确顺序及原因</summary>
+        <p>③ → ① → ② → ④。先让创作者拿到样机（解禁协议保证同日爆发），官方视频定调内容模板，早鸟售罄制造稀缺截图，最后用 UGC 大赛把热度接成长期社区资产。顺序错了，传播链路就会断档。</p>
+      </details>
+    </div>
+
+    <div class="tip">衡量社区健康度不要看粉丝数，看两个指标：每月 UGC 视频数（传播素材的产能）和贡献榜活跃人数（免费外脑的规模）。这两个数字只要涨，K 就有保障。</div>
+  </section>
+
+  <!-- ============ 第 7 章 L4 ============ -->
+  <section class="chapter" id="ch7" data-level="4" data-title="从爆品到产品线">
+    <span class="badge l4">L4 实战</span>
+    <h2>从爆品到产品线：复购、配件与生态</h2>
+    <p class="tldr">10500 台首发订单只是起点。硬件生意的真相是：主机负责交朋友，配件与生态负责赚钱。爆品期的目标是把「一次流量」转化为「一个可反复触达的用户池」。</p>
+
+    <h3>三层收入结构</h3>
+    <table>
+      <tr><th>层级</th><th>形态举例</th><th>毛利特征</th><th>战略作用</th></tr>
+      <tr><td>主机</td><td>标准版 699 元</td><td>低毛利，打平即合格</td><td>扩大装机量，建立入口</td></tr>
+      <tr><td>配件与耗材</td><td>替换脚垫、电池、外观皮肤、收纳包</td><td>高毛利（60% 以上常见）</td><td>利润主力；皮肤类配件自带晒图属性</td></tr>
+      <tr><td>生态与内容</td><td>动作包市场、开发者认证、企业定制</td><td>边际成本近零</td><td>长期护城河；动作包市场让社区开发者赚到钱</td></tr>
+    </table>
+
+    <div class="analogy">爆品像游乐园的门票——门票本身不赚钱，但进了门，爆米花、周边和年卡才是利润。如果你的门票还赚钱，说明票价定便宜了，或者你还没找到园子里卖什么。</div>
+
+    <h3>复购与留存的硬件抓手</h3>
+    <ul>
+      <li><strong>可进化的固件</strong>：每月一次「学会新动作」的 OTA 更新——每次更新都是一次免费的召回触达与一波新的 UGC 素材。</li>
+      <li><strong>收藏与集换</strong>：限定配色按季度发售，编号铭牌可交易——把一次性购买变成持续收集行为。</li>
+      <li><strong>场景扩展</strong>：从桌面玩具到「番茄钟监督员」「会议纪要摆件」，每多一个场景就多一个购买理由和一类新用户。</li>
+    </ul>
+
+    <h3>什么时候扩产品线</h3>
+    <p>只有当主机的月活跃率（开机并联网天数除以 30）稳定超过 40%、且配件复购率超过 15% 时才考虑第二条产品线。过早扩线会分散社区注意力——第二台机器立项的正确信号是：用户开始问「能不能给它做个伴」。</p>
+
+    <div class="widget">
+      <div class="widget-title">情景推演：第 14 个月的报表长什么样？</div>
+      <div class="steps">
+        <div class="step">主机销量逐月下滑至峰值的 20%——这正常吗？（正常：人群池 M 被吸收完，见第 3 章）</div>
+        <div class="step">但配件收入占到了总收入的 45%，月活用户稳定在 50%——这才是一家健康公司的样子。</div>
+        <div class="step">此时正确的动作：把主机改成「保本甚至微亏」的获客产品，用配件和生态利润反哺新动作开发。</div>
+        <div class="step">错误的动作：砍掉配件团队，all in 第二代主机硬件堆料。</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+    </div>
+
+    <div class="warn">警惕「爆品幻觉」：首发的 10500 单里，真正的产品验证指标不是订单量，而是第 90 天还在开机使用的用户比例（90 日留存）。订单可以是营销的胜利，留存才是产品的胜利。</div>
+  </section>
+
+  <!-- ============ 第 8 章 L4 ============ -->
+  <section class="chapter" id="ch8" data-level="4" data-title="综合测验与系列收官">
+    <span class="badge l4">L4 实战</span>
+    <h2>综合测验与系列收官</h2>
+    <p class="tldr">最后一课：把前面 11 课串成一张完整的复刻地图，并用一张自检清单验收你的「机器鸭计划」是否真的可以启动。</p>
+
+    <div class="widget quiz" data-answer="3">
+      <p class="q">综合判断：复刻项目启动 3 个月后，BOM 已优化到 400 元、K 实测 0.7、90 日留存 55%。下一步最优先做什么？</p>
+      <button class="opt" data-fb="成本已不再是主要矛盾——此时修 K 的边际收益远高于继续抠 BOM。">① 继续压缩 BOM，把成本再降 10%</button>
+      <button class="opt" data-fb="K 未过 1 时，买流量等于往漏水的池子里注水。">② 加大投流，先把销量冲上去</button>
+      <button class="opt" data-fb="90 日留存 55% 已相当健康，短板明确在传播端。">③ 立刻开发第二代产品线，拓展人群池</button>
+      <button class="opt" data-fb="留存合格说明产品成立，瓶颈在 K——回到第 2、6 章，用内容模板与社区机制把 K 抬过 1。">④ 集中火力修 K：设计可晒场景、扶持腰部创作者、把「摔倒爬起来」变成可复制的 UGC 模板</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="0">
+      <p class="q">关于「开源软件栈 + 闭源硬件 BOM」策略，下列理解正确的是？</p>
+      <button class="opt" data-fb="对：社区贡献会拉大软硬件联调的体验差距，而成本与供应链的关系无法被代码复制。">① 开源换社区贡献与传播素材，护城河留在供应链、成本与品牌</button>
+      <button class="opt" data-fb="恰恰相反——硬件生意里软件越开放，整机越难被复制。">② 开源会让竞争对手快速克隆整机，应当连软件也闭源</button>
+      <button class="opt" data-fb="用户确实不读代码，但社区里的开发者读——代码只是载体，真正被激活的是围绕它形成的创作与协作生态。">③ 开源与否无所谓，用户根本不在乎代码</button>
+      <button class="opt" data-fb="开源的价值主要在增长端与研发端，不应指望它直接拉动销量。">④ 只要开源，销量自然会暴涨</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">十二课全系列完成度自检清单</div>
+      <div class="steps">
+        <div class="step">① 战略与产品定义（第 01 课）：一句话定位、目标用户画像、首发功能边界已写在一页纸上。</div>
+        <div class="step">② 机械结构（第 02 课）：15 自由度构型方案、连杆与传动图纸、3D 打印样机已走通。</div>
+        <div class="step">③ 硬件电子（第 03–04 课）：主控选型、电机驱动、电源与通信链路原理图评审通过。</div>
+        <div class="step">④ 传感器与固件（第 05–06 课）：IMU 融合、实时控制循环、OTA 链路全部跑通在真机上。</div>
+        <div class="step">⑤ 运动与控制（第 07–08 课）：逆解求解器、PID 整定、ZMP 判据、步态状态机仿真验证。</div>
+        <div class="step">⑥ 智能层（第 09–10 课）：奖励塑形、模仿学习、VLA 指令链路的 Demo 在仿真与真机各跑通一次。</div>
+        <div class="step">⑦ 供应链（第 11 课）：BOM 锁定、关键器件双供应商、单件成本曲线击穿 199 美元线。</div>
+        <div class="step">⑧ 增长（本课）：K 实测报告、内容日历、早鸟与社区方案——当 ① 至 ⑦ 全绿，按下发布键。</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+    </div>
+
+    <p>走到这里，你已经拥有一张从「想复刻」到「能上市」的完整地图。技术栈给你下限，产品与传播给你上限——Microduck 的启示恰恰是：<mark>这行最不缺会写动力学方程的人，最缺把方程翻译成「让人想转发的那 15 秒」的人。</mark></p>
+
+    <div class="key">下一步建议：回到 <a href="microduck-11-supply-chain.html">第 11 课「国产供应链与 BOM」</a>核对成本模型，再回到 <a href="microduck-01-overview.html">第 01 课「战略与产品定义」</a>重读你的定位是否还成立。系列课程到此收官——接下来，是你的 Duck Summer（造鸭之夏）。</div>
+  </section>
+
+  </main>
+</div>
+
+<div class="pager">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score"></div>
+
+<script>
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  const toc = $('#toc'), main = $('#main');
+  const KEY = 'course:' + document.title;
+
+  let state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ state = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} };
+  const markDone = i => { state['ch'+i] = 1; save(); };
+  const doneCount = () => chapters.filter((c,i) => state['ch'+i]).length;
+  const updateBar = () => { $('#progress').style.width = (doneCount()/chapters.length*100)+'%'; };
+
+  let cur = state.cur || 0;
+
+  // 目录
+  const groups = [[],[],[],[]];
+  chapters.forEach((c,i) => groups[+c.dataset.level-1].push([i,c.dataset.title,c.id]));
+  const labels = ['L1 入门','L2 进阶','L3 深入','L4 实战'];
+  let html = '';
+  groups.forEach((g,lv) => {
+    if (!g.length) return;
+    html += `<div class="lv-head">${labels[lv]}</div>`;
+    g.forEach(([i,t,id]) => html += `<a href="#${id}" data-i="${i}"><span>${i+1}.</span><span>${t}</span></a>`);
+  });
+  toc.innerHTML = html;
+  const links = $$('a', toc);
+
+  function setActive(i){
+    cur = i;
+    links.forEach((a,k) => a.classList.toggle('active', k === i));
+    links.forEach((a,k) => a.classList.toggle('done', !!state['ch'+k]));
+    if (body.dataset.mode === 'paged') {
+      chapters.forEach((c,k) => c.classList.toggle('current', k === i));
+      window.scrollTo(0,0);
+    }
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').disabled = i === chapters.length - 1;
+    state.cur = i; save();
+    updateBar();
+  }
+  links.forEach(a => a.onclick = e => { e.preventDefault(); setActive(+a.dataset.i); toc.classList.remove('open'); });
+  $('#prevBtn').onclick = () => setActive(Math.max(0, cur-1));
+  $('#nextBtn').onclick = () => { markDone(cur); setActive(Math.min(chapters.length-1, cur+1)); };
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // 排序题
+  $$('.order').forEach(o => {
+    const items = $$('.item', o), fb = $('.feedback', o);
+    const refresh = () => {
+      items.forEach((it,i) => {
+        $('button', it).disabled = false;
+        $('button:nth-of-type(1)', it).disabled = i === 0;
+        $('button:nth-of-type(2)', it).disabled = i === items.length - 1;
+      });
+      const seq = items.map(it => it.dataset.v ?? items.indexOf(it)).join(',');
+    };
+    items.forEach((it, idx) => {
+      const [up, down] = $$('button', it);
+      up.onclick = () => { if (idx > 0) o.insertBefore(it, items[idx-1]); check(o, fb); refresh(); };
+      down.onclick = () => { if (idx < items.length-1) o.insertBefore(items[idx+1], it); check(o, fb); refresh(); };
+    });
+    function check(root, fbx){
+      const cur = $$('.item', root);
+      const seq = cur.map((it,i) => i);
+      const expect = root.dataset.answer.split(',').map(Number);
+      const ok = cur.every((it,i) => i === expect[i]);
+      if (fbx) { fbx.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fbx.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整。'; }
+    }
+    refresh();
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ============ 课程定制演示：冷启动增长曲线实验台 ============
+   模型：N_{t+1} = N_t·r + K·N_t·(1 - N_t/M)
+   - K 为病毒系数，r 为留存率，M 为人群池规模（教学估算）
+   - 画 S 形增长曲线，并根据 K 与 r 判定三态：
+     衰减型（K + r ≤ 1）/ 亚线性（K 低但缓慢增长）/ 病毒式（K 过 1 的爆发）
+   - 上方曲线为累计用户；标注当前参数下的 24 周期终值与形态 */
+demo('#demo1', ({ k, seed, ret }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cPri = css.getPropertyValue('--primary');
+  const cBad = css.getPropertyValue('--bad'), cOk = css.getPropertyValue('--ok');
+  const cWarn = css.getPropertyValue('--warn');
+
+  const padL = 64, padR = 20, padT = 22, padB = 44;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const T = 24;                       // 模拟周期数（教学：1 周期 ≈ 2 周）
+  const M = 30000;                    // 人群池规模（教学估算）
+  const X = t => padL + (t / T) * plotW;
+
+  // 模拟
+  const N = [];
+  let n = seed;
+  for (let t = 0; t <= T; t++) {
+    N.push(n);
+    n = n * ret + k * n * Math.max(0, 1 - n / M);
+    if (!isFinite(n)) { n = M; break; }
+  }
+  const nMax = Math.max(M * 0.55, ...N) * 1.15;
+  const Y = v => padT + plotH * (1 - v / nMax);
+
+  // —— 网格与坐标 ——
+  ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+  ctx.font = '11px sans-serif'; ctx.fillStyle = cMut;
+  for (let t = 0; t <= T; t += 4) {
+    ctx.beginPath(); ctx.moveTo(X(t), padT); ctx.lineTo(X(t), padT + plotH); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.fillText('第' + t + '期', X(t), H - padB + 16);
+  }
+  ctx.textAlign = 'right';
+  const yTicks = 4;
+  for (let i = 0; i <= yTicks; i++) {
+    const v = (nMax / yTicks) * i;
+    ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(W - padR, Y(v)); ctx.stroke();
+    ctx.fillText(Math.round(v).toLocaleString('en-US'), padL - 8, Y(v) + 4);
+  }
+  ctx.textAlign = 'left';
+  ctx.fillText('累计用户（人）', padL, padT - 8);
+  // 人群池参考线
+  ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = cMut; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, Y(M)); ctx.lineTo(W - padR, Y(M)); ctx.stroke();
+  ctx.fillStyle = cMut; ctx.fillText('人群池上限 M = ' + M.toLocaleString('en-US') + '（教学估算）', padL + 6, Y(M) - 6);
+  ctx.restore();
+
+  // —— 增长曲线 ——
+  const effective = k + ret;   // 每周期传播+留存综合系数
+  const color = effective > 1.25 ? cOk : (effective > 1 ? cWarn : cBad);
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  N.forEach((v, t) => { const px = X(t), py = Y(v); t ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  ctx.stroke(); ctx.restore();
+  // 终点标记
+  const endN = N[N.length - 1];
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(X(T), Y(endN), 5, 0, Math.PI * 2); ctx.fill();
+
+  // 读数与判定
+  const ro = root.querySelector('.readout');
+  let verdict, vColor;
+  if (effective <= 1) {
+    verdict = '衰减型：K + r 不超过 1，增长靠种子量硬顶，传播无法自持——先回去修 K 或留存，别花钱买量。';
+    vColor = cBad;
+  } else if (k < 0.85) {
+    verdict = '亚线性：能缓慢增长但永远不会爆发。种子量决定天花板——适合小本生意，不适合追求 Microduck 式的传播事件。';
+    vColor = cWarn;
+  } else {
+    verdict = '病毒式：K 已越过临界点，曲线进入自维持爆发段——此刻的任务是准备供应链产能与客服，接住这波增长。';
+    vColor = cOk;
+  }
+  ro.textContent = `K = ${k.toFixed(2)}，留存 r = ${ret.toFixed(2)}，种子 ${seed} 人 → 第 ${T} 期累计 ${Math.round(endN).toLocaleString('en-US')} 人（K + r = ${effective.toFixed(2)}）。${verdict}`;
+  ro.style.color = vColor;
+});
+</script>
+</body>
+</html>

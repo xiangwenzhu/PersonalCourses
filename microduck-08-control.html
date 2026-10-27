@@ -1,0 +1,674 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭经典控制与步态 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭经典控制与步态</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="走路不摔的第一性原理">
+      <h2>走路不摔的第一性原理</h2>
+      <p class="tldr">鸭子只有两只脚，站着不动时像把扫帚立在掌心—— statically 根本稳不住；它之所以不摔，是因为一直在「主动地、连续地」调整支撑点，把倾倒的趋势掐灭在萌芽里。</p>
+
+      <p>上一课我们学会了把脚放到想要的位置（<a href="microduck-07-kinematics.html">第 07 课</a>）；但「放得准」只是前提，更根本的问题是：<b>为什么两条腿的东西，不会立刻倒？</b>直觉会说「因为重心在两只脚之间」。这个答案对四条腿的动物成立，对双足却只对了一半——静态下，鸭子的重心投影几乎不可能始终稳稳落在两只脚连成的细小支撑面上。</p>
+
+      <p>把鸭子抽象到最简：一个质心、两根腿、两只脚。只要重力作用线稍微偏出支撑多边形，合力矩就会让它越倒越快——就像把一根长扫帚竖直立在手掌上，松手必倒。<mark>双足站立的本质是一个「不稳定平衡点」</mark>：它能站住，不是因为位置稳，而是因为有一个控制系统在不停地纠偏。</p>
+
+      <div class="analogy">骑自行车：车慢到几乎停的时候最难保持平衡，倒三角的物理决定了它随时会倒；但你只要连续微调车把和重心，就能一直不倒。双足机器人同理——它不是「站得住」，而是「倒得不够快，被纠正回来了」。控制的核心不是维持稳定，而是<b>抵抗不稳定</b>。</div>
+
+      <div class="key"><b>第一性原理：</b>双足行走 = 在一个天然不稳定的系统上，用感知（知道自己在倒）+ 决策（算该往哪挪）+ 执行（把脚挪过去）构成的闭环，持续地「追」一个动态平衡。后面所有控制方法——倒立摆、ZMP、PID——都是这个闭环的具体实现。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：把「第一性原理」拆成三个关键词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">不稳定</div><div class="back">站立时重心高、支撑面小，任何微小扰动都会引发倾倒力矩。静态永远稳不住，只能动态地稳——这是双足区别于四足、轮式的根源。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">闭环</div><div class="back">感知（IMU 测倾倒）→ 决策（算该挪哪只脚、转多少）→ 执行（电机动作）→ 再感知……循环越快，越能在倾倒失控前纠正。控制频率就是生命线。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">动态平衡</div><div class="back">不是「一动不动」，而是「允许小范围的晃，但永远把晃动控制在可恢复区间内」。就像人站着也会前后微晃，只是幅度小到看不出来。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：双足机器人站立时，重力作用线一旦偏出 <input data-answer="支撑面|支撑多边形|支撑区域|支撑底面">，就会产生让它倾倒的合力矩；因此它必须依靠 <input data-answer="闭环控制|闭环|反馈控制|控制"> 持续纠正，而不是静态稳定。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话记住：双足不是「站得稳」，而是「倒得慢、纠得快」。理解了「不稳定 + 闭环 + 动态平衡」这三件事，后面的倒立摆、ZMP、PID 都只是把这套思想数学化、工程化。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="倒立摆直觉">
+      <h2>倒立摆直觉</h2>
+      <p class="tldr">把鸭子进一步抽象成「一根立在移动底座上的倒立摆」：要让它不摔，底座的水平加速度必须和摆的倾斜「配合」——这正是后面 ZMP 判据的几何直觉。</p>
+
+      <p>现在把「会倒」这件事再简化一层。忽略腿的细分动作，把鸭子看成一个质心、一个支撑点：质心高高地立在支撑点正上方——这就是<b>倒立摆</b>，一个经典的「天然不稳定」系统。它的反义词是钟摆：钟摆下垂，偏了会自己荡回来；倒立摆上轻下重，偏了只会越倒越快。</p>
+
+      <p>关键洞察是：倒立摆虽然静态不稳，但<b>底座是可以动的</b>。当你发现摆开始往右倒，就让底座向右加速——惯性会让摆相对底座「看起来往左回摆」，抵消倾倒趋势。人走路时就是这样：感觉要往前倒，就向前迈一步，用新的支撑点接住自己。<mark>行走，本质上就是「连续地控制底座，让倒立摆的倾倒始终被接住」</mark>。</p>
+
+      <div class="analogy">端着一杯满水快步走：为了不让水洒出来，你会不自觉地在启动时把杯子往前倾、刹车时往后倾——不是杯子聪明，是你在用「反向倾斜」抵消惯性。倒立摆的底座加速度控制，就是把这个不自觉的动作变成一条可计算的公式。</div>
+
+      <div class="key">倒立摆直觉三句话：<b>① 它天然要倒；② 底座能动；③ 让底座朝它倒的方向加速，就能把它「托」回竖直。</b>双足控制里最重要的 ZMP（下一章细讲），就是把「托」这个动作量化成一个可判定的区域。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：倒立摆 vs 钟摆，一字之差天壤之别</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">钟摆（正摆）</div><div class="back">质心在转轴下方：偏离平衡位置时，重力产生把它拉回去的恢复力矩——静态稳定，放手会自己来回荡，直到停在最低点。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">倒立摆</div><div class="back">质心在支撑点上方：偏离时重力产生的是把它推离的倾倒力矩——静态不稳定，必须靠底座主动移动来「追」，才能维持不倒。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">发现倒立摆开始向前倾，底座应该怎么动才能把它「托」回竖直？</p>
+        <button class="opt" data-fb="刹车（减速度）会让摆因惯性相对底座继续前倾，火上浇油；要抵消倾倒，应让底座朝倾倒方向加速。">立刻刹车</button>
+        <button class="opt" data-fb="对。底座向前加速，惯性力会让摆相对底座向后回摆，正好抵消向前的倾倒趋势——这就是「接住自己」的物理本质。">向前加速</button>
+        <button class="opt" data-fb="原地不动就是放弃控制：静态下倒立摆必倒，静止等于让它自由倾倒。">保持静止不动</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">倒立摆是双足控制的最小模型：天然要倒、底座能动、朝倒向加速就能托回。记住这个直觉，下一章的 ZMP 就是给它画一条「能不能托住」的安全线。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="PID 三兄弟">
+      <h2>PID 三兄弟</h2>
+      <p class="tldr">P 看现在（差多少补多少）、I 记过去（积少成多消残差）、D 管未来（看变化趋势提前阻尼）；三者合起来，是工程界用了八十年的「万能纠偏器」。</p>
+
+      <p>知道了「要纠偏」，下一个问题是「怎么纠」。答案短得惊人：绝大多数工业控制器，从室温空调到火箭姿态，核心都是同一条公式——<b>PID</b>。它对「期望值与实际值的差」（误差 e）做三件事，加在一起作为控制量：</p>
+
+      <p style="text-align:center">$$u(t) = K_p\, e(t) + K_i \int_0^t e(\tau)\, d\tau + K_d \frac{de(t)}{dt}$$</p>
+
+      <ul>
+        <li><b>比例项 P</b>：$K_p e$——误差越大，纠得越猛。<em>现在</em>差多少，立刻补多少。P 太小没力气、反应慢；P 太大则会矫枉过正，来回振荡。</li>
+        <li><b>积分项 I</b>：$K_i \int e\, dt$——把<em>过去</em>累积的误差加起来补。哪怕误差很小，只要拖得久，I 就会慢慢「攒力气」，最终把稳态残差（比如静摩擦力导致的差一点）彻底消除。</li>
+        <li><b>微分项 D</b>：$K_d \frac{de}{dt}$——盯<em>未来</em>：误差变化越快，阻尼越大。它像一个减震器，在系统冲过头之前提前踩刹车，压制振荡。</li>
+      </ul>
+
+      <div class="analogy">调热水澡：P 是「现在觉得冷就多加点热水」；I 是「一直不够热就持续加码，直到温度到位」；D 是「发现水温升得太快，赶紧把热水关小点，免得等下烫着」。三个人各管一段时间维度，合起来既快又准还不冲过头。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">电机位置控制里，系统已经到位但总有约 1 度的静态误差（怎么调都差一点点），最该加强哪一项？</p>
+        <button class="opt" data-fb="加大 Kp 确实能减小误差，但同时会放大振荡；对「长期差一点点」这种稳态残差，Kp 不是对症的药。">Kp（比例）</button>
+        <button class="opt" data-fb="Kp 只能抑制振荡、不影响稳态残差大小">只用 Kp 一味加大</button>
+        <button class="opt" data-fb="对。静摩擦、重力矩这类扰动造成的稳态残差，靠积分项「积少成多」持续发力才能彻底消除——这正是 I 存在的理由。">Ki（积分）</button>
+        <button class="opt" data-fb="Kd 只影响动态过程（振荡、超调），对「稳定后仍差一点」这种稳态问题没有直接作用。">Kd（微分）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：PID 中「看误差变化趋势、起阻尼减震作用」的是 <input data-answer="D|微分|微分项|Kd"> 项；「积少成多、专门消除长期小残差」的是 <input data-answer="I|积分|积分项|Ki"> 项。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">P 管现在、I 管过去、D 管未来。PID 不是最聪明的控制器，但它便宜、可靠、好调——机器鸭 15 个关节的位置伺服，底层几乎必然是一套调好的 PID。下一章进入双足特有的判据：ZMP。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="ZMP 与支撑面">
+      <h2>ZMP 与支撑面</h2>
+      <p class="tldr">ZMP（零力矩点）是「压力中心」的学名：只要它留在支撑面（脚掌接触区）内，地面就能提供足够的力矩让鸭子不旋转倾倒——这是双足行走最经典的可判定安全线。</p>
+
+      <p>倒立摆直觉说「底座朝倒向加速就能托住」，但工程上要回答得更精确：<em>加速多少算够？边界在哪里？</em>这就引出了双足机器人领域最重要的概念之一——<b>零力矩点</b>（Zero Moment Point，ZMP）。</p>
+
+      <p>先想一个日常事实：你站直时，全身的重力和惯性力，在地面上有一个等效的「合力作用点」——就像把整个人压在一个锥子上，锥尖扎在地上的那个位置。这个位置叫<b>压力中心</b>（CoP）。单脚站立时它必定落在脚掌范围内；双脚站立时它落在两脚之间。<mark>ZMP 就是「压力中心」在机器人动力学里的严格定义</mark>：在支撑面上存在唯一一个点，使地面反力对该点的水平力矩分量为零，这个点就是 ZMP。</p>
+
+      <p><b>判据只有一句话：ZMP 必须在支撑多边形内部。</b>支撑多边形就是脚掌接触点连成的凸多边形（单脚时就是那只脚的接触区）。只要 ZMP 在界内，地面就能提供足够的反力矩，把「旋转倾倒」的趋势摁住；一旦 ZMP 被「推」到边界之外——物理上意味着需要的地面力矩超过了脚掌能提供的极限——鸭子就不可避免地开始旋转、翻倒。</p>
+
+      <div class="analogy">就像你用一根手指顶起一根长杆：杆不倒，是因为杆的压力中心始终在你的指尖范围内。指尖可以缓慢移动来「追」杆的倾斜，但杆一旦倒向指尖够不到的方向，就回天乏术。ZMP 在支撑面内，等于「指尖还追得上」；出了支撑面，等于「指尖追不上了」。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">行走中，鸭子开始向前倾倒、逐渐失控。从 ZMP 判据看，直接原因是什么？</p>
+        <button class="opt" data-fb="对。ZMP 被倾倒趋势推到了支撑面边界之外，地面反力无法提供足够力矩抵抗旋转——这就是「指尖追不上杆」的时刻，鸭子开始绕边界翻转。">ZMP 移出了支撑多边形</button>
+        <button class="opt" data-fb="重心高只决定倾倒的难易程度，不是失控的直接判据；ZMP 出界才是「力矩不够」的精确描述。">重心太高</button>
+        <button class="opt" data-fb="单支撑期是正常步态阶段，本身并不危险；危险的是此期间 ZMP 是否始终留在那只脚的接触区内。">单脚支撑时间太长</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：ZMP 的全称是 <input data-answer="零力矩点">，它的物理本质是地面反力的 <input data-answer="压力中心|等效作用点|合力作用点|作用中心">；安全行走的判据是它必须位于 <input data-answer="支撑多边形|支撑面|支撑区域|支撑底面"> 之内。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">ZMP = 压力中心的动力学学名。判据一句话：ZMP 在支撑面内就不旋转倾倒，出界就翻。下一章把 PID 调参与 ZMP 约束放进同一个实验台，亲手感受「振荡 vs 稳定」。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="PID 调参实战">
+      <h2>PID 调参实战</h2>
+      <p class="tldr">调参不是背口诀，是「看曲线、改参数、再看曲线」的闭环：Kp 决定反应速度与振荡倾向，Kd 压制振荡但放大噪声，Ki 消残差却会攒积分饱和——拖动滑块，亲眼看三种典型命运。</p>
+
+      <p>PID 公式只有一行，但三个旋钮互相牵扯，调不好就翻车。工程上调参靠的是<b>看响应曲线</b>：给系统一个阶跃指令（比如从 0° 突然要到 30°），画出实际角度随时间的变化，用形状判断该动哪个旋钮。</p>
+
+      <p>三种典型命运，都能在下面的实验台里亲手复现：</p>
+      <ul>
+        <li><b>Kp 太小</b>：曲线慢慢爬向目标，没有力气，响应迟缓——「软」。</li>
+        <li><b>Kp 合适、Kd 不足</b>：曲线冲过目标再弹回来，来回振荡好几次才稳住——「晃」。</li>
+        <li><b>Kp 合适、Kd 加持</b>：快速上升到目标，几乎不超调，一次到位——「干脆」。</li>
+      </ul>
+
+      <p>另外两只「隐形的手」：<b>Ki</b> 能消除最后那点残差，但加太猛会让系统在目标附近「 hunting 」（来回小幅度追）；<b>Kd 放大噪声</b>——真实传感器有毛刺，微分会把它放大，所以实际系统常在 D 支路加低通滤波。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">PID 阶跃响应实验台：调三个旋钮，看响应曲线从「软」「晃」到「干脆」</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>Kp（比例） <span class="val" data-for="kp"></span><input type="range" name="kp" min="0" max="12" step="0.1" value="3"></label>
+          <label>Ki（积分） <span class="val" data-for="ki"></span><input type="range" name="ki" min="0" max="4" step="0.05" value="0.4"></label>
+          <label>Kd（微分） <span class="val" data-for="kd"></span><input type="range" name="kd" min="0" max="1.2" step="0.01" value="0.2"></label>
+          <label>转动惯量 J（模拟腿/头的轻重） <span class="val" data-for="J"></span><input type="range" name="J" min="0.2" max="3" step="0.1" value="1"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="analogy">调 PID 像学骑自行车：Kp 是蹬的力度——太轻走不动，太猛容易冲出去；Kd 是把的微调——感觉要歪赶紧轻带一下；Ki 是对「总差一点」的执念——老到不了就暗暗加把劲，但太执着会在原地画龙。想骑得稳，三种手感得一起练。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">阶跃响应曲线大幅超调、来回振荡好几次才收敛，最应该优先调整哪个参数？</p>
+        <button class="opt" data-fb="Kp 太小的问题恰恰是「响应迟缓、爬不上去」，和「振荡」正相反；振荡通常是 Kp 偏大或阻尼不足。">加大 Kp</button>
+        <button class="opt" data-fb="Ki 管的是稳态残差，对振荡的抑制作用有限，加错方向反而更晃">加大 Ki</button>
+        <button class="opt" data-fb="对。振荡说明系统阻尼不足，先加 Kd（必要时适当回调 Kp）把振荡压下去；这正是「D 管未来、提前刹车」的典型场景。">加大 Kd（或适当减小 Kp）</button>
+        <button class="opt" data-fb="把 Kp 归零等于放弃纠偏，系统彻底失去动力——方向完全反了。">把 Kp 调为零</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么实际系统的微分项（Kd）常常要配一个低通滤波器？</p>
+        <button class="opt" data-fb="Kd 与直流偏置无关——它作用于误差的变化率，而直流偏置的变化率是零。">为了消除直流偏置</button>
+        <button class="opt" data-fb="对。微分对高频噪声极其敏感：传感器毛刺会被 D 项放大成控制量的剧烈抖动。低通滤波先把高频毛刺抹平，再送入微分。">传感器噪声是高频的，微分会放大它，滤波先行保护</button>
+        <button class="opt" data-fb="低通滤波恰恰会引入微小相位滞后，不是「改善响应速度」；它的目的是保信号干净，牺牲一点带宽换稳定。">滤波能让响应更快更灵敏</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">调参看曲线：Kp 定快慢、Kd 定振荡、Ki 定残差。实验台里先把 Kp 拉到 8、Kd 拉到 0 看「晃」，再慢慢加 Kd 看振荡被摁住——手感比口诀重要。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="ZMP 判据与线性倒立摆">
+      <h2>ZMP 判据与线性倒立摆</h2>
+      <p class="tldr">把倒立摆「底座该多用力」写成公式：线性倒立摆（LIPM）给出质心加速度、高度与 ZMP 位置的精确关系——它是双足步态规划里最常用的可解模型。</p>
+
+      <p>第 2 章的倒立摆直觉 + 第 4 章的 ZMP 判据，可以合成一个能算的模型。<b>线性倒立摆</b>（Linear Inverted Pendulum Model，LIPM）做了三个简化：① 腿的质量忽略，全部质量集中在质心；② 质心高度 $z_c$ 保持不变（用「伸缩腿」或「腰的上下浮动」补偿掉）；③ 只在水平面内运动。在这些假设下，ZMP 位置 $p$ 与质心水平位置 $x$ 的关系是一条简洁的二阶微分方程：</p>
+
+      <p style="text-align:center">$$\ddot{x} = \omega^2 \bigl( x - p \bigr), \qquad \omega = \sqrt{\dfrac{g}{z_c}}$$</p>
+
+      <p>逐项读：</p>
+      <ul>
+        <li>$\ddot{x}$：质心的水平加速度（想让鸭子加速/减速就靠它）。</li>
+        <li>$x - p$：质心位置与 ZMP 位置的差。<mark>质心偏离 ZMP 多少，就产生多少加速度</mark>——这正是「底座朝倒向加速就能托回」的数学表达。</li>
+        <li>$\omega = \sqrt{g/z_c}$：系统的固有频率。$z_c$（质心高度）越高，$\omega$ 越小，系统「越懒」、响应越慢——这解释了为什么高个子起步慢半拍，也解释了矮墩墩的 Microduck 反而机灵。</li>
+      </ul>
+
+      <p>由这条方程可以直接解出「想让质心以加速度 $\ddot{x}$ 运动，ZMP 应该放在哪」：$p = x - \ddot{x} / \omega^2$。<b>这就是步态规划的施工图</b>：给定一条想要的质心轨迹（什么时候加速、什么时候减速），反算出每一步的 ZMP 位置，再检查它是否始终落在支撑面内——落在界内则可行，出界则说明这条轨迹物理上做不到，得改。</p>
+
+      <div class="analogy">LIPM 像在给鸭子画一张「安全驾驶图」：横轴是它想怎么动（质心轨迹），纵轴是地面必须在哪里接住它（ZMP 位置）。只要把每个瞬间的接住点画进脚掌范围内，这张图就是可执行的；任何一笔画到脚掌外，就是注定要摔的瞬间。</div>
+
+      <div class="warn">常见误区：把 ZMP 和重心投影混为一谈。低速、无加速度时两者几乎重合；但只要质心在加速（起步、刹车、转弯），ZMP 就会相对重心投影发生偏移——这时仍拿「投影在支撑面内」当安全依据，就会漏判。ZMP 判据更严格也更正确。</div>
+
+      <details class="reveal">
+        <summary>延伸：为什么叫「线性」倒立摆？非线性在哪？</summary>
+        <p>真正的倒立摆方程里，摆角进入正弦项（$\sin\theta$），是非线性的；LIPM 假设摆角很小、质心高度恒定，把非线性项近似成线性（$x - p$ 的一次项），从而可以用线性系统的全套工具（解析求解、最优控制 LQR 等）。代价是它只在小角度、平地、准静态附近准确——大动作、跳跃、被猛推就失效，需要更完整的非线性动力学或交给强化学习（第 09 课）。</p>
+      </details>
+
+      <div class="widget fill">
+        <p class="q">填空：LIPM 中 $\omega = \sqrt{g / z_c}$；质心越高，$\omega$ 越 <input data-answer="小|低">，系统响应越 <input data-answer="慢|迟缓|迟钝">。想让质心向前加速，ZMP 应置于质心 <input data-answer="后方|后面|后侧">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">LIPM 把「别摔」翻译成了可计算的方程：$\ddot{x} = \omega^2 (x - p)$。给定质心轨迹 → 反算 ZMP → 检查是否始终在支撑面内——这套流程是很多经典双足步态生成器的骨架。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="步态时间轴">
+      <h2>步态时间轴</h2>
+      <p class="tldr">一个完整步态周期 = 支撑相（脚着地推身体）与摆动相（脚在空中迈向下一个落点）的接力；步频、单双脚支撑比例、落脚点共同决定 ZMP 是否有机会「追」上倾倒——配错了节奏，再准的落点也救不回来。</p>
+
+      <p>把前面所有工具串起来：正逆运动学管「脚去哪」（第 07 课）、PID 管「关节怎么追」（第 5 章）、ZMP/LIPM 管「会不会摔」（第 6 章）。最后一块拼图是<b>时间</b>：这些动作不是同时做的，而是按一条精确的时间轴交替上演。一个完整<b>步态周期</b>（左右脚各迈一次）可以拆成两段相：</p>
+
+      <ul>
+        <li><b>支撑相（Stance）</b>：脚接触地面，承担推身体、调 ZMP 的全部任务。双腿支撑时支撑面大、最稳；单腿支撑时支撑面骤减为一只脚掌，是全程最脆弱的窗口。</li>
+        <li><b>摆动相（Swing）</b>：脚离地，沿第 07 课的摆动轨迹移向下一个落点。这段时间里它不产生任何支撑，全靠另一只脚「独挑大梁」。</li>
+      </ul>
+
+      <p>两者接力构成周期：双支撑 → 单支撑（左脚）→ 双支撑 → 单支撑（右脚）→ ……步频（每分钟多少步）决定每个相有多长：<mark>步频太快，单支撑窗口被压缩，ZMP 来不及从旧支撑面「转移」到新支撑面</mark>，中间会出现「ZMP 出界」的危险瞬间——这就是「走急了容易绊」的动力学解释。</p>
+
+      <div class="widget">
+        <div class="widget-title">分步揭示一个完整步态周期里，ZMP 在支撑面之间如何「迁移」</div>
+        <div class="steps">
+          <div class="step"><b>① 双支撑起始</b> —— 双脚着地，支撑面是包含两脚的凸多边形；ZMP 在面内自由移动，规划器把它慢慢移向即将发力的那只脚。</div>
+          <div class="step"><b>② 进入单支撑（左脚）</b> —— 右脚离地，支撑面骤缩为左脚掌；ZMP 必须始终留在左脚内，同时质心按 LIPM 方程向左脚上方「倾倒」——这是有预谋的倒。</div>
+          <div class="step"><b>③ 摆动相推进</b> —— 右脚在空中沿贝塞尔轨迹移向新落点；期间任何扰动都只能由左脚独立吸收，所以它最脆弱。</div>
+          <div class="step"><b>④ 落地进入双支撑</b> —— 右脚触地，支撑面瞬间扩大回多边形；ZMP「跳」到新支撑面内，系统恢复冗余。</div>
+          <div class="step"><b>⑤ 切换角色，进入下一个半周期</b> —— 左右脚角色互换，重复 ②–④；步频越高，②–④ 越仓促，ZMP 越容易在「迁移途中」出界。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="warn">最常见误区：以为「落点越准就越稳」，于是让步频无限加快、单支撑无限缩短。真相是：步态稳定 = 空间（落点）+ 时间（相的配比）的联合设计。步频一快，ZMP 的迁移时间被压缩，即使每个落点都完美，中间仍会出现「支撑面真空」——空间对了，时间错了，照样摔。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">为什么步频突然加快（走急了）容易绊倒？用本课语言最准确的解释是？</p>
+        <button class="opt" data-fb="对。步频加快压缩了单支撑与双支撑的时长，ZMP 从旧支撑面转移到新支撑面的时间被挤短，迁移途中容易「出界」——这是时间维度上的失稳。">单支撑窗口缩短，ZMP 来不及迁移到新支撑面就出界</button>
+        <button class="opt" data-fb="落点精度与步频无直接关系；问题是节奏，不是落点">放慢步频试试</button>
+        <button class="opt" data-fb="肌肉疲劳是生物现象；对机器人而言，直接机制是 ZMP 迁移时间不足">让步态再快一点</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">步态时间轴 = 支撑相与摆动相的接力。空间上把落点规划好，时间上把相的配比留够——两者都对了，ZMP 才始终追得上倾倒。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道题检验你是否把「不稳定本质、PID、ZMP/LIPM、步态时间轴」串成了闭环；过关之后，去看看强化学习如何接管那些「写不出公式」的复杂动作。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">双足机器人能稳定站立的根本原因，最准确的说法是？</p>
+        <button class="opt" data-fb="那是四足、轮式的特权。双足静态下天然不稳——它能站住靠的是闭环控制，不是重心投影的巧合。">重心投影恰好落在两脚之间，静态稳定</button>
+        <button class="opt" data-fb="对。双足是倒立摆式的天然不稳定系统；控制闭环（感知-决策-执行）持续纠偏，把倾倒趋势摁在可恢复区间内，这才是「站得住」的真相。">它是一个天然不稳定系统，靠闭环控制持续抵抗倾倒</button>
+        <button class="opt" data-fb="脚底大小只影响支撑面大小、进而影响 ZMP 可允许区域，不改变「静态不稳定」这一根本属性。">脚底足够大，静态就是稳定的</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">行走中 ZMP 相对质心投影发生了偏移，此时仍用「投影在支撑面内」判断安全，会有什么问题？</p>
+        <button class="opt" data-fb="低速匀速时 ZMP 才与投影近似重合；一旦有加速，两者就会分离，拿投影当 ZMP 会漏判。">没有影响，两者永远等价</button>
+        <button class="opt" data-fb="偏移方向取决于加速度方向：向前加速时 ZMP 落在投影之后，不是之前。">ZMP 只会落在投影之前，更危险</button>
+        <button class="opt" data-fb="对。加速时 ZMP 与投影分离，且往往更靠近支撑面边界；用投影判断会误以为还有余量，实际 ZMP 可能已出界——必须用 ZMP 判据。">会漏判：加速时 ZMP 已可能出界，而投影仍显示安全</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">关于步频与稳定的关系，正确的是？</p>
+        <button class="opt" data-fb="对。步频加快压缩了各相时长，ZMP 迁移时间不足，容易在支撑面「真空期」出界；所以步态设计要同时调好空间（落点）与时间（相配比）两个维度。">步频过快会压缩单支撑与 ZMP 迁移时间，反而更易失稳</button>
+        <button class="opt" data-fb="「越快越稳」忽略了时间维度：没有足够时间完成 ZMP 迁移，再准的落点也救不回来。">步频越快，重心移动越连贯，越稳定</button>
+        <button class="opt" data-fb="步频与 ZMP 通过相的时长强耦合——它恰恰决定了 ZMP 有多少时间完成迁移。">步频只影响能耗，与稳定无关</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">至此，「经典控制如何撑起一只不摔的鸭子」就讲完了。想巩固运动学工具，回顾 <a href="microduck-07-kinematics.html">第 07 课：机器鸭运动学</a>；下一步去 <a href="microduck-09-rl-sim.html">第 09 课：机器鸭强化学习与仿真训练</a>——看看当动作复杂到写不出公式时，强化学习如何在仿真里把「摔出来」的经验炼成稳健步态。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：PID 阶跃响应实验台 ================= */
+demo('#demo1', ({ kp, ki, kd, J }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cPri = css.getPropertyValue('--primary');
+  const cBad = css.getPropertyValue('--bad'), cOk = css.getPropertyValue('--ok');
+  const cWarn = css.getPropertyValue('--warn');
+
+  // 目标值与坐标映射
+  const target = 30;            // 目标角度（度）
+  const padL = 50, padR = 20, padT = 20, padB = 40;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const tMax = 6;               // 模拟 6 秒
+  const yMax = 60;              // 角度上限（度）
+  const X = t => padL + (t / tMax) * plotW;
+  const Y = v => padT + plotH * (1 - v / yMax);
+
+  // 数值仿真：二阶被控对象 J*x'' = u，离散 PID（带微分滤波与积分抗饱和）
+  const dt = 0.005;
+  const n = Math.round(tMax / dt);
+  const ys = new Array(n + 1);
+  let x = 0, v = 0, intE = 0, prevE = 0;
+  ys[0] = 0;
+  for (let i = 1; i <= n; i++) {
+    const e = target - x;
+    intE += e * dt;
+    // 抗积分饱和：限制积分项幅度
+    const iTerm = ki * intE;
+    const iClamp = 60;
+    const iUse = Math.max(-iClamp, Math.min(iClamp, iTerm));
+    const dRaw = (e - prevE) / dt;
+    prevE = e;
+    // 微分低通滤波（一阶），alpha 越大越平滑
+    const alpha = 0.02;
+    demo._dF = demo._dF === undefined ? 0 : demo._dF + alpha * (dRaw - demo._dF);
+    const dF = demo._dF;
+    const u = kp * e + iUse + kd * dF;
+    const acc = (u - 0.5 * v) / J;    // 含一点粘性阻尼，更接近真实关节
+    v += acc * dt;
+    x += v * dt;
+    ys[i] = x;
+  }
+  demo._dF = 0; // 复位滤波器状态，便于下次重算
+
+  // 指标计算
+  let peak = 0, tPeak = 0, settled = null, ssErr = Math.abs(ys[n] - target);
+  for (let i = 0; i <= n; i++) {
+    const t = i * dt;
+    if (ys[i] > peak) { peak = ys[i]; tPeak = t; }
+  }
+  const overshoot = Math.max(0, peak - target);
+  for (let i = Math.round(1.5 / dt); i <= n; i++) {
+    if (Math.abs(ys[i] - target) < 0.05 * target) { settled = i * dt; break; }
+    settled = null;
+  }
+
+  // 画网格与轴
+  ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+  ctx.font = '11px sans-serif'; ctx.fillStyle = cMut; ctx.textAlign = 'right';
+  for (let gv = 0; gv <= yMax; gv += 15) {
+    ctx.beginPath(); ctx.moveTo(padL, Y(gv)); ctx.lineTo(W - padR, Y(gv)); ctx.stroke();
+    ctx.fillText(gv + '', padL - 8, Y(gv) + 4);
+  }
+  ctx.textAlign = 'center';
+  for (let gt = 0; gt <= tMax; gt += 1) {
+    ctx.beginPath(); ctx.moveTo(X(gt), padT); ctx.lineTo(X(gt), padT + plotH); ctx.stroke();
+    ctx.fillText(gt + 's', X(gt), H - padB + 16);
+  }
+
+  // 目标线（虚线）
+  ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = cMut; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(padL, Y(target)); ctx.lineTo(W - padR, Y(target)); ctx.stroke();
+  ctx.restore();
+
+  // ±5% 误差带
+  ctx.save(); ctx.setLineDash([2, 4]); ctx.strokeStyle = cWarn; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, Y(target * 1.05)); ctx.lineTo(W - padR, Y(target * 1.05)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, Y(target * 0.95)); ctx.lineTo(W - padR, Y(target * 0.95)); ctx.stroke();
+  ctx.restore();
+
+  // 响应曲线
+  ctx.strokeStyle = cPri; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const px = X(i * dt), py = Y(ys[i]);
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // 超调峰值标记
+  if (overshoot > 0.3) {
+    ctx.fillStyle = cBad;
+    ctx.beginPath(); ctx.arc(X(tPeak), Y(peak), 4, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('超调 ' + overshoot.toFixed(1) + '°', X(tPeak) + 8, Y(peak) - 6);
+  }
+
+  // 读数
+  const ro = root.querySelector('.readout');
+  let verdict, vColor;
+  if (settled !== null && overshoot < 3) {
+    verdict = `✅ 响应干脆：${settled.toFixed(2)}s 进入 ±5% 误差带，超调 ${overshoot.toFixed(1)}°。`;
+    vColor = cOk;
+  } else if (overshoot > 8) {
+    verdict = `❌ 振荡明显：超调 ${overshoot.toFixed(1)}°${settled ? '，' + settled.toFixed(2) + 's 才勉强收敛' : '，6 秒内未收敛'}——试试加大 Kd 或减小 Kp。`;
+    vColor = cBad;
+  } else if (settled === null) {
+    verdict = `⚠️ 响应太慢或振荡不止：6 秒内未进入 ±5% 带——试试加大 Kp，或检查 Ki 是否过大引发 hunting。`;
+    vColor = cWarn;
+  } else {
+    verdict = `🙂 基本可用：${settled.toFixed(2)}s 收敛，但超调 ${overshoot.toFixed(1)}° 偏大——微调 Kd 可进一步压平。`;
+    vColor = cPri;
+  }
+  ro.textContent = verdict + `（稳态残差 ${ssErr.toFixed(2)}°）`;
+  ro.style.color = vColor;
+});
+</script>
+</body>
+</html>

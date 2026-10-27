@@ -1,0 +1,688 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器鸭感知与VLA · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar a.home{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.readout{margin:12px 0 0;font-weight:600}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器鸭感知与VLA</h1>
+  <a class="home" href="microduck.html">系列目录</a>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 1 ========== -->
+    <section class="chapter" data-level="1" data-title="从会走到会看">
+      <h2>从会走到会看</h2>
+      <p class="tldr">前九课让鸭子有了「小脑」——会走、会摔、会爬起；这一课给它装「大脑」：用视觉理解世界、听懂自然语言指令，完成从「运动机器」到「智能体」的惊险一跃。</p>
+
+      <p>能走，只是入场券。Microduck 的爆火不只因为可爱，更因为它能「听懂人话」：你说「去厨房帮我拿杯水」，它真的摇摇摆摆走过去、认得杯子、弯腰、抓取——这背后是<b>视觉</b>与<b>语言</b>两大能力的合流。这一课的主角是近年机器人圈最热的技术范式：<b>VLA</b>（Vision-Language-Action，视觉-语言-动作模型）。</p>
+
+      <p>先建立整体地图：感知系统把「摄像头画面 + 语言指令」翻译成<b>内部表示</b>，再由 VLA 模型把内部表示直接翻译成<b>底层控制信号</b>（关节位置/力矩）。它和第 09 课的 RL 不是替代关系：<mark>VLA 管「理解要做什么」，RL 管「把它做出来」</mark>——前者是任务的翻译官，后者是动作的执行官。</p>
+
+      <div class="analogy">把鸭子想成一位刚入职的「机器实习生」：RL 训练是它上的「体校」——教会它怎么控制肌肉；VLA 是它的「大学教育」——教会它看图纸（视觉）、听懂需求（语言）、把需求拆成动作计划（决策）。两个都毕业，才算「可用之才」。</div>
+
+      <div class="key"><b>核心定义：</b>VLA（Vision-Language-Action）模型把「看见的画面 + 听懂的指令」作为输入，直接输出机器人的动作指令。它是多模态大模型（VLM）在机器人领域的延伸——把「文字接龙」的能力，迁移到「动作接龙」。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：这一课的三个关键词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">视觉感知</div><div class="back">用摄像头 + 神经网络，从二维画面里提取三维世界的信息：哪是地面、哪是障碍、杯子在哪、离我多远。是「看懂」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">语言理解</div><div class="back">把「去厨房拿杯水」解析成「目标位置 + 目标物体 + 期望动作」的结构化任务，是「听懂」。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">VLA 模型</div><div class="back">视觉-语言-动作大模型：把「看懂 + 听懂」的联合表示，直接解码成关节控制信号，是「做到」的桥梁。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：VLA 三个字母分别代表 <input data-answer="视觉|Vision">、<input data-answer="语言|Language"> 与 <input data-answer="动作|Action">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话记住：RL 让鸭子「会动」，VLA 让它「懂行」。这一课沿着「会看 → 听懂 → 做到」的链条，逐一拆开。</div>
+    </section>
+
+    <!-- ========== 2 ========== -->
+    <section class="chapter" data-level="1" data-title="让鸭子看见世界">
+      <h2>让鸭子看见世界</h2>
+      <p class="tldr">一台微型相机的成本不到几美元，却能让鸭子从「闭着眼走」变成「看着走」：检测地面与障碍、定位目标物体、估计自身位置——视觉是性价比最高的「感官升级」。</p>
+
+      <p>Microduck 的头部装有一颗微型相机（具体型号官方未完全公开，教学估算为低成本 RGB 相机模组，以厂商规格书为准）。不要小看这颗「眼睛」：对双足机器人而言，<mark>视觉不是锦上添花，而是稳定性的第二支柱</mark>——第 05 课的 IMU 告诉你「我在倒」，视觉告诉你「前面有台阶、左边是墙」，两者互补才能又稳又聪明。</p>
+
+      <p>视觉为鸭子做三件事：</p>
+      <ul>
+        <li><b>语义分割</b>：把画面逐像素分类（地面、地毯边、电线、障碍）——是落脚规划（第 07 课）的眼睛版。</li>
+        <li><b>目标检测</b>：找到「杯子」「拖鞋」「你伸过来的手」在哪——是抓取与交互的前提。</li>
+        <li><b>视觉里程计</b>：对比连续帧，估计「我走了多远、往哪偏」——与 IMU 融合，得到比单独任一种都准的位姿估计。</li>
+      </ul>
+
+      <div class="analogy">夜航的飞机：仪表（IMU）告诉它姿态，但「前方有山」只能靠雷达（视觉）。单看仪表能飞平，不知道往哪飞；单看雷达知道往哪飞，但一个气流颠簸就慌了。双足鸭子同理——IMU 管「别倒」，视觉管「别撞、别踩空、找得到东西」。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么双足机器人通常要「IMU + 视觉」双路感知，而不是只靠其一？</p>
+        <button class="opt" data-fb="IMU 更新确实快，但「快」不是配视觉的理由——互补的是「各自看到不同的信息」。">IMU 更新慢，视觉可以补采样率</button>
+        <button class="opt" data-fb="对。IMU 测自身运动但看不见外界；视觉看见外界但怕快速晃动和光照突变。两者覆盖对方的盲区，融合才是完整感知。">两者观测的信息互补：IMU 测自身运动、视觉感知外界环境，融合更鲁棒</button>
+        <button class="opt" data-fb="双传感器是「冗余备份」，主要意义确实在容错——但比备份更根本的是「信息互补」。">主要是冗余备份，坏了一个还有一个</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：从画面逐像素判断「这是地面还是障碍」的任务叫 <input data-answer="语义分割|分割">；通过对比连续帧估计自身运动叫 <input data-answer="视觉里程计|里程计">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">视觉三件套：分割认路、检测找物、里程计定位。它和 IMU 是互补搭档，不是替代品。下一章看这些画面如何变成网络能懂的「表示」。</div>
+    </section>
+
+    <!-- ========== 3 ========== -->
+    <section class="chapter" data-level="2" data-title="视觉编码器与token">
+      <h2>视觉编码器与 token</h2>
+      <p class="tldr">神经网络看不懂像素，只认「token」——视觉编码器把画面切成一块块小补丁，各自压成一个向量，再配上位置信息：一张图就变成了一串可以像文字一样被处理的「视觉单词」。</p>
+
+      <p>多模态大模型的第一步，是<b>把图像翻译成它能处理的序列</b>。做法叫<b>视觉编码器</b>（如 ViT、CLIP 或 SigLIP）：把图片切成固定大小的「补丁」（patch，例如 14×14 像素），每个补丁经一层神经网络压成一个高维向量——这个向量就是<b>视觉 token</b>。一张 224×224 的图会变成 $(224/14)^2 = 256$ 个视觉 token，如同 256 个「视觉单词」。</p>
+
+      <p>为什么切成块而不是整图压一个向量？因为<b>位置信息太重要了</b>：「杯子在画面左边」和「杯子在右边」对应完全不同的动作。切块后，每个 token 天然携带「我是第几块」的空间坐标；更重要的是，<mark>自注意力机制让任意两个 token 都能「对话」</mark>——地面的 token 可以和杯子的 token 直接交换信息，模型因此能推理「杯子在地毯上，而地毯有点滑」这种跨物体的关系。</p>
+
+      <div class="analogy">把一幅画拆成 256 块拼图，每块写一个便签（这块是什么、在原图哪一行哪一列），再把所有便签钉在公告板上。语言模型读这些便签，就像读一行行文字——它不用「看」画，读便签就能推理出「猫在沙发上」。视觉编码器，就是负责写便签的那位。</div>
+
+      <div class="key">视觉编码器 = 把图像切成补丁 → 每块压成一个向量（视觉 token）→ 拼成序列。它让「图像」和「文字」在神经网络里变成了<b>同一种数据结构</b>——这是所有多模态大模型能成立的地基。</div>
+
+      <details class="reveal">
+        <summary>延伸：CLIP / SigLIP 这类编码器为何常被选作视觉前端？</summary>
+        <p>因为它们在「图文配对」的海量数据上预训练过，天然知道「这张图和哪段文字最配」——这个语义空间对机器人极有用：把「杯子」这个词和画面里杯子的视觉 token 关联起来，几乎不需要额外训练。代价是它们的分辨率通常不高（224 或 384），看远处小目标吃力——复刻时可选更高分辨率或加 ROI 放大。</p>
+      </details>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">把图像切成 14×14 像素的小块、每块压成一个向量，这些向量在模型里被称为什么？</p>
+        <button class="opt" data-fb="对。每个小补丁经视觉编码器压成一个高维向量，称为视觉 token——之后它就能和文字 token 拼在同一条序列里，被同一个 Transformer 处理。">视觉 token（visual tokens）</button>
+        <button class="opt" data-fb="超参数是训练前设定的配置值，不是数据经网络后的中间表示。">超参数</button>
+        <button class="opt" data-fb="卷积核是网络里的权重结构，不是数据本身；这里说的是「数据被转化后的序列单元」。">卷积核</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：一张 224×224 的图按 14×14 分块、不重叠，共得到 <input data-answer="256|16*16|16×16"> 个视觉 token。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">视觉编码器把像素翻译成 token，让图像第一次能被「读」。有了视觉 token 和文字 token，下一步就是把它们接到一起，听指令干活——这就是 VLA。</div>
+    </section>
+
+    <!-- ========== 4 ========== -->
+    <section class="chapter" data-level="2" data-title="模仿学习与VLA">
+      <h2>模仿学习与 VLA</h2>
+      <p class="tldr">VLA 的诞生靠两步：先用海量图文数据学会「看懂 + 听懂」，再用真实遥操作数据做模仿学习，教会它「看懂听懂之后该动手」。数据质量，而不是模型大小，往往决定最终效果。</p>
+
+      <p>VLA 模型不是从零训练的，它的成长分两段。第一段是<b>预训练</b>：喂给它互联网规模的图文对（ captioned images ），让它学会视觉与语言的联合表示——「画面里有什么」「这个物体通常叫什么」。这段训练只让模型「会看会说」，还「不会动手」。</p>
+
+      <p>第二段是<b>模仿学习</b>（Imitation Learning）：让真人戴着遥操作设备「手把手」教它——你戴着机械臂控制器，把「看到杯子 → 走过去 → 弯腰 → 抓取」整段操作演示一遍，机器人记录当时的视觉、语言指令、以及你输出的每一个动作。训练时，模型学习在给定「视觉 + 指令」时，输出和真人一样的动作序列。<mark>这一步的关键是数据质量与多样性</mark>：演示者动作毛躁，它就学毛躁；演示只覆盖了平地，它上了地毯就懵。</p>
+
+      <div class="analogy">带实习生：第一阶段让他读行业报告（预训练，建立通识）；第二阶段你坐他旁边，演示一遍「怎么给客户回邮件」——他模仿你的措辞、顺序、格式。教得好不好，不取决于他读书多少，而取决于你的演示够不够清晰、覆盖的场景够不够全。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">VLA 的模仿学习阶段，对最终机器人表现影响最大的因素通常是？</p>
+        <button class="opt" data-fb="参数量影响「容量上限」，但容量再大，喂的演示数据质量差、场景单一，它也只会精准地模仿那些毛病。">模型的参数量够不够大</button>
+        <button class="opt" data-fb="预训练只教会「看懂听懂」，动手能力是模仿学习阶段注入的——后者更直接决定最终行为。">预训练用的图文数据规模</button>
+        <button class="opt" data-fb="对。模仿学习是「行为克隆」——演示毛躁它就毛躁、场景单一它就单一。数据质量与多样性，往往比模型大小更决定部署效果。">遥操作演示数据的质量与场景覆盖度</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：VLA 训练两阶段——先在图文对上 <input data-answer="预训练|pretrain"> 建立视觉-语言表示，再用遥操作数据做 <input data-answer="模仿学习|imitation learning|模仿"> 学会「动手」。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">VLA = 预训练（看懂听懂）+ 模仿学习（动手模仿）。数据是新的代码——演示的质量与多样性，比网络结构更决定最终表现。下一章亲手在实验台里对比「粗糙演示 vs 平滑演示」的差距。</div>
+    </section>
+
+    <!-- ========== 5 ========== -->
+    <section class="chapter" data-level="3" data-title="模仿学习轨迹实验台">
+      <h2>模仿学习轨迹实验台</h2>
+      <p class="tldr">同一个「伸手抓物」任务，演示数据的质量直接决定学到的轨迹：平滑演示学出干净利落的动作，毛糙演示学出抖抖索索的轨迹——拖动「演示噪声」，亲眼见证垃圾进、垃圾出。</p>
+
+      <p>模仿学习有个朴素到残酷的定理：<b>学到的行为分布，不会好于演示分布</b>（garbage in, garbage out）。下面的实验台用预计算的方式复现这个因果：目标轨迹是一条从起点到杯子的理想曲线；「演示噪声」模拟真人遥操作时手抖、犹豫、路径迂回的程度；「平滑正则」模拟训练时对动作变化率的惩罚强度。</p>
+
+      <div class="widget demo" id="demo1">
+        <div class="widget-title">轨迹对比实验台：看演示噪声如何把「干净动作」污染成「抖动怪」</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>演示噪声（手抖程度） <span class="val" data-for="noise"></span><input type="range" name="noise" min="0" max="1" step="0.02" value="0.15"></label>
+          <label>演示迂回度（犹豫/绕路） <span class="val" data-for="wander"></span><input type="range" name="wander" min="0" max="1" step="0.02" value="0.2"></label>
+          <label>平滑正则强度 <span class="val" data-for="smooth"></span><input type="range" name="smooth" min="0" max="1" step="0.02" value="0.4"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>读图要点：</p>
+      <ul>
+        <li><b>蓝线（理想轨迹）</b>：最短路径，速度曲线平滑——这是「完美老师」。</li>
+        <li><b>橙点（实际学到的轨迹）</b>：带噪声与迂回的演示 + 训练时的平滑正则，共同塑造的最终策略输出。</li>
+        <li><b>红虚线（无正则）</b>：把平滑正则关掉，学到的轨迹会「忠实」复现演示的毛糙——动作抖、能耗高、还更容易撞翻东西。</li>
+      </ul>
+
+      <div class="analogy">跟一位手抖的师傅学书法：他每个笔画都抖、还老爱绕弯。你若只会「照着写」（无正则），写出来必然同样抖；若你心里另有一把「写顺」的尺（平滑正则），就能滤掉一部分毛糙，但滤不掉系统性错误——师傅若总是把「永」字少写一捺，你再顺也补不回来。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">演示数据里总包含「手抖」（高频小噪声），下列哪种做法最能防止策略学到这些抖动？</p>
+        <button class="opt" data-fb="对。平滑正则（惩罚动作变化率）能让训练时「平均掉」高频抖动，鼓励输出低频、连贯的动作——这是模仿学习过滤演示噪声的标准武器。">训练时加入对动作变化率的惩罚（平滑正则）</button>
+        <button class="opt" data-fb="抖动的成因在数据里，不在网络里——换结构而不处理数据，学出来的还是抖。">换一个更大的模型以提高拟合精度</button>
+        <button class="opt" data-fb="增广管的是「覆盖度」（场景多样性），治不了「单条演示内的噪声」——后者要靠正则或滤波。">加大域随机化的强度</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：模仿学习中「学到的行为分布不会好于演示分布」被概括为 <input data-answer="垃圾进垃圾出|garbage in garbage out|GIGO">；抑制动作抖动的常用正则项惩罚 <input data-answer="动作变化率|加速度|抖动|变化率">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">数据决定上限，正则逼近上限。实验台里把平滑正则拉到 0、演示噪声拉满，看「忠实复现毛糙」的灾难性效果——那是一行代码的差别。</div>
+    </section>
+
+    <!-- ========== 6 ========== -->
+    <section class="chapter" data-level="3" data-title="语言指令与动作解码">
+      <h2>语言指令与动作解码</h2>
+      <p class="tldr">「去厨房拿杯水」如何变成关节信号？VLA 的解码阶段把内部表示翻译成「动作 token」——每个动作 token 对应未来一小段的关节目标，再交给底层伺服执行；翻译的颗粒度，决定了鸭子是「聪明」还是「卡顿」。</p>
+
+      <p>VLA 的最后一步，是把 Transformer 内部那串「视觉+语言」的表示，解码成机器人能执行的信号。主流做法有两种，Microduck 类产品的具体实现官方未公开，教学层面对比其取舍：</p>
+
+      <ul>
+        <li><b>动作 token 化</b>（如 RT-2、Octo 的路线）：把连续的动作空间离散成有限个「档位」（如关节角 −30°、−29°… 各是一个 token），模型像生成文字一样逐个生成动作 token。优点是直接复用语言模型的全套解码技术；缺点是离散化引入精度损失。</li>
+        <li><b>连续解码</b>（如扩散策略 Diffusion Policy）：直接输出连续动作向量（甚至一次输出未来一整段动作「块」），通过扩散模型逐步去噪生成。优点是精度高、动作平滑；缺点是与语言模型架构差异大，工程接入更复杂。</li>
+      </ul>
+
+      <p>无论哪种，最终都要回到第 06、08 课的老朋友：<b>底层伺服</b>。VLA 输出的通常是「未来几百毫秒的关节目标轨迹」，以 30–50Hz 更新；底层 PID/RL 策略以 200–1000Hz 跟踪。两层之间的<b>时间对齐</b>和<b>限幅</b>（第 09 课部署三关）依然是硬约束。</p>
+
+      <div class="warn">最常见误区：以为 VLA 输出「电压」直接驱动电机。实际上 VLA 产出的是「高层意图」（关节目标轨迹），真正的电流环、力矩环仍在底层伺服。把两者混为一谈，要么控制频率跟不上（大模型推理慢），要么安全保护缺位（大模型幻觉输出危险动作）。<mark>分层，是让大模型安全上机器人的唯一解</mark>。</div>
+
+      <div class="analogy">交响乐指挥和乐手：指挥（VLA）不自己拉小提琴，他给出「这段要柔、渐强」的意图，乐手（底层伺服）以毫秒级反应把每个音拉准。若指挥越俎代庖去抠每个手指动作，整场演出必然慢半拍；若乐手不听指挥，音乐就散了。分层协作，缺一不可。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么 VLA 模型通常不以 1000Hz 直接输出力矩控制电机？</p>
+        <button class="opt" data-fb="模型大小不是主因——小模型也够慢；根本矛盾是「大模型推理的时延」与「电流环所需带宽」之间的量级差。">因为网络太大，装不进嵌入式芯片</button>
+        <button class="opt" data-fb="对。大模型推理一帧要几十上百毫秒，而电机电流环要微秒-毫秒级响应；分层后，VLA 出「意图」（低频），伺服出「执行」（高频），各取所长。">大模型推理延迟高、频率低，电流环必须毫秒级响应——职责必须分层</button>
+        <button class="opt" data-fb="低功耗是结果之一，不是分层的原因——根本原因是时延与带宽的物理矛盾。">因为大模型功耗太高，省电起见让底层干粗活</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p class="q">填空：VLA 输出的是<b>未来一段关节目标轨迹</b>，属于 <input data-answer="高层|高层意图|低频|意图"> 控制层；真正以高频跟踪它的是底层 <input data-answer="伺服|PID|控制"> 层。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">解码两条路线：动作 token 化（复用 LM 技术栈）与连续扩散（精度与平滑）。无论哪条，最终都回落到「高层出意图、底层管执行」的分层架构。下一章看 Microduck 式的 VLA 落地，工程上有哪些取舍。</div>
+    </section>
+
+    <!-- ========== 7 ========== -->
+    <section class="chapter" data-level="4" data-title="Microduck式VLA落地">
+      <h2>Microduck 式 VLA 落地</h2>
+      <p class="tldr">把 VLA 塞进一只 25 厘米、售价几百美元的鸭子，是一场「算力、功耗、延迟」的三角平衡：模型要蒸馏到小得离谱，推理要压到实时，动作还要保留「可爱」——工程智慧藏在每一个妥协里。</p>
+
+      <p>实验室里 VLA 可以跑在 A100 上，Microduck 的「大脑」却只有一颗低功耗嵌入式芯片。落地要做一整套「减肥」：</p>
+
+      <ul>
+        <li><b>模型蒸馏</b>：用大型 VLA 当「老师」，训练一个几兆参数的小模型当「学生」，把老师的「视觉→动作」映射逼近过来。蒸馏后精度略降，但换来在嵌入式芯片上实时运行。</li>
+        <li><b>分辨率与帧率折中</b>：相机喂给网络的图像从 224 降到 160 甚至 128，帧率从 30 降到 10–15——省算力，但远处小物体更难看清。补救：只对「用户指名的目标区域」做 ROI 放大。</li>
+        <li><b>云边协同（可选）</b>：简单指令本地小模型消化；复杂任务（「帮我找一下那个红色的、上次出现过的包」）走 WiFi 上云端大模型。代价是延迟与断网可用性——Microduck 宣传卖点之一的「离线可用」，就是这条路的取舍结果。</li>
+        <li><b>人格化层</b>：让它「可爱」的不是 VLA 本体，而是外面包的一层「表情与动作风格库」——头部摆动频率、摇臀节奏、声音反馈，都是调好的预设动画，按情绪状态机触发。这层几乎不占算力，却是「萌」的全部来源。</li>
+      </ul>
+
+      <div class="analogy">高端餐厅开外卖分店：招牌菜（VLA 能力）要保留，但中央厨房（云端大模型）搬不过来，只能培训本地厨师（蒸馏小模型）做「简化版」；摆盘（人格化动画）则用预制模板保证水准稳定。顾客吃得开心，靠的不是每道菜都现做，而是「关键体验不缩水」。</div>
+
+      <details class="reveal">
+        <summary>延伸：「离线可用」与「云边协同」矛盾吗？</summary>
+        <p>不矛盾，是「分级」：本地小模型兜底基础能力（走、避障、响应简单指令），保证断网不瘫；云端大模型处理真正需要「大知识」的请求。产品宣传「离线可用」时，通常指前者；上云是锦上添花而非必需。复刻时建议先做强本地兜底，再考虑云。</p>
+      </details>
+
+      <div class="widget">
+        <div class="widget-title">分步走完 Microduck 式 VLA 的一次完整请求</div>
+        <div class="steps">
+          <div class="step"><b>① 视觉采流</b> —— 头部相机抓取当前帧，预处理（缩放、归一化）后送入视觉编码器，得到视觉 token。</div>
+          <div class="step"><b>② 指令解析</b> —— 用户语音/文字指令经 ASR/分词转成文本 token，与视觉 token 拼合进 Transformer。</div>
+          <div class="step"><b>③ 动作生成</b> —— 小 VLA 模型自回归/扩散解码出未来 1–2 秒的关节目标轨迹（动作块）。</div>
+          <div class="step"><b>④ 风格包装</b> —— 人格化层按当前情绪状态，给轨迹叠加头部/躯干动画，注入「鸭子感」。</div>
+          <div class="step"><b>⑤ 底层执行</b> —— 轨迹切块、限幅后交给伺服环（第 06、08 课）以高频跟踪，同时持续回读 IMU/视觉，闭环修正。</div>
+          <button class="btn primary next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">Microduck 要保留「离线可用」卖点，其 VLA 架构最需要优先保证的是？</p>
+        <button class="opt" data-fb="对。断网时鸭子仍要能走、能避障、响应基础指令——这意味着本地小模型必须兜住「保命能力」，云端只处理锦上添花的高阶请求。">本地小模型兜住基础能力（走、避障、简单指令）</button>
+        <button class="opt" data-fb="依赖云端与「离线可用」直接冲突——云端可以是增强项，但不能是命门。">所有请求都走云端以保证能力上限</button>
+        <button class="opt" data-fb="人格化是体验层，离线刚需是能力层；前者再好也救不了后者缺席。">优先完善人格化动画而非本地能力</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">落地四板斧：蒸馏、降分辨率、云边分级、人格化包装。每一招都是「算力-功耗-体验」三角里的取舍。最后一章做总测验，收官「智能」模块。</div>
+    </section>
+
+    <!-- ========== 8 ========== -->
+    <section class="chapter" data-level="4" data-title="综合测验与下一步">
+      <h2>综合测验与下一步</h2>
+      <p class="tldr">三道题检验你是否把「视觉、token、模仿学习、VLA、工程落地」串成闭环；过关之后，去看看这台聪明鸭子背后的国产供应链与 BOM 账本。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">关于模仿学习，下列说法最准确的是？</p>
+        <button class="opt" data-fb="模型大小决定容量上限，但模仿学习是「行为克隆」——演示毛躁它就毛躁，容量再大也只是更精准地复刻毛病。">模型够大就能超越演示者的水平</button>
+        <button class="opt" data-fb="预训练建立「看懂听懂」，动手能力是模仿阶段注入的——后者才是行为质量的直接来源。">预训练阶段决定了最终的动手水平</button>
+        <button class="opt" data-fb="对。模仿学习复制的是「分布」：演示的毛躁、偏见、场景盲区都会被继承；平滑正则与数据清洗能缓解，但不能凭空超越。">学到的行为分布不会好于演示分布，演示质量与多样性直接决定最终表现</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么 VLA 必须与底层伺服「分层」，而不是直接输出电流驱动电机？</p>
+        <button class="opt" data-fb="频率错配是物理约束，不是代码优化能弥合的——大模型推理的时延量级与电流环带宽差着数量级。">只要代码优化得好，大模型也能跑 1000Hz</button>
+        <button class="opt" data-fb="对。大模型推理以「帧」为单位（几十毫秒），电流环以「微秒-毫秒」为单位；分层让两者各按其节奏工作，互不拖后腿。">大模型推理延迟高、频率低，电流环要求毫秒级响应，节奏必须错开</button>
+        <button class="opt" data-fb="恰恰相反——分层正是为了让大模型「不必」毫秒级响应，才让它上得了机器人。">分层是为了让大模型也承担毫秒级控制任务</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">让 Microduck「可爱」的主要来源，工程上是？</p>
+        <button class="opt" data-fb="对。人格化层（头部摆动、摇臀节奏、声音反馈）是预设动画 + 状态机触发，几乎不占算力，却贡献了绝大部分「萌」的观感——VLA 负责「聪明」，人格化层负责「可爱」。">外置的人格化动作/表情风格库，与 VLA 本体解耦</button>
+        <button class="opt" data-fb="VLA 输出的是「做什么」，「怎么可爱地去做」是风格层的事——两者解耦正是工程上的聪明处。">VLA 模型在生成动作时自然涌现的可爱</button>
+        <button class="opt" data-fb="电机精度决定「动作是否到位」，不决定「观感是否可爱」——后者是风格，不是精度。">电机的高精度控制让动作显得萌</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">「智能」模块收官。想巩固学习算法基础，回顾 <a href="microduck-09-rl-sim.html">第 09 课：机器鸭强化学习与仿真训练</a>；下一步去 <a href="microduck-11-supply-chain.html">第 11 课：机器鸭国产供应链与 BOM</a>——拆开 399 美元背后的成本账本，看看中国供应链能把它打到多少。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ============ 课程定制演示：模仿学习轨迹实验台 ============
+   行为模型：
+   - 理想轨迹：最短路径的 5 次多项式（起终点速度为零），位置用 p(t)，速度 v(t)。
+   - 演示噪声：在理想轨迹上叠加正弦「手抖」（幅度 ∝ noise）与「迂回」偏置（∝ wander）。
+   - 平滑正则：学到的轨迹 = 演示轨迹 经一阶低通滤波，滤波系数 α ∝ smooth（0 = 无正则，忠实复现毛糙）。 */
+demo('#demo1', ({ noise, wander, smooth }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cTxt = css.getPropertyValue('--text'), cMut = css.getPropertyValue('--muted');
+  const cLine = css.getPropertyValue('--border'), cPri = css.getPropertyValue('--primary');
+  const cBad = css.getPropertyValue('--bad'), cOk = css.getPropertyValue('--ok');
+  const cWarn = css.getPropertyValue('--warn');
+
+  const padL = 46, padR = 20, padT = 20, padB = 42;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const T = 3;
+  const X = t => padL + (t / T) * plotW;
+
+  // 布局：上半画「位置-时间」，下半画「速度-时间」
+  const posH = plotH * 0.55, velH = plotH * 0.45;
+  const PY = p => padT + posH * (1 - p);
+  const VY = v => padT + posH + 12 + velH * (0.5 - v / 3);
+
+  const N = 200;
+  const idealP = [], idealV = [];
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * T, s = t / T;
+    // 5 次多项式：s(τ) = 6τ^5 − 15τ^4 + 10τ^3
+    const p = 6 * s**5 - 15 * s**4 + 10 * s**3;
+    const v = (30 * s**4 - 60 * s**3 + 30 * s**2) / T;
+    idealP.push(p); idealV.push(v);
+  }
+
+  // 演示轨迹 = 理想 + 手抖（正弦扰动）+ 迂回（慢波动偏置）
+  const demoP = [], demoV = [];
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * T;
+    const shake = noise * 0.06 * Math.sin(2 * Math.PI * 6 * t + 0.7) + noise * 0.03 * Math.sin(2 * Math.PI * 11 * t);
+    const detour = wander * 0.18 * Math.sin(2 * Math.PI * 0.8 * t) * Math.sin(Math.PI * (i / N));
+    demoP.push(Math.max(0, Math.min(1, idealP[i] + shake + detour)));
+  }
+  // 数值微分
+  for (let i = 0; i <= N; i++) {
+    const a = demoP[Math.max(0, i - 1)], b = demoP[Math.min(N, i + 1)];
+    demoV.push((b - a) / (2 * T / N));
+  }
+
+  // 学到的轨迹 = 演示轨迹 经低通（模拟平滑正则的效果）
+  const alpha = 0.04 + smooth * 0.3;
+  const learnP = [], learnV = [];
+  let lp = demoP[0];
+  for (let i = 0; i <= N; i++) { lp += alpha * (demoP[i] - lp); learnP.push(lp); }
+  for (let i = 0; i <= N; i++) {
+    const a = learnP[Math.max(0, i - 1)], b = learnP[Math.min(N, i + 1)];
+    learnV.push((b - a) / (2 * T / N));
+  }
+
+  // 抖动指标：速度序列的高频能量
+  const jitter = arr => {
+    let e = 0;
+    for (let i = 2; i < arr.length; i++) e += Math.abs(arr[i] - 2 * arr[i-1] + arr[i-2]);
+    return e / arr.length;
+  };
+  const jDemo = jitter(demoV), jLearn = jitter(learnV), jIdeal = jitter(idealV);
+
+  // —— 画网格 ——
+  ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+  ctx.font = '11px sans-serif'; ctx.fillStyle = cMut;
+  for (let gt = 0; gt <= T; gt += 0.5) {
+    ctx.beginPath(); ctx.moveTo(X(gt), padT); ctx.lineTo(X(gt), padT + plotH); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillText(gt.toFixed(1) + 's', X(gt), H - padB + 16);
+  }
+  ctx.textAlign = 'right';
+  for (let g = 0; g <= 1; g += 0.25) {
+    ctx.beginPath(); ctx.moveTo(padL, PY(g)); ctx.lineTo(W - padR, PY(g)); ctx.stroke();
+    ctx.fillText(g.toFixed(2), padL - 6, PY(g) + 4);
+  }
+  for (let gv = -1.5; gv <= 1.5; gv += 0.75) {
+    ctx.beginPath(); ctx.moveTo(padL, VY(gv)); ctx.lineTo(W - padR, VY(gv)); ctx.stroke();
+    ctx.fillText((gv > 0 ? '+' : '') + gv.toFixed(2), padL - 6, VY(gv) + 4);
+  }
+  // 区域标签
+  ctx.textAlign = 'left'; ctx.fillStyle = cMut;
+  ctx.fillText('位置 →', padL + 4, padT + 14);
+  ctx.fillText('速度 →', padL + 4, padT + posH + 22);
+
+  const plotLine = (arr, yFn, color, width, dash) => {
+    ctx.save();
+    if (dash) ctx.setLineDash(dash);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const px = X((i / N) * T), py = yFn(arr[i]);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  // 理想轨迹（蓝实线）
+  plotLine(idealP, PY, cPri, 2.5);
+  plotLine(idealV, VY, cPri, 2.5);
+  // 学到的轨迹（橙实线）
+  plotLine(learnP, PY, cWarn, 2);
+  plotLine(learnV, VY, cWarn, 2);
+  // 演示轨迹（红虚线，无正则时与「学到」重合 → 警示）
+  plotLine(demoP, PY, cBad, 1.5, [4, 4]);
+  plotLine(demoV, VY, cBad, 1.5, [4, 4]);
+
+  // 图例
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = cPri; ctx.fillText('—— 理想轨迹', W - 150, padT + 14);
+  ctx.fillStyle = cWarn; ctx.fillText('—— 学到的轨迹', W - 150, padT + 30);
+  ctx.fillStyle = cBad; ctx.fillText('- - 演示数据（带噪声）', W - 150, padT + 46);
+
+  // 读数
+  const ro = root.querySelector('.readout');
+  let verdict, vColor;
+  if (smooth < 0.08 && noise > 0.4) {
+    verdict = '❌ 无正则 + 高噪声：学到的轨迹「忠实」复现演示的毛糙——抖动被原样继承。';
+    vColor = cBad;
+  } else if (jLearn < jDemo * 0.55 && jLearn < jIdeal * 3) {
+    verdict = '✅ 平滑正则起效：学到的轨迹抖动显著低于演示，已接近理想。';
+    vColor = cOk;
+  } else if (noise > 0.5 && wander > 0.5) {
+    verdict = '⚠️ 演示噪声与迂回都偏高：正则只能部分挽救，最好回去重录干净的演示。';
+    vColor = cWarn;
+  } else {
+    verdict = '🙂 效果尚可：继续提高平滑正则或降低演示噪声可进一步优化。';
+    vColor = cPri;
+  }
+  ro.textContent = `${verdict} 抖动指标（速度二阶差分均值）：演示 ${jDemo.toFixed(3)} → 学到 ${jLearn.toFixed(3)}（理想 ${jIdeal.toFixed(3)}）。`;
+  ro.style.color = vColor;
+});
+</script>
+</body>
+</html>
