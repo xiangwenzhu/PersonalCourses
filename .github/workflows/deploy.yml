@@ -1,0 +1,76 @@
+name: Deploy via bundle
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: true
+
+env:
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # git bundle 需要完整历史
+
+      - name: Create bundle
+        run: |
+          git bundle create site.bundle main
+          ls -lh site.bundle
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -T 15 -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || \
+            echo "keyscan failed, fall back to accept-new"
+          echo "StrictHostKeyChecking accept-new" >> ~/.ssh/config
+
+      - name: Push bundle to server
+        run: |
+          ok=0
+          for i in 1 2 3; do
+            if scp -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
+              site.bundle "$SSH_USER@$SSH_HOST:/opt/personalcourses/incoming/site.bundle"; then
+              ok=1; break
+            fi
+            echo "scp attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          [ "$ok" = "1" ] || { echo "scp failed after 3 attempts (link likely blocked)"; exit 1; }
+
+      - name: Fetch bundle on server
+        run: |
+          ssh -o ConnectTimeout=30 "$SSH_USER@$SSH_HOST" '
+            set -e
+            cd /opt/personalcourses/repo
+            old=$(git rev-parse HEAD)
+            git fetch /opt/personalcourses/incoming/site.bundle main
+            new=$(git rev-parse origin/main 2>/dev/null || git rev-parse FETCH_HEAD)
+            if [ "$old" = "$new" ]; then
+              echo "no change"
+              exit 0
+            fi
+            git reset --hard FETCH_HEAD
+            rsync -a --delete \
+              --exclude .git --exclude .github --exclude .screenshots \
+              --exclude .trae-html-share-packages --exclude deploy \
+              ./ /var/www/personalcourses/
+            echo "deployed $new"
+          '
+
+      - name: Verify deployment
+        run: |
+          code=$(ssh -o ConnectTimeout=30 "$SSH_USER@$SSH_HOST" \
+            "curl -s -o /dev/null -w '%{http_code}' -H 'Host: course.leozhu.cn' http://127.0.0.1/")
+          echo "HTTP status: $code"
+          [ "$code" = "200" ] || { echo "Site did not return 200"; exit 1; }
