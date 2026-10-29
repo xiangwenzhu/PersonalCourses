@@ -8,7 +8,7 @@
 :root{
   --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
   --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--warn:#f59e0b;
-  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--l5:#059669;
   --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
 }
 [data-theme="dark"]{
@@ -24,16 +24,23 @@ body{margin:0;font:16px/1.7 -apple-system,"Segoe UI","PingFang SC","Microsoft Ya
 .hero{margin-bottom:22px}
 .hero h2{margin:0 0 8px;font-size:26px}
 .hero p{margin:0;color:var(--muted);max-width:62ch}
+.sec-title{display:flex;align-items:baseline;gap:10px;margin:30px 0 14px}
+.sec-title h2{margin:0;font-size:20px}
+.sec-title span{font-size:13.5px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
 .card{display:flex;flex-direction:column;gap:8px;padding:20px 22px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);text-decoration:none;color:var(--text);transition:transform .15s,border-color .15s}
 .card:hover{transform:translateY(-2px);border-color:var(--primary)}
 .card .tag{align-self:flex-start;font-size:12px;padding:2px 10px;border-radius:99px;font-weight:600;color:#fff}
-.tag.a{background:var(--l3)}.tag.b{background:var(--l4)}.tag.c{background:var(--l1)}
+.tag.a{background:var(--l3)}.tag.b{background:var(--l4)}.tag.c{background:var(--l1)}.tag.d{background:var(--l5)}
 .card h3{margin:0;font-size:19px}
 .card p{margin:0;color:var(--muted);font-size:14.5px;flex:1}
 .card .levels{display:flex;gap:6px;margin-top:2px}
 .card .dot{width:8px;height:8px;border-radius:50%}
 .card .more{font-size:14px;color:var(--primary);font-weight:600}
+.series{position:relative;overflow:hidden}
+.series::after{content:"";position:absolute;top:0;right:0;width:80px;height:80px;background:var(--primary-soft);border-radius:0 var(--radius) 0 100%;opacity:.5;pointer-events:none}
+.series .icon{font-size:28px;line-height:1}
+.series .count{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:13.5px}
 footer code{background:var(--primary-soft);padding:1px 6px;border-radius:5px}
 </style>
@@ -48,10 +55,106 @@ footer code{background:var(--primary-soft);padding:1px 6px;border-radius:5px}
 <main class="wrap">
   <section class="hero">
     <h2>我的互动式课程库</h2>
-    <p>这里放我自己感兴趣的主题的互动式课程。每个课程都是单文件网页，含分层讲解、交互演示与小测验，点进去直接开始学。</p>
+    <p>这里放我自己感兴趣的主题的互动式课程。系列课程有独立学习路径页，单课可直接进入；每门课都是单文件网页，含分层讲解、交互演示与小测验。</p>
   </section>
 
+  <div class="sec-title">
+    <h2>系列课程</h2>
+    <span>按学习路径组织的课程组，点击进入二级课程页</span>
+  </div>
   <div class="grid">
+    <a class="card series" href="bioinfo-track.html">
+      <span class="icon">🧬</span>
+      <span class="tag d">生物信息学 · 学习路径</span>
+      <h3>生物信息学学习路径</h3>
+      <p>L1 直觉 → L2 工具链 → L3 实战 → L4 前沿，11 门课规划，3 门已上线：导论、生物学速成、Linux 命令行。</p>
+      <span class="count">📚 11 门课 · 已上线 3 门</span>
+      <div class="levels">
+        <span class="dot" style="background:var(--l1)"></span>
+        <span class="dot" style="background:var(--l2)"></span>
+        <span class="dot" style="background:var(--l3)"></span>
+        <span class="dot" style="background:var(--l4)"></span>
+      </div>
+      <span class="more">进入系列 →</span>
+    </a>
+
+    <a class="card series" href="llm-finetuning.html">
+      <span class="icon">🤖</span>
+      <span class="tag b">AI 工程 · 学习路径</span>
+      <h3>大模型微调 · 学习路径</h3>
+      <p>L1 决策 → L2 LoRA 与数据 → L3 训练机制 → L4 对齐上线，5 门课全部上线；入口页含先修知识自测与学习路径图，每门课配交互演示与分层测验。</p>
+      <span class="count">📚 5 门课 · 全部上线</span>
+      <div class="levels">
+        <span class="dot" style="background:var(--l1)"></span>
+        <span class="dot" style="background:var(--l2)"></span>
+        <span class="dot" style="background:var(--l3)"></span>
+        <span class="dot" style="background:var(--l4)"></span>
+      </div>
+      <span class="more">进入系列 →</span>
+    </a>
+
+    <a class="card series" href="microduck.html">
+      <span class="icon">🦆</span>
+      <span class="tag b">机器人 · 具身智能</span>
+      <h3>Microduck 复刻工程</h3>
+      <p>拆解 399 美元的爆火机器鸭：从认识产品、机械结构、舵机选型、主控电源，到控制算法、强化学习与国产供应链，12 门课走完"看懂 → 造出来 → 跑起来 → 卖得好"。</p>
+      <span class="count">📚 12 门课系列</span>
+      <div class="levels">
+        <span class="dot" style="background:var(--l1)"></span>
+        <span class="dot" style="background:var(--l2)"></span>
+        <span class="dot" style="background:var(--l3)"></span>
+        <span class="dot" style="background:var(--l4)"></span>
+      </div>
+      <span class="more">进入系列 →</span>
+    </a>
+
+    <a class="card series" href="microgrid-hub.html">
+      <span class="icon">⚡</span>
+      <span class="tag a">能源 · 电力系统</span>
+      <h3>微电网 · 学习路径</h3>
+      <p>7 门课从「可自治的小电网」直觉讲起，经设备、拓扑、控制（PQ/V-f/下垂）、能量管理（EMS 与峰谷套利），到保护安全和工程落地（标准、ROI 测算、校园案例），配 PCC 切换、潮流、下垂曲线等交互演示。</p>
+      <span class="count">📚 7 门课 · 全部上线</span>
+      <div class="levels">
+        <span class="dot" style="background:var(--l1)"></span>
+        <span class="dot" style="background:var(--l2)"></span>
+        <span class="dot" style="background:var(--l3)"></span>
+        <span class="dot" style="background:var(--l4)"></span>
+      </div>
+      <span class="more">进入系列 →</span>
+    </a>
+  </div>
+
+  <div class="sec-title">
+    <h2>单课</h2>
+    <span>独立主题课程，点开即学</span>
+  </div>
+  <div class="grid">
+    <a class="card" href="bioinfo-file-formats-course.html">
+      <span class="tag d">生物信息学 · 工具链</span>
+      <h3>生信文件格式完全指南：FASTA 到 VCF</h3>
+      <p>六大核心格式逐一拆解：FASTQ 解码器、SAM 11 列查看器、VCF 字段解读、GFF vs BED 坐标陷阱，附格式侦探识别挑战。</p>
+      <div class="levels">
+        <span class="dot" style="background:var(--l1)"></span>
+        <span class="dot" style="background:var(--l2)"></span>
+        <span class="dot" style="background:var(--l3)"></span>
+        <span class="dot" style="background:var(--l4)"></span>
+      </div>
+      <span class="more">开始学习 →</span>
+    </a>
+
+    <a class="card" href="bioinfo-alignment-course.html">
+      <span class="tag d">生物信息学 · 算法</span>
+      <h3>序列比对：从打分矩阵到 BLAST</h3>
+      <p>BLOSUM62 打分矩阵探索、动态规划填表演示、BLAST 种子-延伸模拟、多序列比对保守性分析，附策略选择实战。</p>
+      <div class="levels">
+        <span class="dot" style="background:var(--l1)"></span>
+        <span class="dot" style="background:var(--l2)"></span>
+        <span class="dot" style="background:var(--l3)"></span>
+        <span class="dot" style="background:var(--l4)"></span>
+      </div>
+      <span class="more">开始学习 →</span>
+    </a>
+
     <a class="card" href="fft-course.html">
       <span class="tag a">信号处理 · 数学</span>
       <h3>快速傅里叶变换（FFT）</h3>
@@ -117,22 +220,10 @@ footer code{background:var(--primary-soft);padding:1px 6px;border-radius:5px}
       <span class="more">开始学习 →</span>
     </a>
 
-    <a class="card" href="microduck.html">
-      <span class="tag b">机器人 · 具身智能</span>
-      <h3>Microduck 复刻工程（系列）</h3>
-      <p>拆解 399 美元的爆火机器鸭：从认识产品、机械结构、舵机选型、主控电源，到控制算法、强化学习与国产供应链，12 门课走完"看懂 → 造出来 → 跑起来 → 卖得好"。</p>
-      <div class="levels">
-        <span class="dot" style="background:var(--l1)"></span>
-        <span class="dot" style="background:var(--l2)"></span>
-        <span class="dot" style="background:var(--l3)"></span>
-        <span class="dot" style="background:var(--l4)"></span>
-      </div>
-      <span class="more">进入系列 →</span>
-    </a>
   </div>
 
   <footer>
-    所有课程均为独立的单文件 HTML，无需构建，可在浏览器中直接打开（数学公式依赖 KaTeX CDN，离线时仅公式降级）。新增课程只需加入 <code>.html</code> 文件并在此页补一张卡片。
+    所有课程均为独立的单文件 HTML，无需构建，可在浏览器中直接打开（数学公式依赖 KaTeX CDN，离线时仅公式降级）。系列课程入口统一指向二级课程页，新增课程按同样方式补卡片。
   </footer>
 </main>
 

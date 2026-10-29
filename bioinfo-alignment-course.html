@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>序列比对：从打分矩阵到 BLAST · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>序列比对：从打分矩阵到 BLAST</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="什么是序列比对">
+      <h2>什么是序列比对</h2>
+      <p class="tldr">序列比对就是找两条字母串的"最佳对齐方式"：哪里相同、哪里不同、哪里缺了字母——这是 BLAST、双序列比对、多序列比对的基础。</p>
+
+      <p>给你两条序列：</p>
+      <pre>序列 A: GATTACA
+序列 B: GATACA</pre>
+      <p>它们有多像？肉眼能发现 B 比 A 少了一个 <code>T</code>。但当序列长达几万碱基时，我们必须给"像"下一个<strong>数学定义</strong>，然后让计算机去找最像的对齐方式。</p>
+
+      <div class="analogy">比对像"找不同"游戏：两张几乎一样的图摆在一起，标出所有差异。但要求你先定规则：一个字母不同扣几分？空一个位置扣几分？规则不同，"最佳答案"也不同。</div>
+
+      <!-- 互动演示：手动比对 -->
+      <div class="widget demo" id="manualAlignDemo">
+        <div class="widget-title">手动比对：点按钮在序列 B 中插入"空位"，让两条序列对齐</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn" id="insertGap1">在第 3 位插空位</button>
+          <button class="btn" id="insertGap2">在第 5 位插空位</button>
+          <button class="btn primary" id="resetAlign">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>上面你刚刚做的事情，就是 Smith-Waterman 算法的核心：<strong>允许插入空位（gap），让尽可能多的字母对齐</strong>。剩下的问题是：这个"对齐"有多好？需要打分。</p>
+
+      <div class="key">比对的两大要素：① 对齐方式（哪里插空位）② 打分规则（匹配加几分，错配扣几分，空位扣几分）。两者缺一不可。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">序列比对中引入"空位（gap）"的主要目的是什么？</p>
+        <button class="opt" data-fb="gap 确实会增加长度，但这是手段不是目的。">让序列变得一样长</button>
+        <button class="opt" data-fb="正确。插入/缺失（indel）是常见突变，gap 让后续的相同区域仍能对齐。">容忍插入/缺失，保留更多匹配</button>
+        <button class="opt" data-fb="空位是演化事件（indel）的数学表达。">让打分更高</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">你已经理解了比对的本质：不是找相同，是在允许差异的规则下找"最优对齐"。下一章：打分规则怎么定。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="打分矩阵：给相似性定标准">
+      <h2>打分矩阵：给相似性定标准</h2>
+      <p class="tldr">不是所有错配都一样：A↔G（嘌呤互换）比 A↔C 更容易发生——打分矩阵把这种生物学差异编码成数字。</p>
+
+      <p>最简单的打分是"匹配 +1，错配 -1"。但生物学上，某些替换更"自然"：A 和 G 都是嘌呤（双环），C 和 T 都是嘧啶（单环），它们之间的替换（转换）比跨类替换（颠换）常见得多。</p>
+
+      <h3>核酸打分： simplicity is king</h3>
+      <table>
+        <tr><th></th><th>A</th><th>C</th><th>G</th><th>T</th></tr>
+        <tr><td><strong>A</strong></td><td>+2</td><td>-1</td><td>-1</td><td>-1</td></tr>
+        <tr><td><strong>C</strong></td><td>-1</td><td>+2</td><td>-1</td><td>-1</td></tr>
+        <tr><td><strong>G</strong></td><td>-1</td><td>-1</td><td>+2</td><td>-1</td></tr>
+        <tr><td><strong>T</strong></td><td>-1</td><td>-1</td><td>-1</td><td>+2</td></tr>
+      </table>
+
+      <h3>蛋白质打分：PAM 与 BLOSUM</h3>
+      <p>蛋白质更复杂——20 种氨基酸的物化性质各不相同。两套经典矩阵：</p>
+      <ul>
+        <li><strong>PAM</strong>（Percent Accepted Mutation）：基于<em>近缘</em>序列（每 100 个残基 1 个突变）推演演化概率</li>
+        <li><strong>BLOSUM</strong>（BLOcks SUbstitution Matrix）：直接统计<em>保守区段</em>中氨基酸的替换频率，数字越小越严格（BLOSUM80 适合近缘，BLOSUM45 适合远缘）</li>
+      </ul>
+
+      <div class="analogy">打分矩阵像"语言的拼写纠错词典"：英语里 <em>recieve</em> 错成 <em>receive</em> 很常见（扣分少），但错成 <em>zebra</em> 就很离谱（扣分多）。BLOSUM 就是蛋白质世界的"常见 typo 排行榜"。</div>
+
+      <!-- 互动演示：打分矩阵对比 -->
+      <div class="widget demo" id="matrixDemo">
+        <div class="widget-title">打分矩阵探索：选一对氨基酸，看在不同矩阵下的得分</div>
+        <canvas width="800" height="320"></canvas>
+        <div class="controls">
+          <label>氨基酸 1 <span class="val" data-for="aa1"></span><input type="range" name="aa1" min="0" max="19" step="1" value="0"></label>
+          <label>氨基酸 2 <span class="val" data-for="aa2"></span><input type="range" name="aa2" min="0" max="19" step="1" value="6"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">常见氨基酸替换：Leu↔Ile（都是疏水）、Ser↔Thr（都带羟基）通常得正分；Cys（能形成二硫键）替换通常得负分。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">比较远缘物种的蛋白质序列（演化距离大），应该用哪个矩阵？</p>
+        <button class="opt" data-fb="PAM1 是极度近缘（99% 相同）用的，不适合远缘。">PAM1</button>
+        <button class="opt" data-fb">BLOSUM80 适合高度相似的序列（近缘）。</button>
+        <button class="opt" data-fb="正确。数字小的 BLOSUM/PAM 数字大的适合远缘。">BLOSUM45</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">打分矩阵是把"生物学知识"翻译成"数学权重"的艺术。选错矩阵 = 用错标尺量距离。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="动态规划：最优比对怎么找">
+      <h2>动态规划：最优比对怎么找</h2>
+      <p class="tldr">暴力枚举所有对齐方式需要指数级时间；动态规划用"填表"的方式把复杂度降到 O(m×n)，保证找到全局最优解。</p>
+
+      <p>以 Needleman-Wunsch（全局比对）为例：建立一个矩阵，行是序列 A 的前缀，列是序列 B 的前缀。每个格子填"最优子问题的分数"：</p>
+
+      $$F(i,j) = \max \begin{cases} F(i-1,j-1) + s(A_i, B_j) & \text{对角：匹配/错配} \\ F(i-1,j) - d & \text{上：A 插 gap} \\ F(i,j-1) - d & \text{左：B 插 gap} \end{cases}$$
+
+      <div class="analogy">像玩贪吃蛇走迷宫：每个路口只记"到这里的最佳路径分"。想走到终点，只需要知道左边、上边、左上三个格子哪个分最高，加上这一步的得分即可——不用重走整条路。</div>
+
+      <!-- 互动演示：DP 矩阵填表 -->
+      <div class="widget demo" id="dpDemo">
+        <div class="widget-title">动态规划可视化：点"下一步"看矩阵如何填充，回溯找出最优比对</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="dpNext">下一步 →</button>
+          <button class="btn" id="dpReset">↺ 重置</button>
+          <span class="readout" style="font-size:14px;color:var(--muted)"></span>
+        </div>
+      </div>
+
+      <div class="key">Smith-Waterman（局部比对）与 Needleman-Wunsch（全局比对）的区别：SW 允许分数为负时归零（找最相似的局部片段），NW 强制从角落走到角落。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你想在一条长基因组序列中找一段短 motif（可能只匹配其中一小段），应该用哪种算法？</p>
+        <button class="opt" data-fb">全局比对强制两端对齐，会把不相关的区域也硬比，结果很差。</button>
+        <button class="opt" data-fb="正确。局部比对只找分数最高的片段，忽略两端不匹配的部分。">Smith-Waterman（局部比对）</button>
+        <button class="opt" data-fb">BLAST 是启发式加速，底层原理仍是局部比对；题目问的是算法类型。</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">动态规划是生物信息学的"最强大脑"：序列比对、RNA 折叠、基因预测都靠它。理解了填表逻辑，你就理解了生信算法的半壁江山。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="BLAST：比对的工业化">
+      <h2>BLAST：比对的工业化</h2>
+      <p class="tldr">动态规划太慢（O(m×n)），BLAST 用"种子-延伸-评估"三步启发式加速，把比对速度提高了几个数量级——牺牲一点精确性，换来实时检索。</p>
+
+      <p>BLAST（Basic Local Alignment Search Tool）的原理：</p>
+
+      <div class="widget steps">
+        <div class="widget-title">BLAST 三步流水线</div>
+        <div class="step"><strong>① 种子（Seed）</strong>：把查询序列切成短 k-mer（如 11bp），在预建好的哈希索引中查找完全匹配的种子位置。</div>
+        <div class="step"><strong>② 延伸（Extension）</strong>：从种子两端向外延伸，允许错配，直到分数降到阈值以下（X-drop）。</div>
+        <div class="step"><strong>③ 评估（E-value）</strong>：给每个命中打分，并计算 E-value（随机情况下得到这样好分数的概率）。E-value 越小越显著。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="analogy">BLAST 像图书馆检索：不是逐字逐句比对两本书（动态规划），而是先查"哪些页含这个词"（种子），翻到那几页再仔细对比（延伸），最后判断"这段相似是不是巧合"（E-value）。</div>
+
+      <!-- 互动演示：BLAST 流程模拟 -->
+      <div class="widget demo" id="blastDemo">
+        <div class="widget-title">BLAST 模拟器：输入一段查询序列，看种子命中和延伸过程</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runBlast">🔍 运行 BLAST</button>
+          <button class="btn" id="resetBlast">↺ 重置</button>
+          <span class="readout" style="font-size:14px;color:var(--muted)"></span>
+        </div>
+      </div>
+
+      <h3>关键参数怎么选</h3>
+      <table>
+        <tr><th>参数</th><th>作用</th><th>调大/调小的影响</th></tr>
+        <tr><td>word size</td><td>种子长度 k</td><td>调大：更快但漏掉远缘匹配；调小：更敏感但更慢</td></tr>
+        <tr><td>E-value</td><td>显著性阈值</td><td>常用 1e-5；调小更严格（减少假阳性）</td></tr>
+        <tr><td>matrix</td><td>打分矩阵</td><td>远缘用 BLOSUM45，近缘用 BLOSUM80</td></tr>
+        <tr><td>gap open/extend</td><td>空位罚分</td><td>open 高 → 倾向少而长的 gap；extend 高 → 倾向短 gap</td></tr>
+      </table>
+
+      <div class="warn">BLAST 不是全局最优！它可能漏掉复杂的长距离相似性（尤其是很多 gap 的情况）。需要精确比对时，回到 ClustalW/MAFFT（多序列）或 Smith-Waterman（双序列）。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">BLAST 的 E-value = 1e-20 和 E-value = 0.5，哪个结果更可信？</p>
+        <button class="opt" data-fb="正确。E-value 是随机命中概率，越小越显著。">1e-20 更可信</button>
+        <button class="opt" data-fb">0.5 意味着约有一半概率是随机的，不可信。">0.5 更可信</button>
+        <button class="opt" data-fb">两者单位相同（期望随机命中数），直接比大小即可。">一样可信</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">BLAST 是"够用就好"的典范：在速度和精度间找到工程平衡点。理解它的启发式逻辑，你就知道什么时候该信它，什么时候该换方法。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="多序列比对与系统发育">
+      <h2>多序列比对与系统发育</h2>
+      <p class="tldr">把 3 条以上序列一起比对（MSA），能找出保守区域和变异热点——这是系统发育树、家族分析和结构预测的前提。</p>
+
+      <p>多序列比对（Multiple Sequence Alignment, MSA）是 NP-hard 问题（没有已知的高效精确解）。常用近似算法：</p>
+      <ul>
+        <li><strong>渐进式</strong>（ClustalW）：先两两比对，按相似度聚类，逐步加入序列。快，但对顺序敏感</li>
+        <li><strong>迭代式</strong>（MAFFT, MUSCLE）：反复优化，直到分数收敛。更准，稍慢</li>
+      </ul>
+
+      <!-- 互动演示：MSA 保守性可视化 -->
+      <div class="widget demo" id="msaDemo">
+        <div class="widget-title">多序列比对保守性分析：拖动滑块看不同区域保守度</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls">
+          <label>窗口大小 <span class="val" data-for="win"></span><input type="range" name="win" min="3" max="10" step="1" value="5"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>从 MSA 可以构建<strong>系统发育树</strong>：序列差异越小的物种，在进化树上离得越近。常用方法：邻接法（NJ）、最大似然法（ML）、贝叶斯推断。</p>
+
+      <div class="key">保守区域 = 功能重要（不允许突变）；变异热点 = 可能中性或正选择。MSA 是连接"序列"与"演化"的桥梁。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">在多序列比对中，完全保守（所有序列相同）的氨基酸通常意味着什么？</p>
+        <button class="opt" data-fb">保守往往意味着功能约束强，而不是不重要。">这个位点不重要</button>
+        <button class="opt" data-fb">序列保守不代表表达量。">这个基因表达量高</button>
+        <button class="opt" data-fb="正确。强烈的功能约束（如活性位点）会阻止突变累积。">这个位点对功能至关重要</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">MSA 是"从序列到演化"的必经之路。做家族分析、找功能位点、预测结构——都从这里开始。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="实战：一次完整的比对分析">
+      <h2>实战：一次完整的比对分析</h2>
+      <p class="tldr">给你一个未知 DNA 序列，完整走一遍"BLAST 找同源 → 提取家族 → MSA 找保守区 → 解读功能"的分析流程。</p>
+
+      <h3>场景</h3>
+      <p>你测得一条 200bp 的未知序列，怀疑是某个酶的片段。怎么分析？</p>
+
+      <div class="widget steps">
+        <div class="widget-title">分析流水线</div>
+        <div class="step"><strong>① BLASTn</strong>（核酸 vs 核酸）：先确认它是不是已知基因。若 E-value &lt; 1e-20，看 hit 的注释。</div>
+        <div class="step"><strong>② BLASTx</strong>（核酸 vs 蛋白翻译）：若核酸库没结果，翻译成 6 个读码框搜蛋白库——可能是新基因的片段。</div>
+        <div class="step"><strong>③ 提取同源序列</strong>：取 top 10 hit，用 Entrez 或脚本批量下载 FASTA。</div>
+        <div class="step"><strong>④ MAFFT 多序列比对</strong>：看保守区域，找活性位点（通常是完全保守的催化残基）。</div>
+        <div class="step"><strong>⑤ 结构/功能预测</strong>：若保守区域含特定 motif（如 ATP-binding GXGXXG），推测功能。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <!-- 互动：比对策略选择 -->
+      <div class="widget">
+        <div class="widget-title">策略选择挑战：为每个场景选最合适的工具</div>
+        <div class="widget quiz" data-answer="1">
+          <p class="q"><strong>场景1</strong>：确认一段 150bp 的 PCR 产物是否为目的基因片段（已知物种的已知基因）。</p>
+          <button class="opt" data-fb">MAFFT 用于多序列比对，这里只需快速确认身份。">MAFFT</button>
+          <button class="opt" data-fb="正确。短序列 + 已知数据库，BLASTn 最快。">BLASTn</button>
+          <button class="opt" data-fb">ClustalW 是 MSA 工具，不适合单序列鉴定。">ClustalW</button>
+          <div class="feedback"></div>
+        </div>
+        <div class="widget quiz" data-answer="2">
+          <p class="q"><strong>场景2</strong>：比较 50 个不同物种的同源基因，找保守的功能域。</p>
+          <button class="opt" data-fb">BLAST 是双序列搜索，不能同时处理 50 条序列的比对。">BLAST</button>
+          <button class="opt" data-fb">Smith-Waterman 只能比对两条序列，且 O(n²) 太慢。">Smith-Waterman</button>
+          <button class="opt" data-fb="正确。MAFFT/MUSCLE 专门处理多序列比对，能找出跨物种保守区域。">MAFFT</button>
+          <div class="feedback"></div>
+        </div>
+        <div class="widget quiz" data-answer="0">
+          <p class="q"><strong>场景3</strong>：一段新测的 RNA 序列，想确认它编码的蛋白功能（核酸库中无同源）。</p>
+          <button class="opt" data-fb="正确。先翻译成蛋白（6 读码框）再搜蛋白库，能突破核酸层面的低相似性。">BLASTx</button>
+          <button class="opt" data-fb">BLASTn 在核酸层面找不到，tBLASTn 是蛋白搜核酸，方向反了。">BLASTn</button>
+          <button class="opt" data-fb">Needleman-Wunsch 是双序列全局比对，不能搜库。">Needleman-Wunsch</button>
+          <div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="key">工具选择口诀：短序列鉴定用 BLAST，精确双序列用 SW/NW，多序列找保守用 MAFFT，远缘关系用翻译后搜索（BLASTx/tBLASTn）。</div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>动态规划填表的时间复杂度是 O(<input data-answer="m*n|mn|n*m|nm">)；BLAST 先用短 <input data-answer="k-mer|kmer|word|seed|种子"> 命中再延伸；E-value 越 <input data-answer="小|低"> 结果越显著。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">你已经掌握了序列比对的完整理论体系：从打分矩阵到动态规划，从 BLAST 到多序列比对。下一步：学习编程（Python/R）来自动化这些分析，或进入 RNA-seq 实战。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示1：手动比对
+(() => {
+  const root = document.getElementById('manualAlignDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+  const seqA = 'GATTACA';
+  let seqB = 'GATACA';  // 可能插入 gap
+
+  function score(sA, sB) {
+    let sc = 0, matches = 0;
+    for (let i = 0; i < sA.length; i++) {
+      if (i < sB.length) {
+        if (sB[i] === '-') { sc -= 2; }
+        else if (sA[i] === sB[i]) { sc += 2; matches++; }
+        else { sc -= 1; }
+      }
+    }
+    return { sc, matches };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, cv.height);
+    const charW = 50, startX = 80, y1 = 120, y2 = 190;
+    const paddedB = seqB.padEnd(seqA.length, '-');
+
+    // 序列 A
+    ctx.font = 'bold 28px monospace'; ctx.textAlign = 'center';
+    seqA.split('').forEach((c, i) => {
+      const x = startX + i * charW;
+      ctx.fillStyle = cssVar('--text');
+      ctx.fillText(c, x, y1);
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('序列 A', 10, y1);
+
+    // 序列 B（含 gap）
+    ctx.font = 'bold 28px monospace'; ctx.textAlign = 'center';
+    paddedB.split('').forEach((c, i) => {
+      const x = startX + i * charW;
+      if (c === '-') {
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText('−', x, y2);
+      } else {
+        const match = i < seqA.length && c === seqA[i];
+        ctx.fillStyle = match ? cssVar('--ok') : '#dc2626';
+        ctx.fillText(c, x, y2);
+      }
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('序列 B', 10, y2);
+
+    // 连线
+    ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1;
+    paddedB.split('').forEach((c, i) => {
+      if (c !== '-' && c === seqA[i]) {
+        const x = startX + i * charW;
+        ctx.beginPath(); ctx.moveTo(x, y1 + 8); ctx.lineTo(x, y2 - 28); ctx.stroke();
+      }
+    });
+
+    // 得分
+    const { sc, matches } = score(seqA, paddedB);
+    ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 18px sans-serif';
+    ctx.fillText(`得分: ${sc}（匹配 ${matches} × +2，空位 × -2）`, 80, 260);
+    ctx.font = '15px sans-serif';
+    ctx.fillStyle = sc >= 10 ? cssVar('--ok') : sc >= 6 ? cssVar('--warn') : '#dc2626';
+    ctx.fillText(sc >= 10 ? '✅ 很好的对齐！只有 1 个 gap' : sc >= 6 ? '⚠️ 还可以优化' : '❌ 需要调整 gap 位置', 80, 290);
+  }
+
+  document.getElementById('insertGap1').onclick = () => {
+    if (seqB.includes('-') && seqB.indexOf('-') < 3) return;
+    seqB = seqB.slice(0, 3) + '-' + seqB.slice(3);
+    draw();
+  };
+  document.getElementById('insertGap2').onclick = () => {
+    seqB = seqB.replace('-', '');
+    seqB = seqB.slice(0, 5) + '-' + seqB.slice(5);
+    draw();
+  };
+  document.getElementById('resetAlign').onclick = () => { seqB = 'GATACA'; draw(); };
+  draw();
+})();
+
+// 演示2：打分矩阵
+const BLOSUM62 = {
+  A:[4,-1,-2,-2,0,-1,-1,0,-2,-1,-1,-1,-1,-2,-1,1,0,-3,-2,0],
+  R:[-1,5,0,-2,-3,1,0,-2,0,-3,-2,2,-1,-3,-2,-1,-1,-3,-2,-3],
+  N:[-2,0,6,1,-3,0,0,0,1,-3,-3,0,-2,-3,-2,1,0,-4,-2,-3],
+  D:[-2,-2,1,6,-3,0,2,-1,-1,-3,-4,-1,-3,-3,-1,0,-1,-4,-3,-3],
+  C:[0,-3,-3,-3,9,-3,-4,-3,-3,-1,-1,-3,-1,-2,-3,-1,-1,-2,-2,-1],
+  Q:[-1,1,0,0,-3,5,2,-2,0,-3,-2,1,0,-3,-1,0,-1,-2,-1,-2],
+  E:[-1,0,0,2,-4,2,5,-2,0,-3,-3,1,-2,-3,-1,0,-1,-3,-2,-2],
+  G:[0,-2,0,-1,-3,-2,-2,6,-2,-4,-4,-2,-3,-3,-2,0,-2,-2,-3,-3],
+  H:[-2,0,1,-1,-3,0,0,-2,8,-3,-3,-1,-2,-1,-2,-1,-2,-2,2,-3],
+  I:[-1,-3,-3,-3,-1,-3,-3,-4,-3,4,2,-3,1,0,-3,-2,-1,-3,-1,3],
+  L:[-1,-2,-3,-4,-1,-2,-3,-4,-3,2,4,-2,2,0,-3,-2,-1,-2,-1,1],
+  K:[-1,2,0,-1,-3,1,1,-2,-1,-3,-2,5,-1,-3,-1,0,-1,-3,-2,-2],
+  M:[-1,-1,-2,-3,-1,0,-2,-3,-2,1,2,-1,5,0,-2,-1,-1,-1,-1,1],
+  F:[-2,-3,-3,-3,-2,-3,-3,-3,-1,0,0,-3,0,6,-4,-2,-2,1,3,-1],
+  P:[-1,-2,-2,-1,-3,-1,-1,-2,-2,-3,-3,-1,-2,-4,7,-1,-1,-4,-3,-2],
+  S:[1,-1,1,0,-1,0,0,0,-1,-2,-2,0,-1,-2,-1,4,1,-3,-2,-2],
+  T:[0,-1,0,-1,-1,-1,-1,-2,-2,-1,-1,-1,-1,-2,-1,1,5,-2,-2,0],
+  W:[-3,-3,-4,-4,-2,-2,-3,-2,-2,-3,-2,-3,-1,1,-4,-3,-2,11,2,-3],
+  Y:[-2,-2,-2,-3,-2,-1,-2,-3,2,-1,-1,-2,-1,3,-3,-2,-2,2,7,-1],
+  V:[0,-3,-3,-3,-1,-2,-2,-3,-3,3,1,-2,1,-1,-2,-2,0,-3,-1,4]
+};
+const AA_KEYS = Object.keys(BLOSUM62);
+const AA_NAMES = {A:'Ala 丙氨酸',R:'Arg 精氨酸',N:'Asn 天冬酰胺',D:'Asp 天冬氨酸',C:'Cys 半胱氨酸',Q:'Gln 谷氨酰胺',E:'Glu 谷氨酸',G:'Gly 甘氨酸',H:'His 组氨酸',I:'Ile 异亮氨酸',L:'Leu 亮氨酸',K:'Lys 赖氨酸',M:'Met 蛋氨酸',F:'Phe 苯丙氨酸',P:'Pro 脯氨酸',S:'Ser 丝氨酸',T:'Thr 苏氨酸',W:'Trp 色氨酸',Y:'Tyr 酪氨酸',V:'Val 缬氨酸'};
+const AA_GROUPS = {A:'疏水',R:'正电',N:'极性',D:'负电',C:'特殊',Q:'极性',E:'负电',G:'特殊',H:'正电',I:'疏水',L:'疏水',K:'正电',M:'疏水',F:'疏水',P:'特殊',S:'极性',T:'极性',W:'疏水',Y:'极性',V:'疏水'};
+
+demo('#matrixDemo', ({ aa1, aa2 }, ctx, cv, root) => {
+  const W = cv.width;
+  const key1 = AA_KEYS[aa1], key2 = AA_KEYS[aa2];
+  const score = BLOSUM62[key1][aa2];
+  const isMatch = key1 === key2;
+
+  // 大数字
+  ctx.font = 'bold 80px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = isMatch ? cssVar('--ok') : score >= 0 ? '#3b82f6' : '#dc2626';
+  ctx.fillText(String(score), W/2, 120);
+
+  // 标签
+  ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = cssVar('--text');
+  ctx.fillText(`${key1} ↔ ${key2}`, W/2, 170);
+  ctx.font = '15px sans-serif'; ctx.fillStyle = cssVar('--muted');
+  ctx.fillText(`${AA_NAMES[key1]}  vs  ${AA_NAMES[key2]}`, W/2, 200);
+  ctx.fillText(`化学性质：${AA_GROUPS[key1]} vs ${AA_GROUPS[key2]}`, W/2, 228);
+
+  // 解释
+  ctx.font = '16px sans-serif'; ctx.textAlign = 'left';
+  let explain;
+  if (isMatch) explain = `相同氨基酸，高度保守，得正分 ${score}`;
+  else if (score >= 3) explain = `非常容易被替换（如 Leu↔Ile），得高分 ${score}`;
+  else if (score >= 0) explain = `中性替换，常见于演化中，得分 ${score}`;
+  else if (score >= -2) explain = `不太常见的替换，轻微扣分 ${score}`;
+  else explain = `罕见替换（如带电↔疏水），严重扣分 ${score}`;
+  ctx.fillStyle = isMatch || score >= 0 ? cssVar('--ok') : '#dc2626';
+  ctx.fillText(explain, 80, 275);
+
+  // 提示
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+  ctx.fillText('BLOSUM62：正分=保守替换，负分=激进替换。相同氨基酸恒为高分（对角线）', 80, 305);
+
+  root.querySelector('.readout').textContent = isMatch ? '对角线：完全保守' : score >= 0 ? '非对角线正分：允许替换' : '负分：功能/结构不兼容';
+});
+
+// 演示3：DP 矩阵填表（简化版，逐步展示）
+(() => {
+  const root = document.getElementById('dpDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+  const seqA = 'ACGT';
+  const seqB = 'AGT';
+  const match = 2, mismatch = -1, gap = -2;
+  const m = seqA.length, n = seqB.length;
+
+  // 初始化 DP 表
+  const F = [];
+  for (let i = 0; i <= m; i++) { F.push(new Array(n + 1).fill(null)); }
+  for (let i = 0; i <= m; i++) F[i][0] = i * gap;
+  for (let j = 0; j <= n; j++) F[0][j] = j * gap;
+
+  // 填充（保存路径）
+  const traceback = [];
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const diag = F[i-1][j-1] + (seqA[i-1] === seqB[j-1] ? match : mismatch);
+      const up = F[i-1][j] + gap;
+      const left = F[i][j-1] + gap;
+      const best = Math.max(diag, up, left);
+      F[i][j] = best;
+      traceback.push({ i, j, diag, up, left, best, chosen: best === diag ? 'diag' : best === up ? 'up' : 'left' });
+    }
+  }
+
+  let step = 0; // 0=初始, 1..traceback.length=填表, 然后回溯
+  const totalSteps = traceback.length;
+
+  function drawCell(x, y, w, h, val, color) {
+    ctx.fillStyle = color || cssVar('--card');
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = cssVar('--border');
+    ctx.strokeRect(x, y, w, h);
+    if (val !== null && val !== undefined) {
+      ctx.fillStyle = cssVar('--text');
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(val), x + w/2, y + h/2 + 6);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, cv.height);
+    const cellW = 60, cellH = 45;
+    const startX = 120, startY = 80;
+
+    // 标签
+    ctx.font = 'bold 14px monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = cssVar('--text');
+    ctx.fillText('A 序列 →', startX + (m+1)*cellW/2, 30);
+    ctx.fillText('B 序列 ↓', 60, startY + (n+1)*cellH/2);
+
+    // 首行首列
+    for (let i = 0; i <= m; i++) {
+      const x = startX + (i+1)*cellW, y = startY;
+      drawCell(x, y, cellW, cellH, i === 0 ? '' : seqA[i-1], cssVar('--primary-soft'));
+    }
+    for (let j = 0; j <= n; j++) {
+      const x = startX, y = startY + (j+1)*cellH;
+      drawCell(x, y, cellW, cellH, j === 0 ? '' : seqB[j-1], cssVar('--primary-soft'));
+    }
+
+    // DP 单元格
+    for (let i = 0; i <= m; i++) {
+      for (let j = 0; j <= n; j++) {
+        const x = startX + (i+1)*cellW, y = startY + (j+1)*cellH;
+        let val = null, color;
+        if (i === 0 || j === 0) { val = F[i][j]; color = cssVar('--border'); }
+        else {
+          const idx = (i-1)*n + (j-1);
+          if (idx < step) { val = F[i][j]; color = cssVar('--card'); }
+          else if (idx === step && step < totalSteps) {
+            val = '?'; color = cssVar('--warn');
+          }
+        }
+        drawCell(x, y, cellW, cellH, val, color);
+      }
+    }
+
+    // 当前步骤说明
+    if (step < totalSteps) {
+      const t = traceback[step];
+      ctx.fillStyle = cssVar('--text'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(`步骤 ${step+1}/${totalSteps}: F[${t.i}][${t.j}] = max(对角 ${t.diag}, 上 ${t.up}, 左 ${t.left}) = ${t.best}`, 30, cv.height - 50);
+      // 高亮三个来源
+      const sx = startX + (t.i)*cellW, sy = startY + (t.j)*cellH;
+      ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+      ctx.strokeRect(sx, sy, cellW, cellH); // diag
+      ctx.strokeRect(sx + cellW, sy, cellW, cellH); // up
+      ctx.strokeRect(sx, sy + cellH, cellW, cellH); // left
+      ctx.lineWidth = 1;
+    } else {
+      // 回溯完成，显示比对
+      ctx.fillStyle = cssVar('--ok'); ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('✅ 最优比对结果:', 30, cv.height - 60);
+      ctx.font = '18px monospace';
+      ctx.fillText('A: ACGT', 30, cv.height - 32);
+      ctx.fillText('B: A-GT', 30, cv.height - 8);
+      // 高亮路径（简化为右下角）
+      ctx.strokeStyle = cssVar('--ok'); ctx.lineWidth = 3;
+      let ci = m, cj = n;
+      while (ci > 0 || cj > 0) {
+        const x = startX + (ci+1)*cellW, y = startY + (cj+1)*cellH;
+        ctx.strokeRect(x, y, cellW, cellH);
+        if (ci > 0 && cj > 0 && F[ci][cj] === F[ci-1][cj-1] + (seqA[ci-1] === seqB[cj-1] ? match : mismatch)) { ci--; cj--; }
+        else if (ci > 0 && F[ci][cj] === F[ci-1][cj] + gap) { ci--; }
+        else { cj--; }
+      }
+      ctx.lineWidth = 1;
+    }
+  }
+
+  document.getElementById('dpNext').onclick = () => {
+    if (step <= totalSteps) { step++; draw(); }
+    readout.textContent = step < totalSteps ? '观察每个格子如何由三个邻居决定' : step === totalSteps ? '矩阵填完！' : '';
+  };
+  document.getElementById('dpReset').onclick = () => { step = 0; draw(); readout.textContent = ''; };
+  draw();
+})();
+
+// 演示4：BLAST 模拟
+(() => {
+  const root = document.getElementById('blastDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+
+  const query = 'GATTACAGATTACAGATTACA';
+  const db = [
+    'CCGGATTTACAGATTACAGATTACAGG',
+    'TTGATTACAGATTACAGG',
+    'AAGCTTAGCTAGCTAGCTAGCTA'
+  ];
+  const k = 5; // word size
+  let phase = 0; // 0: idle, 1: seeds, 2: extend, 3: eval
+
+  function findSeeds() {
+    const seeds = [];
+    for (let i = 0; i <= query.length - k; i++) {
+      const word = query.slice(i, i + k);
+      db.forEach((seq, dbi) => {
+        let pos = seq.indexOf(word);
+        while (pos !== -1) {
+          seeds.push({ qi: i, di: dbi, pos });
+          pos = seq.indexOf(word, pos + 1);
+        }
+      });
+    }
+    return seeds;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, cv.height);
+    const qy = 80, dby = 180;
+
+    // 查询序列
+    ctx.font = 'bold 16px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = cssVar('--primary'); ctx.fillText('Query:', 30, qy - 20);
+    ctx.font = '14px monospace';
+    query.split('').forEach((c, i) => {
+      ctx.fillStyle = phase >= 1 && phase < 3 ? '#f59e0b' : cssVar('--text');
+      ctx.fillText(c, 100 + i * 14, qy);
+    });
+
+    // 数据库序列
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillStyle = cssVar('--text'); ctx.fillText('Database:', 30, dby - 20);
+    ctx.font = '13px monospace';
+    db.forEach((seq, di) => {
+      const y = dby + di * 35;
+      ctx.fillStyle = cssVar('--muted'); ctx.fillText(`Seq${di}:`, 30, y);
+      seq.split('').forEach((c, i) => {
+        let color = cssVar('--text');
+        if (phase >= 2) {
+          // 延伸高亮
+          const hit = findSeeds().some(s => s.di === di && i >= s.pos - 2 && i <= s.pos + k + 2);
+          if (hit) color = cssVar('--ok');
+        }
+        ctx.fillStyle = color;
+        ctx.fillText(c, 100 + i * 11, y);
+      });
+    });
+
+    // 种子框
+    if (phase === 1) {
+      findSeeds().forEach(s => {
+        const x = 100 + s.qi * 14;
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
+        ctx.strokeRect(x - 2, qy - 12, k * 14, 18);
+        const dx = 100 + s.pos * 11;
+        ctx.strokeRect(dx - 2, dby + s.di * 35 - 12, k * 11, 18);
+      });
+    }
+
+    // 评估
+    if (phase === 3) {
+      ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('Results:', 30, 310);
+      ctx.font = '14px monospace';
+      ctx.fillStyle = cssVar('--ok');
+      ctx.fillText('Seq0  E=1e-15  Score=42  ████████████████████ 显著同源', 100, 335);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('Seq1  E=0.001  Score=28  ██████  可能相关', 100, 358);
+      ctx.fillStyle = cssVar('--muted');
+      ctx.fillText('Seq2  E=0.8    Score=8   ▏ 随机命中', 100, 381);
+    }
+  }
+
+  document.getElementById('runBlast').onclick = () => {
+    phase = (phase + 1) % 4;
+    if (phase === 1) readout.textContent = '① 扫描 Query 的所有 k-mer（k=5），在数据库索引中找完全匹配';
+    if (phase === 2) readout.textContent = '② 找到 2 个种子命中，向两端延伸（允许错配），直到分数下降';
+    if (phase === 3) readout.textContent = '③ 评估显著性：Seq0 和 Seq1 是真实同源，Seq2 是噪音';
+    if (phase === 0) readout.textContent = '';
+    draw();
+  };
+  document.getElementById('resetBlast').onclick = () => { phase = 0; readout.textContent = ''; draw(); };
+  draw();
+})();
+
+// 演示5：MSA 保守性
+(() => {
+  const root = document.getElementById('msaDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+
+  const sequences = [
+    'MKTAYIAKQRQISFVKSHFSRQ',
+    'MKTAYIAKQRQISFVKSHFSRQ',
+    'MKTAYIAKQRQISFVKSHFSRQ',
+    'MKTAYIAKQRQISFVKSHFSRQ',
+    'MKTAYVAKQRQISFVKSHFSRQ',
+    'MKTAYVAKQRQISFVKSHFSRQ',
+    'MKTAYIAKQRQISFVKSHFSRQ',
+    'MRTAYIAKQRQISFVKSHFSRQ'
+  ];
+
+  function conservation(windowSize) {
+    const len = sequences[0].length;
+    const scores = [];
+    for (let i = 0; i < len; i++) {
+      const start = Math.max(0, i - Math.floor(windowSize/2));
+      const end = Math.min(len, i + Math.ceil(windowSize/2));
+      let cons = 0;
+      for (let pos = start; pos < end; pos++) {
+        const col = sequences.map(s => s[pos]);
+        const most = Math.max(...Object.values(col.reduce((a,c)=>{a[c]=(a[c]||0)+1;return a;},{})));
+        cons += most / sequences.length;
+      }
+      scores.push(cons / (end - start));
+    }
+    return scores;
+  }
+
+  function draw(win) {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    const scores = conservation(win);
+    const len = scores.length;
+    const x1 = 60, x2 = W - 40, y1 = 60, y2 = H - 60;
+
+    // 曲线
+    ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2;
+    ctx.beginPath();
+    scores.forEach((s, i) => {
+      const x = x1 + i * (x2 - x1) / (len - 1);
+      const y = y2 - s * (y2 - y1);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // 填充
+    ctx.lineTo(x2, y2); ctx.lineTo(x1, y2); ctx.closePath();
+    ctx.fillStyle = 'rgba(5,150,105,0.15)';
+    ctx.fill();
+
+    // 阈值线
+    ctx.strokeStyle = cssVar('--warn'); ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(x1, y2 - 0.8*(y2-y1)); ctx.lineTo(x2, y2 - 0.8*(y2-y1)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 轴
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('序列位置 →', (x1+x2)/2, H - 20);
+    ctx.fillText('1', x1, H - 40);
+    ctx.fillText(String(len), x2, H - 40);
+    ctx.fillText('保守度 (0-1)', 40, 30);
+    ctx.fillText('1.0', x1 - 15, y1 + 5);
+    ctx.fillText('0.8', x1 - 15, y2 - 0.8*(y2-y1) + 5);
+    ctx.fillText('0', x1 - 15, y2 + 5);
+
+    // 标注保守区
+    ctx.fillStyle = cssVar('--ok'); ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('保守区（功能重要）', x1 + 10, y1 + 20);
+    ctx.fillStyle = '#dc2626';
+    ctx.fillText('变异位点', x1 + (x2-x1)*0.55, y2 - 0.5*(y2-y1));
+
+    const avg = (scores.reduce((a,b)=>a+b,0)/len).toFixed(2);
+    readout.textContent = `窗口=${win}，平均保守度=${avg} | 保守区通常是活性位点或结构核心`;
+  }
+
+  root.querySelector('input[name=win]').addEventListener('input', e => draw(+e.target.value));
+  draw(5);
+})();
+</script>
+</body>
+</html>

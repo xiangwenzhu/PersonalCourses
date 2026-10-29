@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网学习路径 · 系列课程</title>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.7 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1}
+.topbar a{color:var(--primary);text-decoration:none;font-size:14px}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px 60px}
+.hero{margin-bottom:22px}
+.hero h2{margin:0 0 8px;font-size:26px}
+.hero p{margin:0;color:var(--muted);max-width:64ch}
+.path{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 26px}
+.step-chip{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;font-size:13px;font-weight:600;background:var(--primary-soft);color:var(--primary)}
+.step-chip .num{width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px}
+.step-chip.arrow{background:none;color:var(--muted);padding:6px 2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;gap:8px;padding:20px 22px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);text-decoration:none;color:var(--text);transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--primary)}
+.card .top{display:flex;justify-content:space-between;align-items:center}
+.card .tag{font-size:12px;padding:2px 10px;border-radius:99px;font-weight:600;color:#fff}
+.t1{background:var(--l1)}.t2{background:var(--l2)}.t3{background:var(--l3)}.t4{background:var(--l4)}
+.card .lv{font-size:12px;color:var(--muted)}
+.card h3{margin:0;font-size:18px}
+.card p{margin:0;color:var(--muted);font-size:14px;flex:1}
+.card .levels{display:flex;gap:5px;margin-top:2px}
+.card .dot{width:8px;height:8px;border-radius:50%}
+.card .more{font-size:14px;color:var(--primary);font-weight:600}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html">← 返回课程库首页</a>
+  <h1>微电网学习路径</h1>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h2>微电网 · 从入门到工程实践</h2>
+    <p>7 门课组成的学习路径：先建立直觉，再深入设备与拓扑，接着啃控制与调度两大硬骨头，最后落到保护安全与工程落地。建议按顺序学习，也可以按兴趣跳读——每门课都自带交互演示与测验。</p>
+  </section>
+
+  <div class="path">
+    <span class="step-chip"><span class="num">1</span>入门认知</span><span class="step-chip arrow">→</span>
+    <span class="step-chip"><span class="num">2</span>设备与拓扑</span><span class="step-chip arrow">→</span>
+    <span class="step-chip"><span class="num">3</span>控制策略</span><span class="step-chip arrow">→</span>
+    <span class="step-chip"><span class="num">4</span>能量管理</span><span class="step-chip arrow">→</span>
+    <span class="step-chip"><span class="num">5</span>保护安全</span><span class="step-chip arrow">→</span>
+    <span class="step-chip"><span class="num">6</span>工程实践</span>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="microgrid-basics.html">
+      <div class="top"><span class="tag t1">第 1 课 · L1 直觉</span><span class="lv">约 30 分钟</span></div>
+      <h3>微电网入门</h3>
+      <p>什么是微电网：从「可自治的小电网」定义讲起，理解并网与孤岛两种运行状态、四大构成与典型场景。配 PCC 开关切换的 Canvas 交互模拟。</p>
+      <div class="levels"><span class="dot" style="background:var(--l1)"></span></div>
+      <span class="more">开始学习 →</span>
+    </a>
+
+    <a class="card" href="microgrid-components.html">
+      <div class="top"><span class="tag t2">第 2 课 · L2 概念</span><span class="lv">约 45 分钟</span></div>
+      <h3>组成与关键设备</h3>
+      <p>分布式电源、储能、负荷分级逐一拆解；逆变器、PCS、STS 三大电力电子设备分步讲解；典型日能量流动模拟（拖时间轴看潮流方向与弃光）。</p>
+      <div class="levels"><span class="dot" style="background:var(--l1)"></span><span class="dot" style="background:var(--l2)"></span></div>
+      <span class="more">开始学习 →</span>
+    </a>
+
+    <a class="card" href="microgrid-topology.html">
+      <div class="top"><span class="tag t2">第 3 课 · L2 概念</span><span class="lv">约 40 分钟</span></div>
+      <h3>拓扑结构：交流与直流</h3>
+      <p>AC / DC / 交直流混合三种母线方案怎么选？辐射状、环形、单母线组网可靠性对比，含三拓扑单线图切换演示与 PCC 容量配置。</p>
+      <div class="levels"><span class="dot" style="background:var(--l1)"></span><span class="dot" style="background:var(--l2)"></span></div>
+      <span class="more">开始学习 →</span>
+    </a>
+
+    <a class="card" href="microgrid-control.html">
+      <div class="top"><span class="tag t3">第 4 课 · L3 机制</span><span class="lv">约 50 分钟</span></div>
+      <h3>运行模式与控制策略</h3>
+      <p>PQ 恒功率、V/f 恒压恒频、下垂控制三大策略的原理与适用场景；双逆变器下垂曲线交互演示（调 kp 看频率与出力分配）；无缝切换与预同步。</p>
+      <div class="levels"><span class="dot" style="background:var(--l1)"></span><span class="dot" style="background:var(--l2)"></span><span class="dot" style="background:var(--l3)"></span></div>
+      <span class="more">开始学习 →</span>
+    </a>
+
+    <a class="card" href="microgrid-ems.html">
+      <div class="top"><span class="tag t3">第 5 课 · L3~L4</span><span class="lv">约 50 分钟</span></div>
+      <h3>能量管理与优化调度</h3>
+      <p>EMS 三层调度框架、目标函数与约束建模、峰谷套利；园区储能收益测算交互演示（调容量/功率/价差看电费、套利与弃光）；LP/MIP 优化方法对比。</p>
+      <div class="levels"><span class="dot" style="background:var(--l1)"></span><span class="dot" style="background:var(--l2)"></span><span class="dot" style="background:var(--l3)"></span></div>
+      <span class="more">开始学习 →</span>
+    </a>
+
+    <a class="card" href="microgrid-protection.html">
+      <div class="top"><span class="tag t4">第 6 课 · L4 深入</span><span class="lv">约 45 分钟</span></div>
+      <h3>保护、孤岛检测与安全</h3>
+      <p>为什么传统配电网保护在微电网里会失效？被动/主动/混合孤岛检测方法对比，含频率偏移盲区交互演示（调不平衡度看频率演化与跳闸窗口）。</p>
+      <div class="levels"><span class="dot" style="background:var(--l1)"></span><span class="dot" style="background:var(--l2)"></span><span class="dot" style="background:var(--l3)"></span><span class="dot" style="background:var(--l4)"></span></div>
+      <span class="more">开始学习 →</span>
+    </a>
+
+    <a class="card" href="microgrid-practice.html">
+      <div class="top"><span class="tag t4">第 7 课 · L4 深入</span><span class="lv">约 45 分钟</span></div>
+      <h3>标准、经济与工程实践</h3>
+      <p>IEEE 2030.7、GB/T 33589 等标准地图；投资回报测算器（调储能/光伏/价差/造价看回收期与现金流曲线）；校园微电网案例与七步方法论。</p>
+      <div class="levels"><span class="dot" style="background:var(--l1)"></span><span class="dot" style="background:var(--l2)"></span><span class="dot" style="background:var(--l3)"></span><span class="dot" style="background:var(--l4)"></span></div>
+      <span class="more">开始学习 →</span>
+    </a>
+  </div>
+
+  <footer>
+    每门课均为独立的单文件 HTML，含分层讲解、交互演示与小测验；数学公式依赖 KaTeX CDN，离线时公式降级为普通文本。学习进度自动保存在浏览器本地。
+  </footer>
+</main>
+
+<script>
+(() => {
+  const KEY = 'courses:home-theme';
+  const body = document.body;
+  const saved = localStorage.getItem(KEY);
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) body.dataset.theme = 'dark';
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const next = body.dataset.theme === 'dark' ? 'light' : 'dark';
+    body.dataset.theme = next;
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+
+</body>
+</html>

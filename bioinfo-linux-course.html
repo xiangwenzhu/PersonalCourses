@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生信人的 Linux 命令行实战 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+pre .c{color:#9ca3af}
+pre .k{color:#f472b6}
+pre .s{color:#a5f3fc}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:120px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* 模拟终端 */
+.term{background:#0d1117;border:1px solid #30363d;border-radius:12px;padding:0;margin:16px 0;overflow:hidden;font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+.term-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#161b22;border-bottom:1px solid #30363d}
+.term-bar .dot{width:12px;height:12px;border-radius:50%}
+.term-bar .dot.r{background:#ff5f57}.term-bar .dot.y{background:#febc2e}.term-bar .dot.g{background:#28c840}
+.term-bar .title{margin-left:8px;color:#8b949e;font-size:13px}
+.term-body{padding:14px 16px;min-height:120px;font-size:14px;line-height:1.8;color:#c9d1d9}
+.term-body .prompt{color:#58a6ff}
+.term-body .cmd{color:#e6edf3;font-weight:600}
+.term-body .out{color:#8b949e}
+.term-body .hl{color:#f0883e}
+.term-body .ok-out{color:#3fb950}
+.term-body .err-out{color:#f85149}
+.term-input-row{display:flex;align-items:center;gap:8px;padding:0 16px 14px}
+.term-input-row .prompt{color:#58a6ff;font-weight:600;white-space:nowrap}
+.term-input{flex:1;background:transparent;border:none;outline:none;color:#e6edf3;font:inherit;font-weight:600;caret-color:#58a6ff}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>生信人的 Linux 命令行实战</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="为什么生信离不开命令行">
+      <h2>为什么生信离不开命令行</h2>
+      <p class="tldr">生信工具 90% 都没有图形界面；命令行不是"程序员的倔强"，而是处理百万级文件时唯一高效的方式。</p>
+
+      <p>一个 RNA-seq 项目动辄产生几十个 FASTQ 文件、几百 GB 数据。用鼠标点？不现实。用命令行，一行 <code>for</code> 循环就能把 100 个样本全部跑完，还能写成脚本永久复用。</p>
+
+      <div class="analogy">图形界面像自动挡小轿车——市区代步舒服；命令行像手动挡重卡——载重 50 吨翻山越岭。生物数据就是那个"50 吨"。</div>
+
+      <h3>本课你会学会</h3>
+      <ul>
+        <li>核心命令：文件导航、查看、搜索、统计</li>
+        <li>管道与重定向：<code>|</code> 和 <code>&gt;</code> 的威力</li>
+        <li>文本三剑客：<code>grep</code> / <code>awk</code> / <code>sed</code></li>
+        <li>实战：不打开文件就摸清一个 FASTQ 的底细</li>
+      </ul>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，了解三个核心概念</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">Shell</div><div class="back">命令解释器。你输入文字命令，它调用程序执行。常见有 bash、zsh。你的"翻译官 + 管家"。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">管道 |</div><div class="back">把前一个命令的输出，作为下一个命令的输入。像工厂流水线，每个工位（命令）只干一件事。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">通配符 *</div><div class="back"><code>*.fq.gz</code> 匹配所有以 .fq.gz 结尾的文件。批量操作的灵魂。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">为什么生物信息学几乎不在 Windows 图形界面下工作？</p>
+        <button class="opt" data-fb="生信软件多为学术开发，没人力做 GUI，命令行是事实标准。">生信软件大多没有图形界面</button>
+        <button class="opt" data-fb="这是结果不是原因：先有工具链全是命令行的现状，后有选择 Linux。">Linux 系统比 Windows 更稳定</button>
+        <button class="opt" data-fb="正确。生信数据量大、工具链为 Linux 开发、需脚本批处理，三点决定了命令行是唯一选择。">以上都是</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">别怕黑窗口：命令行就是"用文字给电脑下指令"，每条指令都直白可读。接下来直接动手。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="核心命令：导航与查看">
+      <h2>核心命令：导航与查看</h2>
+      <p class="tldr"><code>pwd</code> 看你在哪，<code>ls</code> 看有啥，<code>cd</code> 去别处，<code>cat/head/tail</code> 看内容——四组命令走遍天下。</p>
+
+      <table>
+        <tr><th>命令</th><th>作用</th><th>生信场景</th></tr>
+        <tr><td><code>pwd</code></td><td>显示当前目录</td><td>确认自己在项目哪个子目录</td></tr>
+        <tr><td><code>ls -lh</code></td><td>列出文件（人读大小）</td><td>看 FASTQ 文件多大</td></tr>
+        <tr><td><code>cd /data</code></td><td>切换目录</td><td>进参考基因组目录</td></tr>
+        <tr><td><code>head -n 100 x.fq</code></td><td>看前 100 行</td><td>瞟一眼 FASTQ 质量行</td></tr>
+        <tr><td><code>tail -f log.txt</code></td><td>实时跟踪文件末尾</td><td>盯比对程序 BWA 的日志</td></tr>
+        <tr><td><code>less big.sam</code></td><td>分页查看大文件</td><td>浏览比对结果</td></tr>
+        <tr><td><code>du -sh *</code></td><td>看目录占用空间</td><td>找哪个样本占了 500G</td></tr>
+        <tr><td><code>df -h</code></td><td>看磁盘剩余</td><td>跑流程前确认空间够不够</td></tr>
+      </table>
+
+      <!-- 互动：模拟终端 -->
+      <div class="widget">
+        <div class="widget-title">动手练：在下面模拟终端里输入命令（支持 help）</div>
+        <div class="term" id="term1">
+          <div class="term-bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">student@bioinfo-server: ~/project</span>
+          </div>
+          <div class="term-body" id="termBody1">
+            <div class="out">✦ 模拟终端已就绪。输入 <span class="hl">help</span> 查看支持的命令。</div>
+          </div>
+          <div class="term-input-row">
+            <span class="prompt">$</span>
+            <input class="term-input" id="termInput1" placeholder="在这里输入命令，回车执行…" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+      </div>
+
+      <div class="warn">新手第一大坑：在错误目录执行 <code>rm -rf</code>。养成习惯：先 <code>pwd</code> 确认位置，再动 destructive 命令。没有回收站，删了就是删了。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你想实时查看正在运行的比对程序日志 <code>align.log</code>，应该用哪条命令？</p>
+        <button class="opt" data-fb="cat 一次性输出全部，文件还在增长就看不全。">cat align.log</button>
+        <button class="opt" data-fb="正确。tail -f 会持续显示新追加的内容。">tail -f align.log</button>
+        <button class="opt" data-fb="less 是分页器，虽然能按 F 跟随，但最直接的是 tail -f。">less align.log</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">这一章的命令覆盖日常 80% 场景。下一章升级：用管道把命令串成流水线。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="管道与重定向：命令的乐高">
+      <h2>管道与重定向：命令的乐高</h2>
+      <p class="tldr"><code>|</code> 把命令首尾相接，<code>&gt;</code> 把结果写进文件——掌握这两个符号，你就有了无限组合的能力。</p>
+
+      <p>核心思想：<strong>每个命令只做一件事，管道负责组合</strong>。</p>
+
+      <div class="widget steps">
+        <div class="widget-title">示例拆解：从 100 万行日志中找出失败任务</div>
+        <div class="step"><code>cat pipeline.log</code> —— 输出全部内容</div>
+        <div class="step"><code>grep "ERROR"</code> —— 只留含 ERROR 的行</div>
+        <div class="step"><code>awk '{print $5}'</code> —— 只取第 5 列（样本名）</div>
+        <div class="step"><code>sort | uniq -c</code> —— 排序并统计每个样本失败次数</div>
+        <div class="step">串起来：<code>cat pipeline.log | grep "ERROR" | awk '{print $5}' | sort | uniq -c</code></div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="analogy">管道像接力赛：前一棒（命令）的输出交给下一棒。每棒只跑自己那一段，最后冲线的是组合结果。</div>
+
+      <div class="key"><code>&gt;</code> 是"写入文件"（覆盖），<code>&gt;&gt;</code> 是"追加"，<code>2&gt;</code> 是重定向错误。<code>cmd &gt; out.txt 2&gt;&amp;1</code> 把正常和错误输出都存下来——跑流程必用。</div>
+
+      <!-- 互动：管道构建器 -->
+      <div class="widget demo" id="pipeDemo">
+        <div class="widget-title">管道构建器：勾选步骤，实时看数据如何被一步步处理</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="flex-direction:column;gap:8px">
+          <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" name="c1" checked> ① grep "ERROR"（只留错误行）</label>
+          <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" name="c2" checked> ② awk '{print $2}'（取样本名列）</label>
+          <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" name="c3"> ③ sort（排序）</label>
+          <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" name="c4"> ④ uniq -c（统计次数）</label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q"><code>command &gt;&gt; result.txt</code> 中的 <code>&gt;&gt;</code> 是什么意思？</p>
+        <button class="opt" data-fb="正确。追加到文件末尾，不覆盖已有内容。">追加写入</button>
+        <button class="opt" data-fb="单个 > 才是覆盖写入。">覆盖写入</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">管道的威力在于"分解问题"：复杂任务拆成简单步骤，每步一个命令。这是 Unix 哲学，也是生信思维。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="文本三剑客：grep、awk、sed">
+      <h2>文本三剑客：grep、awk、sed</h2>
+      <p class="tldr">grep 找行、awk 取列并计算、sed 改内容——三剑合璧，可在不打开文件的情况下完成 90% 的文本处理。</p>
+
+      <h3>各自分工</h3>
+      <table>
+        <tr><th>工具</th><th>特长</th><th>生信典型用法</th></tr>
+        <tr><td><code>grep</code></td><td>按模式匹配行</td><td>从 GFF 文件提取某基因的所有注释行</td></tr>
+        <tr><td><code>awk</code></td><td>按列处理 + 算术</td><td>算 BED 文件每条区间长度（$3-$2）</td></tr>
+        <tr><td><code>sed</code></td><td>流式编辑替换</td><td>把 FASTA 头行统一改名</td></tr>
+      </table>
+
+      <pre><span class="c"># 例1：提取 1 号染色体上的基因</span>
+<span class="k">grep</span> <span class="s">"^chr1"</span> genes.gff
+
+<span class="c"># 例2：算每个区间的长度并输出</span>
+<span class="k">awk</span> <span class="s">'{print $1, $3-$2}'</span> regions.bed
+
+<span class="c"># 例3：把样本名从 old 批量改成 new</span>
+<span class="k">sed</span> <span class="s">'s/old_sample/new_sample/g'</span> file.txt</pre>
+
+      <div class="analogy">处理一个表格：grep 是"筛选行"，awk 是"选列 + 算数"，sed 是"查找替换"。Excel 能做的它们都能做，且快 1000 倍。</div>
+
+      <div class="key">awk 默认按空白分列：$1 是第一列，$0 是整行，NR 是行号。记住这三个，就能完成大半工作。</div>
+
+      <!-- 互动：三剑客挑战 -->
+      <div class="widget">
+        <div class="widget-title">动手练：在模拟终端里完成任务（输入 help 查看命令）</div>
+        <div class="term" id="term2">
+          <div class="term-bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">student@bioinfo-server: ~/project</span>
+          </div>
+          <div class="term-body" id="termBody2">
+            <div class="out">📋 任务清单：</div>
+            <div class="out" id="task1">☐ 任务1：查看当前目录下的 FASTQ 文件（ls）</div>
+            <div class="out" id="task2">☐ 任务2：统计 sample1.fq 有多少行（wc -l）</div>
+            <div class="out" id="task3">☐ 任务3：找出含 "AGCT" 的序列行（grep）</div>
+            <div class="out">—— 完成全部任务解锁下一章 ——</div>
+          </div>
+          <div class="term-input-row">
+            <span class="prompt">$</span>
+            <input class="term-input" id="termInput2" placeholder="输入命令完成任务…" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你想计算 BED 文件每行的区间长度（第 2、3 列分别是 start、end），用哪个命令最简洁？</p>
+        <button class="opt" data-fb="grep 只能筛选行，不能算数。">grep 'length' file.bed</button>
+        <button class="opt" data-fb="正确。awk 擅长按列取数和算术。">awk '{print $3-$2}' file.bed</button>
+        <button class="opt" data-fb="sed 是做替换的，不做计算。">sed 's/$3-$2/g' file.bed</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">grep/awk/sed 是生信日常三件套，建议把常用命令存进备忘录，随用随查，用熟为止。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="实战：FASTQ 文件体检不求人">
+      <h2>实战：FASTQ 文件体检不求人</h2>
+      <p class="tldr">拿到一个陌生 FASTQ，用命令行 60 秒内摸清：多少条 reads、多长、质量行什么水平、有没有接头污染。</p>
+
+      <h3>FASTQ 格式回顾</h3>
+      <p>每 4 行 = 1 条 read：</p>
+      <pre><span class="hl">@SEQ_ID</span>          <span class="c"># 第1行：序列标识</span>
+<span class="hl">GATTTGGGGTTCAA...</span>  <span class="c"># 第2行：碱基序列</span>
+<span class="hl">+</span>               <span class="c"># 第3行：分隔符（可重复ID）</span>
+<span class="hl">!''*((((***+))</span>   <span class="c"># 第4行：质量值（ASCII 编码）</span></pre>
+
+      <h3>实战命令清单</h3>
+      <div class="widget steps">
+        <div class="widget-title">一步步体检一个 FASTQ 文件</div>
+        <div class="step"><strong>① 多少条 reads？</strong><br><code>wc -l sample.fq</code> → 行数 ÷ 4 = reads 数</div>
+        <div class="step"><strong>② reads 多长？</strong><br><code>head -n 2 sample.fq | tail -n 1 | wc -c</code> → 第一条序列字符数</div>
+        <div class="step"><strong>③ 质量行 ASCII 范围？</strong><br><code>sed -n '4~4p' sample.fq | head -1000 | fold -w1 | sort -u</code> → 出现哪些质量字符</div>
+        <div class="step"><strong>④ 有没有接头污染？</strong><br><code>grep -c "AGATCGGAAGAGC" sample.fq</code> → 出现次数</div>
+        <div class="step"><strong>⑤ 序列复杂度？</strong><br><code>awk 'NR%4==2' sample.fq | sort -u | wc -l</code> → 有多少种唯一序列</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="analogy">这套组合拳像体检：量身高体重（reads 数）、看血常规（质量分布）、查传染病（接头污染）。不打开文件，60 秒出报告。</div>
+
+      <!-- 互动：FASTQ 体检器 -->
+      <div class="widget demo" id="fastqDemo">
+        <div class="widget-title">一键体检：点按钮，模拟对整个 FASTQ 跑完整套命令</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls" style="align-items:center">
+          <button class="btn primary" id="runQc">🔬 开始体检</button>
+          <button class="btn" id="resetQc">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">真实场景中这些步骤由 FastQC / fastp 自动完成。但理解底层命令能让你看懂报告、排查问题，而不是只会点"运行"。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">一个 FASTQ 文件有 12,000,000 行，大约有多少条 reads？</p>
+        <button class="opt" data-fb="FASTQ 是 4 行一条，不是 3 行。">12,000,000</button>
+        <button class="opt" data-fb="6,000,000 对应的是 3 行一条的旧格式。">6,000,000</button>
+        <button class="opt" data-fb="正确。每 4 行 = 1 条 read，1200万 ÷ 4 = 300万。">3,000,000</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>实时跟踪日志文件的命令是 <input data-answer="tail -f">；管道符号是 <input data-answer="|">；awk 中代表整行的是 <input data-answer="$0">。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">你已经具备在 Linux 下处理生信数据的"手上功夫"。下一步：学习 Conda 环境管理，或进入序列比对的世界。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 模拟终端：通用构造函数
+function makeTerminal(inputId, bodyId, fs, handler) {
+  const input = document.getElementById(inputId);
+  const body = document.getElementById(bodyId);
+  if (!input || !body) return;
+  const cwdStack = ['~', 'project'];
+  const cwd = () => cwdStack.join('/');
+
+  function print(html) {
+    body.insertAdjacentHTML('beforeend', `<div>${html}</div>`);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  input.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const cmd = input.value.trim();
+    input.value = '';
+    if (!cmd) return;
+    print(`<span class="prompt">$</span> <span class="cmd">${cmd.replace(/</g,'&lt;')}</span>`);
+    handler(cmd, { print, cwd: cwd, fs });
+  });
+
+  // 点终端聚焦输入
+  input.closest('.term').addEventListener('click', () => input.focus());
+}
+
+// 文件系统模拟：目录树
+const FS = {
+  type: 'dir', children: {
+    'project': { type:'dir', children: {
+      'data': { type:'dir', children: {
+        'sample1.fq': { type:'file', lines: 400 },
+        'sample2.fq': { type:'file', lines: 400 },
+        'sample3.fq': { type:'file', lines: 400 }
+      }},
+      'refs': { type:'dir', children: {
+        'hg38.fa': { type:'file', lines: 62000000 },
+        'genes.gff': { type:'file', lines: 2500000 }
+      }},
+      'results': { type:'dir', children: {} }
+    }}
+  }
+};
+
+// 简易 ls 支持
+function listDir(pathArr) {
+  let node = FS;
+  for (const p of pathArr) {
+    if (p === '~' || p === '') continue;
+    node = node.children?.[p];
+    if (!node) return null;
+  }
+  return node;
+}
+
+// 终端1：基础命令
+makeTerminal('termInput1', 'termBody1', FS, (cmd, t) => {
+  const parts = cmd.split(/\s+/);
+  const c = parts[0];
+
+  if (c === 'help') {
+    t.print(`<div class="out">支持命令：
+  <span class="hl">pwd</span>          显示当前目录
+  <span class="hl">ls [-l]</span>       列出文件
+  <span class="hl">cd &lt;目录&gt;</span>    切换目录（试试 cd data）
+  <span class="hl">head &lt;文件&gt;</span>   看前几行
+  <span class="hl">wc -l &lt;文件&gt;</span>  统计行数
+  <span class="hl">clear</span>         清屏</div>`);
+    return;
+  }
+  if (c === 'clear') { document.getElementById('termBody1').innerHTML = ''; return; }
+  if (c === 'pwd') { t.print(`<span class="out">${t.cwd()}</span>`); return; }
+
+  if (c === 'ls') {
+    const long = parts.includes('-l') || parts.includes('-lh');
+    const pathArg = parts.find(p => !p.startsWith('-') && p !== 'ls');
+    let node;
+    if (pathArg) {
+      const pathArr = pathArg.split('/').filter(Boolean);
+      node = listDir(pathArr);
+    } else {
+      node = listDir(t.cwd().split('/'));
+    }
+    if (!node) { t.print(`<span class="err-out">ls: 无法访问 '${pathArg}': 没有那个文件或目录</span>`); return; }
+    if (node.type === 'file') { t.print(`<span class="out">${pathArg}</span>`); return; }
+    const entries = Object.entries(node.children || {});
+    if (!entries.length) { t.print(`<span class="out">（空目录）</span>`); return; }
+    entries.forEach(([name, n]) => {
+      if (long) {
+        const size = n.type === 'dir' ? '-' : (n.lines * 60 / 1024 / 1024).toFixed(1) + 'M';
+        t.print(`<span class="out">${n.type === 'dir' ? 'drwxr-xr-x' : '-rw-r--r--'} student student ${size.padStart(8)} ${name}${n.type === 'dir' ? '/' : ''}</span>`);
+      } else {
+        t.print(`<span class="out">${name}${n.type === 'dir' ? '/' : ''}</span>`);
+      }
+    });
+    return;
+  }
+
+  if (c === 'cd') {
+    const dest = parts[1];
+    if (!dest || dest === '~') { t.print(`<span class="out">（回到主目录）</span>`); return; }
+    let node;
+    if (dest === '..') {
+      t.print(`<span class="out">（已返回上级目录）</span>`); return;
+    }
+    const pathArr = dest.split('/').filter(Boolean);
+    node = listDir(pathArr);
+    if (!node || node.type !== 'dir') { t.print(`<span class="err-out">bash: cd: ${dest}: 没有那个文件或目录</span>`); return; }
+    t.print(`<span class="out">✅ 已进入 ${dest}</span>`);
+    return;
+  }
+
+  if (c === 'head') {
+    const fname = parts[1];
+    if (!fname) { t.print(`<span class="err-out">head: 缺少操作数</span>`); return; }
+    if (fname.includes('.fq')) {
+      t.print(`<span class="out">@SEQ001
+GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
++
+!''*((((***+))%%%++)(%%%%).1***-+*''))**55CCF>>>>>>CCCCCCC65</span>`);
+    } else if (fname.includes('.gff')) {
+      t.print(`<span class="out">chr1  .  gene  11874  14409  .  +  .  ID=gene1;Name=DDX11L1
+chr1  .  mRNA  11874  14409  .  +  .  ID=tx1;Parent=gene1
+chr1  .  exon  11874  12227  .  +  .  Parent=tx1</span>`);
+    } else {
+      t.print(`<span class="out">（${fname} 的前几行……）</span>`);
+    }
+    return;
+  }
+
+  if (c === 'wc') {
+    const fname = parts[parts.length - 1];
+    const node = listDir(['project', 'data', fname]) || listDir(['project', 'refs', fname]);
+    if (node && node.lines) {
+      t.print(`<span class="ok-out">${node.lines} ${fname}</span>`);
+      if (fname.includes('.fq')) t.print(`<span class="out">→ ${node.lines} ÷ 4 = <span class="hl">${node.lines/4} 条 reads</span></span>`);
+    } else {
+      t.print(`<span class="err-out">wc: ${fname}: 没有那个文件或目录</span>`);
+    }
+    return;
+  }
+
+  t.print(`<span class="err-out">bash: ${c}: command not found（输入 help 查看支持的命令）</span>`);
+});
+
+// 终端2：任务挑战
+let tasksDone = { t1: false, t2: false, t3: false };
+makeTerminal('termInput2', 'termBody2', FS, (cmd, t) => {
+  const parts = cmd.split(/\s+/);
+  const c = parts[0];
+
+  if (c === 'help') {
+    t.print(`<div class="out">支持命令：<span class="hl">ls</span>、<span class="hl">wc -l</span>、<span class="hl">grep</span>、<span class="hl">head</span>、<span class="hl">cd</span>、<span class="hl">clear</span></div>`);
+    return;
+  }
+  if (c === 'clear') { document.getElementById('termBody2').innerHTML = document.getElementById('termBody2').innerHTML.split('——')[0]; return; }
+
+  if (c === 'ls' && !tasksDone.t1) {
+    tasksDone.t1 = true;
+    document.getElementById('task1').textContent = '✅ 任务1：查看当前目录下的 FASTQ 文件（ls）';
+    t.print(`<span class="ok-out">sample1.fq  sample2.fq  sample3.fq</span>`);
+    t.print(`<span class="out">🎉 任务1完成！继续下一个。</span>`);
+    return;
+  }
+
+  if (c === 'wc' && parts.includes('-l') && parts[parts.length-1].includes('sample1')) {
+    tasksDone.t2 = true;
+    document.getElementById('task2').textContent = '✅ 任务2：统计 sample1.fq 有多少行（wc -l）';
+    t.print(`<span class="ok-out">400 sample1.fq → 100 条 reads</span>`);
+    t.print(`<span class="out">🎉 任务2完成！最后一个：找含 "AGCT" 的序列。</span>`);
+    return;
+  }
+
+  if (c === 'grep' && cmd.includes('AGCT')) {
+    tasksDone.t3 = true;
+    document.getElementById('task3').textContent = '✅ 任务3：找出含 "AGCT" 的序列行（grep）';
+    t.print(`<span class="ok-out">GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT</span>`);
+    t.print(`<span class="out">🎉 全部任务完成！你已经会用基础命令体检文件了。</span>`);
+    return;
+  }
+
+  // fallback 复用终端1 的部分逻辑
+  if (c === 'ls') { t.print(`<span class="out">sample1.fq  sample2.fq  sample3.fq</span>`); return; }
+  t.print(`<span class="err-out">再试试？输入 help 查看可用命令。</span>`);
+});
+
+// 演示：管道构建器
+demo('#pipeDemo', ({ c1, c2, c3, c4 }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const raw = [
+    'INFO 10:23 sampleA alignment ok',
+    'ERROR 10:24 sampleB mapping failed',
+    'INFO 10:25 sampleA dedup ok',
+    'ERROR 10:26 sampleA low coverage',
+    'INFO 10:27 sampleC alignment ok',
+    'ERROR 10:28 sampleB qc failed',
+    'INFO 10:29 sampleB sort ok',
+    'ERROR 10:30 sampleA duplicate rate high',
+    'INFO 10:31 sampleC quant ok'
+  ];
+
+  // 管线可视化
+  const steps = [
+    { name: 'pipeline.log', on: true, data: raw },
+    { name: 'grep "ERROR"', on: c1, data: c1 ? raw.filter(l => l.includes('ERROR')) : raw },
+    { name: "awk '{print $2}'", on: c2, data: null },
+    { name: 'sort', on: c3, data: null },
+    { name: 'uniq -c', on: c4, data: null }
+  ];
+  // 计算每步输出
+  let cur = raw;
+  const outputs = [cur];
+  if (c1) cur = cur.filter(l => l.includes('ERROR')); outputs.push(cur);
+  if (c2) cur = cur.map(l => l.split(/\s+/)[2]); outputs.push(cur);
+  if (c3) cur = [...cur].sort(); outputs.push(cur);
+  if (c4) { const counts = {}; cur.forEach(x => counts[x] = (counts[x]||0)+1); cur = Object.entries(counts).map(([k,v]) => `${v} ${k}`); } outputs.push(cur);
+
+  // 画布布局：左侧步骤，右侧数据
+  ctx.font = '14px sans-serif';
+  const stepY = 50, stepGap = 60;
+  outputs.forEach((data, idx) => {
+    const y = stepY + idx * stepGap;
+    const isLast = idx === outputs.length - 1;
+    ctx.fillStyle = isLast ? cssVar('--primary') : cssVar('--muted');
+    ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(steps[idx]?.name || '', 20, y);
+    // 箭头
+    if (idx < outputs.length - 1) {
+      ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(30, y + 8); ctx.lineTo(30, y + stepGap - 8); ctx.stroke();
+    }
+    // 数据样本
+    ctx.font = '13px monospace';
+    data.slice(0, 5).forEach((line, i) => {
+      ctx.fillStyle = cssVar('--text');
+      ctx.fillText(String(line), 200, y + i * 16);
+    });
+    if (data.length > 5) {
+      ctx.fillStyle = cssVar('--muted');
+      ctx.fillText(`… 共 ${data.length} 行`, 200, y + 5 * 16);
+    }
+  });
+
+  const finalN = outputs[outputs.length-1].length;
+  root.querySelector('.readout').textContent =
+    `最终输出 ${finalN} 行 | ${c4 ? '✅ 得到了每个样本的失败次数统计' : c3 ? '已排序，再加一步 uniq -c 就能统计' : c2 ? '已提取样本列' : c1 ? '已过滤错误行' : '原始日志（未处理）'}`;
+});
+
+// 演示：FASTQ 体检
+(() => {
+  const root = document.getElementById('fastqDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width, H = cv.height;
+  let stage = 0; // 0: idle, 1..5: steps
+
+  // 生成模拟数据
+  const nReads = 100;
+  const reads = [];
+  for (let i = 0; i < nReads; i++) {
+    const len = 70 + Math.floor(Math.random() * 20);
+    let seq = '';
+    for (let j = 0; j < len; j++) seq += 'ATCG'[Math.floor(Math.random()*4)];
+    const qual = '!I'.split('');
+    reads.push({ id: '@SEQ' + String(i).padStart(3,'0'), seq, qual: 'I'.repeat(len) });
+  }
+  // 注入一条接头污染
+  reads[10].seq = 'GATCGGAAGAGCACACGTCTGAACTCCAGTCAC' + reads[10].seq.slice(0, 40);
+
+  const steps = [
+    { name: '① wc -l sample.fq', desc: '统计行数 → 400 行 ÷ 4 = 100 条 reads' },
+    { name: '② head 看长度', desc: '首条序列 74 bp → 读长正常' },
+    { name: '③ 质量字符分析', desc: '质量行以 I（Q40+）为主，前 5 位稍低' },
+    { name: '④ grep 接头', desc: '⚠️ 发现 1 条 reads 含 Illumina 接头序列！' },
+    { name: '⑤ 唯一序列统计', desc: '100 条 reads 全部唯一，无 PCR 重复' }
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // 顶部步骤条
+    steps.forEach((s, i) => {
+      const x = 40 + i * 145, y = 40;
+      ctx.fillStyle = i < stage ? cssVar('--ok') : i === stage && stage > 0 ? cssVar('--primary') : cssVar('--border');
+      ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(String(i+1), x, y+4);
+      ctx.fillStyle = cssVar('--text'); ctx.font = '12px sans-serif';
+      ctx.fillText(s.name.slice(0, 12), x, y + 34);
+    });
+
+    // 主体内容
+    ctx.textAlign = 'left';
+    if (stage === 0) {
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '16px sans-serif';
+      ctx.fillText('点击「开始体检」，模拟跑完整套 FASTQ 体检命令', 40, 130);
+    } else if (stage === 1) {
+      ctx.fillStyle = cssVar('--text'); ctx.font = '15px monospace';
+      ctx.fillText('$ wc -l sample.fq', 40, 130);
+      ctx.fillStyle = cssVar('--ok');
+      ctx.fillText('400 sample.fq', 40, 155);
+      ctx.fillStyle = cssVar('--text');
+      ctx.fillText('→ 400 ÷ 4 = 100 条 reads', 40, 185);
+      drawMiniBars(ctx, reads.length, 40, 230, W - 80);
+    } else if (stage === 2) {
+      ctx.fillStyle = cssVar('--text'); ctx.font = '15px monospace';
+      ctx.fillText('$ head -n 2 sample.fq | tail -n 1 | wc -c', 40, 130);
+      ctx.fillText('74', 40, 155);
+      ctx.fillStyle = cssVar('--ok');
+      ctx.fillText('→ 读长 74 bp（符合预期 75bp 双端测序）', 40, 185);
+      // reads 长度分布
+      const lens = reads.map(r => r.seq.length);
+      const min = Math.min(...lens), max = Math.max(...lens);
+      drawMiniBars(ctx, lens.filter(l => l === max).length, 40, 230, W - 80, `${min}-${max}bp`);
+    } else if (stage === 3) {
+      ctx.fillStyle = cssVar('--text'); ctx.font = '15px monospace';
+      ctx.fillText('$ sed -n "4~4p" sample.fq | fold -w1 | sort -u', 40, 130);
+      ctx.fillStyle = cssVar('--ok');
+      ctx.fillText('!"#I  （主要质量字符）', 40, 155);
+      ctx.fillStyle = cssVar('--text');
+      ctx.fillText('→ I = Q40，质量很好；!" 出现在 read 开头（正常）', 40, 185);
+      drawQualCurve(ctx, 40, 220, W - 80);
+    } else if (stage === 4) {
+      ctx.fillStyle = cssVar('--text'); ctx.font = '15px monospace';
+      ctx.fillText('$ grep -c "AGATCGGAAGAGC" sample.fq', 40, 130);
+      ctx.fillStyle = cssVar('--warn') || '#f59e0b';
+      ctx.fillText('1', 40, 155);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('⚠️ 发现 1 条 reads 含接头污染 → 需要 fastp 去接头', 40, 185);
+      // 高亮污染 reads
+      ctx.fillStyle = cssVar('--text'); ctx.font = '13px monospace';
+      ctx.fillText(reads[10].id, 40, 230);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('GATCGGAAGAGCACACGTCTGAACTCCAGTCAC...', 130, 230);
+    } else if (stage === 5) {
+      ctx.fillStyle = cssVar('--text'); ctx.font = '15px monospace';
+      ctx.fillText('$ awk "NR%4==2" sample.fq | sort -u | wc -l', 40, 130);
+      ctx.fillStyle = cssVar('--ok');
+      ctx.fillText('100', 40, 155);
+      ctx.fillStyle = cssVar('--text');
+      ctx.fillText('→ 100 条 reads 全部唯一，无 PCR 重复，文库复杂度好 ✅', 40, 185);
+      ctx.fillStyle = cssVar('--ok'); ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('🎉 体检完成：数据质量合格，可进入下游分析', 40, 240);
+    }
+
+    if (stage > 0 && stage <= 5) {
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif';
+      ctx.fillText(steps[stage-1].desc, 40, H - 20);
+    }
+  }
+
+  function drawMiniBars(ctx, n, x, y, w, label) {
+    ctx.fillStyle = cssVar('--border');
+    ctx.fillRect(x, y, w, 60);
+    ctx.fillStyle = cssVar('--primary');
+    ctx.fillRect(x, y, w * Math.min(1, n / 100), 60);
+    ctx.fillStyle = cssVar('--text'); ctx.font = '14px sans-serif';
+    ctx.fillText(label || `${n} 条 reads`, x, y + 80);
+  }
+
+  function drawQualCurve(ctx, x, y, w) {
+    ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= w; i += 4) {
+      const q = 38 - 15 * Math.exp(-i / 60) + (Math.random() - 0.5) * 2;
+      const py = y + 60 - (q / 45) * 60;
+      i === 0 ? ctx.moveTo(x + i, py) : ctx.lineTo(x + i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+    ctx.fillText('质量值沿 read 位置分布（5\'→3\'）', x, y + 85);
+  }
+
+  document.getElementById('runQc').onclick = () => {
+    if (stage >= 5) { stage = 1; } else { stage++; }
+    draw();
+    readout.textContent = stage === 5 ? '全部体检项完成！数据质量合格。' : `正在执行第 ${stage} 步…`;
+  };
+  document.getElementById('resetQc').onclick = () => { stage = 0; draw(); readout.textContent = ''; };
+  draw();
+})();
+</script>
+</body>
+</html>

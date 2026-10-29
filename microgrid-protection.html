@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网保护与安全 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>微电网保护与安全</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章 ========== -->
+    <section class="chapter" data-level="3" data-title="传统配电网的保护逻辑为何失效">
+      <h2>传统配电网的保护逻辑为何失效</h2>
+      <p class="tldr">传统继电保护的两大前提——功率单向流动、短路电流足够大——在微电网接入后都被打破，这是微电网保护设计的核心矛盾。</p>
+
+      <p>传统配电网是<mark>放射状</mark>结构：电能从主网变压器流向各馈线和负荷。保护装置（熔断器、过流继电器）长期基于两个隐含假设设计：</p>
+      <ul>
+        <li><b>假设一：潮流单向。</b>故障电流只可能从主网一侧流向故障点，因此三段式电流保护的整定配合（上下级时间差 0.3~0.5 s，典型值）可以靠选择性切除故障。</li>
+        <li><b>假设二：短路电流大。</b>主网变压器容量大、阻抗小，馈线末端短路时仍能提供 5~10 倍额定电流的短路电流（典型值），足以让熔断器和过流继电器可靠动作。</li>
+      </ul>
+      <p>微电网（由分布式电源、储能、负荷组成的可控小型电网）接入后，情况完全改变：</p>
+      <ul>
+        <li><b>潮流双向。</b>光伏出力大于本地负荷时功率倒送，保护安装处的电流方向可能反向，方向元件缺失的传统保护可能误动或拒动。</li>
+        <li><b>短路电流骤降。</b>微电网的主力电源是<mark>并网逆变器</mark>，其电力电子器件过载能力有限，故障时仅输出 1.2~2 倍额定电流（典型值），且毫秒级内就会被限流控制"封死"。这与同步发电机 5~10 倍的短路电流相比小了数倍，<b>低于熔断器和过流继电器的动作门槛</b>，导致拒动。</li>
+        <li><b>孤岛时更糟。</b>主网断开后，微电网若继续带负荷运行（孤岛运行），此时系统内只剩逆变器电源，短路电流进一步降低，传统过流保护几乎彻底失效。</li>
+      </ul>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，回顾失效的三个环节</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">假设① 功率单向</div><div class="back">微电网接入后潮流双向、甚至倒送，方向选择性被破坏，上下级配合失效。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">假设② 短路电流大</div><div class="back">逆变器限流仅 1.2~2 倍额定电流（典型值），达不到过流继电器与熔断器的动作值。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">后果</div><div class="back">拒动（故障切不掉）或误动（正常倒送被当成故障），保护的选择性和速动性同时受损。</div></div></div>
+        </div>
+      </div>
+
+      <div class="warn">这是微电网保护设计的核心矛盾：保护原理没有变，但<b>电源特性变了</b>——从"大容量旋转电机"变成了"被限流的电力电子接口"。整章后续内容都在回应这一矛盾。</div>
+      <div class="tip">记住两条被推翻的假设：潮流单向 → 双向；短路电流大（5~10 倍）→ 小（1.2~2 倍，典型值）。孤岛运行是矛盾最尖锐的场景。</div>
+    </section>
+
+    <!-- ========== 第 2 章 ========== -->
+    <section class="chapter" data-level="3" data-title="孤岛效应与危害">
+      <h2>孤岛效应与危害</h2>
+      <p class="tldr">孤岛是微电网与主网断开后仍继续供电的运行状态；计划孤岛可控、无害，非计划孤岛则同时威胁设备、人员与主网。</p>
+
+      <p><mark>孤岛（Islanding）</mark>指主网因故障或检修断开，而微电网仍带着本地负荷继续运行的状态。它分两类：</p>
+      <table>
+        <tr><th></th><th>计划孤岛（Intentional）</th><th>非计划孤岛（Unintentional）</th></tr>
+        <tr><td>成因</td><td>按预定控制策略主动、可控地切换到孤岛模式（如计划检修前的"无缝切换"）</td><td>主网侧故障导致断路器跳开，微电网"被动地"被遗留在带电状态</td></tr>
+        <tr><td>可控性</td><td>切换前已调整出力、储能接管电压频率支撑</td><td>无人知晓、无人调度，状态完全失控</td></tr>
+        <tr><td>风险</td><td>低，是微电网的价值场景之一</td><td>高，必须在 2 s 内检测并切除（典型并网标准，如 IEEE 1547 的要求）</td></tr>
+      </table>
+
+      <h3>非计划孤岛为什么危险？</h3>
+      <ul>
+        <li><b>电压频率失控。</b>逆变器原本"跟随"主网，主网消失后若控制没来得及切换，有功/无功不平衡会使电压和频率漂出允许范围，损坏用电设备。</li>
+        <li><b>检修人员触电风险。</b>线路已停电检修，但微电网仍在向这段线路反送电——"停电的线其实是带电的"，这是最致命的安全隐患。</li>
+        <li><b>重合闸冲击。</b>主网故障清除后自动重合闸动作，若两侧电压相位差很大，重合瞬间会产生巨大的冲击电流和转矩，损坏发电机与逆变器。</li>
+      </ul>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">为什么非计划孤岛对检修作业特别危险？</p>
+        <button class="opt" data-fb="逆变器确实会限流，但触电风险的主因不是电流大小，而是线路"应该停电却实际带电"。">逆变器短路电流只有 1~2 倍额定电流，电流小所以更安全</button>
+        <button class="opt" data-fb="电压频率失控会损坏设备，但对检修人员的直接威胁是"反送电触电"，两者要区分。">孤岛只会造成电压频率失控，影响设备不影响人</button>
+        <button class="opt" data-fb="主网侧已停电，但微电网仍通过反送电使线路带电，检修人员按"无电"操作会触电；这是非计划孤岛最致命的危害。">线路虽已停电，但微电网仍可能经馈线反送电，检修人员误判"无电"而触电</button>
+        <button class="opt" data-fb="非计划孤岛恰恰意味着微电网控制没有完成切换，处于失控运行状态。">孤岛状态下微电网的控制器会自动停机，没有风险</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">识别孤岛的判据：主网侧断路器已跳开 + 微电网侧仍有电源出力 → 存在非计划孤岛，必须立即检测并断开微电网并网开关。</div>
+      <div class="tip">计划孤岛是功能，非计划孤岛是事故。本课程后面的"孤岛检测"全部针对非计划孤岛。</div>
+    </section>
+
+    <!-- ========== 第 3 章 ========== -->
+    <section class="chapter" data-level="3" data-title="孤岛检测：被动式">
+      <h2>孤岛检测：被动式</h2>
+      <p class="tldr">被动式检测只"看"电压、频率、相位的跳变（UVP/OVP/UFP/OFP），不注入扰动，实现简单，但存在原理性盲区。</p>
+
+      <p><mark>被动式孤岛检测（Passive Anti-Islanding, PAI）</mark>不主动向电网注入任何信号，只监测并网点（PCC，公共连接点）的电气量是否跳变到整定值之外：</p>
+      <ul>
+        <li><b>UVP / OVP</b>：欠压保护（Under-Voltage Protection）/ 过压保护（Over-Voltage Protection），监测电压幅值，典型动作值约为额定电压的 0.88 倍 / 1.10 倍。</li>
+        <li><b>UFP / OFP</b>：欠频保护（Under-Frequency Protection）/ 过频保护（Over-Frequency Protection），监测频率，典型动作窗口约为 49.5 Hz ~ 50.5 Hz（与电网具体标准有关）。</li>
+        <li>此外还有电压相位突变、谐波监测等辅助判据。</li>
+      </ul>
+
+      <h3>盲区（Non-Detection Zone, NDZ）从哪里来？</h3>
+      <p>孤岛瞬间，逆变器输出与本地负荷之间的<b>有功、无功不平衡度</b>决定了电气量会不会越限：</p>
+      <ul>
+        <li>若负荷远小于出力（有功缺额），频率会被"推高"，超过 50.5 Hz → OFP 动作。</li>
+        <li>若负荷远大于出力，频率被"拖低"，跌破 49.5 Hz → UFP 动作。</li>
+        <li>但若进入孤岛的那一刻，<mark>负荷与出力的有功、无功恰好近似平衡</mark>，电压频率几乎不偏移，就会一直停留在 49.5~50.5 Hz 窗口内——<b>被动式检测永远等不到越限，盲区形成</b>。这正是第 1 章矛盾的直接体现：逆变器"乖乖跟随"主网，连频率都不帮你暴露孤岛。</li>
+      </ul>
+
+      <div class="widget demo" id="islandDemo">
+        <div class="widget-title">孤岛频率演化模拟：拖动「有功不平衡度」，再断开主电网</div>
+        <canvas width="800" height="240"></canvas>
+        <div class="controls">
+          <label>有功不平衡度（出力 − 负荷）<span class="val" data-for="m"></span>
+            <input type="range" name="m" min="-30" max="30" step="1" value="0"></label>
+          <button class="btn primary" id="gridBtn">主电网断开</button>
+          <button class="btn" id="resetBtn">重置</button>
+        </div>
+        <p style="margin:12px 0 4px;font-size:14px;color:var(--muted)">
+          当前频率：<b id="freqRead">50.00 Hz</b> ｜ 被动式跳闸（UFP/OFP，窗口 49.5~50.5 Hz，典型值）：<b id="tripRead">未动作</b><br>
+          模型：$f = 50 + k \times \Delta P$，$k$ 取 0.10 Hz/%（演示简化值），一阶滞后趋近。试着把滑块放到接近 0——频率几乎不动，这就是盲区。
+        </p>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">被动式孤岛检测的盲区在什么情况下出现？</p>
+        <button class="opt" data-fb="负荷远小于出力时频率会显著升高，OFP 会动作，恰好是容易检测的情况。">孤岛瞬间负荷远小于电源出力时</button>
+        <button class="opt" data-fb="此时电压频率偏移极小，始终落在 UVP/OVP/UFP/OFP 的动作窗口内，被动判据永远不触发，形成非检测区（NDZ）。">孤岛瞬间负荷与电源出力近似平衡时</button>
+        <button class="opt" data-fb="主网侧故障清除前，微电网尚未形成孤岛，谈不上被动式检测盲区。">主网侧发生永久性短路故障时</button>
+        <button class="opt" data-fb="逆变器限流影响短路电流大小，与被动式检测的盲区机理（不平衡度）无关。">逆变器限流倍数设置得过高时</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">被动式的优点是零扰动、不影响电能质量；缺点是盲区不可避免。要消除盲区，就得"主动出击"——下一章的主动式检测。</div>
+    </section>
+
+    <!-- ========== 第 4 章 ========== -->
+    <section class="chapter" data-level="4" data-title="孤岛检测：主动式与混合式">
+      <h2>孤岛检测：主动式与混合式</h2>
+      <p class="tldr">主动式检测向系统注入微小扰动"试探"电网是否还在，能把盲区压得很小，代价是扰动影响电能质量；混合式则取长补短。</p>
+
+      <p><mark>主动式检测（Active Anti-Islanding, AAI）</mark>的思路：并网时电网像"大海"，注入一点扰动会被主网吸收，电气量纹丝不动；一旦孤岛，微电网是"小水洼"，同样的扰动就会引起可观的响应——据此判定孤岛。常见方法：</p>
+      <ul>
+        <li><b>频率偏移法（AFD, Active Frequency Drift）</b>：有意让逆变器输出电流的频率略微"跑偏"一点，并网时 PCC 频率被主网锁死不动，孤岛时这个跑偏会逐周期累积，把频率推出 UFP/OFP 窗口。</li>
+        <li><b>Sandia 频移法（SFS, Sandia Frequency Shift）</b>：在 AFD 基础上加入正反馈——频率越偏，扰动越大，加速频率偏离，检测速度更快，是工程中常用的改进。</li>
+        <li><b>阻抗测量法</b>：周期性注入小幅电压（或电流）扰动，测量 PCC 处等效阻抗。主网在时等效阻抗极小（近似无穷大电网），孤岛时阻抗由本地负荷决定，明显变大。</li>
+      </ul>
+
+      <h3>三种方法怎么选？</h3>
+      <div class="widget">
+        <div class="widget-title">翻卡对比：被动 / 主动 / 混合</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">被动式</div><div class="back">无扰动、不影响电能质量、成本低；但存在原理性盲区（NDZ），平衡负荷下检测不到。适合对电能质量敏感的场合。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">主动式</div><div class="back">注入扰动（AFD/SFS/阻抗测量），盲区小、检测快；但扰动长期存在会略微降低电能质量，多台逆变器并联时扰动可能相互抵消。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">混合式</div><div class="back">被动判据常驻监测，一旦疑似孤岛（频率/电压微偏）立即启用主动扰动复核。正常时无扰动，疑似时高灵敏——工程主流方案。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">主动式的本质是"用可控的扰动换取无盲区"：有主网时扰动被无限大电网吸收，孤岛时扰动在小系统上暴露无遗。Sandia 频移用正反馈把"频率越偏推得越狠"，是加速检测的关键技巧。</div>
+      <div class="tip">记住权衡轴：被动式 = 零扰动但有盲区；主动式 = 有扰动但盲区小；混合式 = 平时被动、疑似时主动，是目前逆变器并网标准（如 IEEE 1547）推荐的主流路线。</div>
+    </section>
+
+    <!-- ========== 第 5 章 ========== -->
+    <section class="chapter" data-level="4" data-title="微电网保护的新思路">
+      <h2>微电网保护的新思路</h2>
+      <p class="tldr">短路电流太小，就把"比电流大小"换成"比较两端电流是否相等"；运行方式多变，就让保护定值跟着运行方式自动切换。</p>
+
+      <h3>思路一：差动保护</h3>
+      <p>电流差动保护比较被保护设备<mark>两端（或多端）电流的相量和</mark>：正常运行或外部故障时，流进等于流出，差流约等于零；内部故障时产生很大差流，立即跳闸。它几乎不受短路电流大小、潮流方向的影响，天然适合微电网——这正是解决"逆变器短路电流小"这一核心矛盾的直接武器。代价是需要两端电流的通信通道。</p>
+
+      <h3>思路二：自适应保护（Adaptive Protection）</h3>
+      <p>核心思想：微电网有并网、孤岛两种运行方式，短路电流水平和潮流方向都不同，<mark>一套定值无法兼顾两种模式，就让保护定值随运行方式自动切换</mark>——并网时用一套整定，孤岛检测确认后用另一套整定。前提是系统能可靠、快速地识别当前运行方式。</p>
+
+      <div class="widget steps">
+        <div class="widget-title">分步揭示：自适应保护切换流程</div>
+        <div class="step">① 实时监测运行方式：保护装置持续采样并网开关状态、PCC 频率与电压，判断系统处于并网还是孤岛模式。</div>
+        <div class="step">② 并网模式：启用"大电网定值组"——按主网提供的短路电流水平整定，配合方向元件处理双向潮流。</div>
+        <div class="step">③ 孤岛预警：被动+主动检测判出孤岛倾向，或并网开关分闸信号到达，进入切换流程。</div>
+        <div class="step">④ 定值切换：保护装置自动切换到"孤岛定值组"——按逆变器 1.2~2 倍额定短路电流水平（典型值）重新整定，动作门槛大幅降低。</div>
+        <div class="step">⑤ 复核与闭锁：若切换后差流/过流判据动作则快速跳开故障段；若判断为误告警则延时返回并网定值，防止定值来回震荡。</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+
+      <h3>思路三：基于通信的保护</h3>
+      <p>利用微电网内已有的通信网络（如 IEC 61850），把各保护点的电气量汇集到主站做集中判据，或实现纵联比较（如纵联差动、方向比较）。它跳出了"单点只看本地量"的传统框架，但可靠性受通信延时和断链影响，通常与本地后备保护（如低电压闭锁的过流保护）配合使用。</p>
+
+      <div class="warn">误区提醒：自适应保护的前提是"运行方式识别足够快、足够可靠"。如果孤岛识别慢半拍，定值还停在并网组，故障就可能拒动——所以第 3、4 章的孤岛检测是自适应保护的"眼睛"。</div>
+      <div class="tip">三种新思路其实回答了三个问题：差动保护回答"电流太小怎么办"（不比较大小，比较是否相等）；自适应保护回答"运行方式变了怎么办"（定值跟着变）；通信保护回答"单点信息不够怎么办"（多点协同）。</div>
+    </section>
+
+    <!-- ========== 第 6 章 ========== -->
+    <section class="chapter" data-level="4" data-title="本章综合测验">
+      <h2>本章综合测验</h2>
+      <p class="tldr">三道题覆盖本章三条主线：孤岛检测盲区、逆变器限流的后果、自适应保护的核心思想。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">① 被动式孤岛检测存在盲区的根本原因是什么？</p>
+        <button class="opt" data-fb="逆变器限流影响的是短路电流大小，与被动式检测盲区（不平衡度）的成因不同。">并网逆变器把短路电流限制在 1.2~2 倍额定值</button>
+        <button class="opt" data-fb="孤岛瞬间若负荷与电源出力的有功、无功近似平衡，电压频率偏移落在 UVP/OVP/UFP/OFP 动作窗口内，被动判据永不触发，形成 NDZ。">孤岛瞬间本地负荷与电源出力近似平衡，电压频率不越限</button>
+        <button class="opt" data-fb="UFP/OFP 的典型窗口（49.5~50.5 Hz）本身有合理依据，盲区与整定值大小无直接关系。">UFP/OFP 的整定窗口设得太宽</button>
+        <button class="opt" data-fb="被动式检测恰恰不注入任何扰动，"扰动太小"是主动式才关心的问题。">被动式检测注入的扰动太小，不足以引起跳变</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">② 逆变器短路电流受限（仅 1.2~2 倍额定，典型值）直接带来的保护问题是什么？</p>
+        <button class="opt" data-fb">方向元件缺失会导致双向潮流下误动/拒动，这是"潮流双向"带来的问题，不是"电流变小"的直接后果</button>
+        <button class="opt" data-fb="短路电流小不会导致误动偏大，恰恰相反，动作门槛显得"过高"。">过流保护的动作电流被抬高，容易误动</button>
+        <button class="opt" data-fb="传统过流保护与熔断器按大短路电流整定，逆变器提供的 1.2~2 倍额定电流（典型值）达不到动作值，故障无法被切除。">传统按大短路电流整定的过流保护、熔断器可能拒动</button>
+        <button class="opt" data-fb="差动保护比较的是两端电流相量，受短路电流绝对值影响小，反而是解决方案之一。">差动保护因此完全无法使用</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">③ 自适应保护的核心思想是什么？</p>
+        <button class="opt" data-fb="微电网并网与孤岛两种模式下短路电流水平和潮流方向差异很大，一套定值无法兼顾，因此让保护定值随运行方式自动切换（并网定值组 / 孤岛定值组）。">让保护定值随微电网运行方式（并网/孤岛）自动切换</button>
+        <button class="opt" data-fb">"不断提高灵敏度"是传统保护的整定思路，自适应保护的关键词是"随方式切换"，而不是单向调高灵敏度。">不断提高保护灵敏度，以应对短路电流变小</button>
+        <button class="opt" data-fb="自动重合闸是故障后的恢复手段，与"定值随运行方式切换"的自适应思想无关。">用自动重合闸替代过流保护动作</button>
+        <button class="opt" data-fb">盲目降低动作门槛会把正常倒送潮流误判为故障，造成大面积误动。">把所有保护的动作门槛统一降到额定电流附近</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">三道题的三个答案可以串成一句话：被动式有盲区（平衡负荷时检测不到）→ 所以要用主动/混合式补上；短路电流太小（1.2~2 倍）→ 所以过流保护不可靠，要靠差动；运行方式多变 → 所以保护定值要自适应切换。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示：<div class="steps"><div class="step">..</div>...<button class="btn next-step">下一步</button></div> ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空：<input data-answer="答案1|答案2"> + <button class="btn check"> ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序：<div class="order" data-answer="a,b,c"><div class="item" data-id="a">..</div>.. <button class="btn check"> ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调。用法：demo('#id', (params, ctx, canvas) => {...}) ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：孤岛频率演化 ================= */
+(() => {
+  const root = document.querySelector('#islandDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const slider = root.querySelector('input[name=m]'), valSpan = root.querySelector('.val[data-for=m]');
+  const gridBtn = root.querySelector('#gridBtn'), resetBtn = root.querySelector('#resetBtn');
+  const freqRead = root.querySelector('#freqRead'), tripRead = root.querySelector('#tripRead');
+
+  const F0 = 50, K = 0.10;          // f = 50 + 0.10 × 不平衡度(%)，演示简化值
+  const F_MIN = 49.5, F_MAX = 50.5; // UFP/OFP 典型窗口
+  let gridOn = true, freq = F0, phase = 0, last = performance.now();
+  const W = cv.width, H = cv.height, mid = H / 2;
+
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function draw() {
+    const now = performance.now(), dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    const m = +slider.value;
+    valSpan.textContent = (m > 0 ? '+' : '') + m + '%';
+    // 频率演化：并网锁定 50Hz；孤岛按一阶趋近 f = 50 + K*m
+    const target = gridOn ? F0 : F0 + K * m;
+    freq += (target - freq) * (gridOn ? 0.3 : 0.02);
+    phase += 2 * Math.PI * freq * dt;
+
+    // 波形（滚动窗口：画最近几个周期）
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = css('--border'); ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
+    ctx.strokeStyle = gridOn ? css('--primary') : css('--warn'); ctx.lineWidth = 2; ctx.beginPath();
+    const span = 0.1; // 时间窗口（秒）
+    for (let x = 0; x <= W; x++) {
+      const t = x / W * span, y = mid - (H / 2 - 12) * Math.sin(phase - 2 * Math.PI * freq * (span - t));
+      x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+
+    // 状态与读数
+    const tripped = !gridOn && (freq < F_MIN || freq > F_MAX);
+    freqRead.textContent = freq.toFixed(2) + ' Hz';
+    tripRead.textContent = gridOn ? '未动作（并网中）' : (tripped ? '已跳闸 ✅（频率越出 49.5~50.5 Hz 窗口）'
+      : (Math.abs(m) <= 2 ? '未动作 ⚠️ 疑似盲区' : '未动作（频率偏移中…）'));
+    tripRead.style.color = tripped ? css('--ok') : (!gridOn && Math.abs(m) <= 2 ? css('--bad') : 'inherit');
+
+    requestAnimationFrame(draw);
+  }
+
+  gridBtn.onclick = () => {
+    gridOn = !gridOn;
+    gridBtn.textContent = gridOn ? '主电网断开' : '主电网重合';
+  };
+  resetBtn.onclick = () => { gridOn = true; freq = F0; phase = 0; slider.value = 0; gridBtn.textContent = '主电网断开'; };
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

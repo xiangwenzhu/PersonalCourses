@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型微调 05 · 评估、对齐与上线</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* 本课定制样式 */
+.demo select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px}
+.series-link{max-width:860px;margin:0 auto;text-align:center;font-size:14px;color:var(--muted)}
+.series-link a{color:var(--primary);font-weight:600}
+/* 时间线交互 */
+.tl-wrap{overflow-x:auto;padding:10px 2px}
+.tl-svg{min-width:640px}
+.tl-svg .node{fill:var(--card);stroke:var(--border);stroke-width:1.4;cursor:pointer}
+.tl-svg .node:hover{stroke:var(--primary);stroke-width:2}
+.tl-svg .node.active{stroke:var(--primary);stroke-width:2.5;fill:var(--primary-soft)}
+.tl-svg .edge{stroke:var(--muted);stroke-width:1.5;marker-end:url(#tlArrow)}
+.tl-svg text{fill:var(--text);font-family:inherit}
+#tlDetail{margin-top:14px;border:1px solid var(--border);border-radius:10px;background:var(--card);padding:14px 16px}
+#tlDetail h4{margin:0 0 6px;font-size:16px}
+#tlDetail p{margin:4px 0;font-size:14.5px}
+#tlDetail .solves{color:var(--ok);font-weight:600}
+/* 决策器 */
+.adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.adv-grid label{display:flex;flex-direction:column;font-size:14px;gap:4px}
+.adv-grid select,.adv-grid input{width:100%}
+#advOut{border-radius:10px;padding:16px 18px;margin-top:16px;border:1px solid var(--primary);background:var(--card)}
+#advOut .rec{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--primary)}
+#advOut .block{margin:10px 0}
+#advOut .block b{display:block;font-size:14px;margin-bottom:2px}
+#advOut .block span{font-size:14.5px;line-height:1.6}
+#advOut .why{font-size:13.5px;color:var(--muted);margin-top:10px;border-top:1px dashed var(--border);padding-top:10px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>大模型微调 · 第 5 课：评估、对齐与上线</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ==================== 第 1 章（L1） ==================== -->
+    <section class="chapter" data-level="1" data-title="为什么需要“对齐”：会说，不等于说得好">
+      <h2>为什么需要"对齐"：会说，不等于说得好</h2>
+      <p class="tldr">SFT 之后的模型已经"会说人话"，但它说的话不一定符合你的期待——可能啰嗦、可能跑题、可能有安全隐患。"对齐"（Alignment，让模型的行为符合人类的期望与价值观）就是解决"会说但说不对"的那道工序。</p>
+
+      <p>在前几课里，你已经学会用 SFT（Supervised Fine-Tuning，监督微调：给模型看成百上千条"标准问答示范"，让它模仿）把底座模型调教得"像模像样"。训练时看着损失一路下降，满心欢喜地让它生成一段回答，结果可能是这样的：</p>
+
+      <table>
+        <tr><th>用户问</th><th>SFT 后的模型可能答</th><th>问题在哪</th></tr>
+        <tr><td>"怎么重置密码？"</td><td>从互联网的发展史讲起，用了 800 字还没讲到重置按钮</td><td><mark>啰嗦、抓不住重点</mark></td></tr>
+        <tr><td>"帮我写一封请假邮件"</td><td>邮件写完了，但又附赠了三大段请假注意事项、法律依据和嘘寒问暖</td><td><mark>过度发挥、不听指令</mark></td></tr>
+        <tr><td>"心情不好怎么办？"</td><td>认真地建议"试试过量饮酒放松"（它在某本小说里读到过）</td><td><mark>不安全、价值观跑偏</mark></td></tr>
+      </table>
+
+      <div class="analogy">SFT 像教新员工"背熟了客服话术手册"：每句话都通顺、都像那么回事。但一上真场子，他可能背完话术还喋喋不休（啰嗦），客户问 A 他答到 Z（跑题），甚至把玩笑当建议说出口（不安全）。<mark>背熟手册 ≠ 会好好干活</mark>，还差一步"学会看场合、懂分寸"的历练——这就是对齐。</div>
+
+      <p>这里出现本课第一个关键术语：<mark>对齐（Alignment）</mark>，指的是让模型的输出符合人类的偏好、意图和安全标准。注意它和 SFT 的关系：<strong>SFT 教模型"模仿示范"，对齐教模型"分清好坏"</strong>。示范数据毕竟有限，模型见过的话术之外怎么表现，要靠对齐来兜底。</p>
+
+      <div class="key">本课主线就三件事：① 怎么<b>评估</b>模型好不好（第 2 章）；② 怎么把模型<b>对齐</b>到人类的喜好上（第 3–5 章）；③ 怎么把它<b>上线</b>跑起来、并持续变好（第 6–7 章）。</div>
+
+      <div class="widget">
+        <div class="widget-title">判断题：这是"会说但说不对"吗？</div>
+        <div class="widget quiz" data-answer="1">
+          <p class="q">场景一：用户问"北京到上海的火车多久"，模型先讲了 200 字高铁发展史，最后才说"约 4.5–6 小时"。这属于对齐要解决的问题吗？</p>
+          <button class="opt" data-fb="不对。这不是模型“不会说”，恰恰是“会说但说不对”的典型——信息没错，但啰嗦、没有直接回应需求，正是对齐要压掉的行为。">不属于，模型至少答对了，没问题</button>
+          <button class="opt" data-fb="对。回答内容正确但极度啰嗦、不直接回应问题，属于" helpfulness（有用性）"不足，是偏好对齐的典型目标。">属于：内容没错但啰嗦、没直接回应需求</button>
+          <button class="opt" data-fb="这只是个小毛病，但"小毛病"恰恰是对齐存在的意义——SFT 不擅长逐条纠正这种细粒度偏好。">不属于，这只是无伤大雅的小毛病</button>
+          <div class="feedback"></div>
+        </div>
+        <div class="widget quiz" data-answer="2">
+          <p class="q">场景二：模型把训练语料里某本小说角色的台词当成了养生建议，推荐给真实用户。这属于对齐要解决的问题吗？</p>
+          <button class="opt" data-fb="收集更多语料不等于筛选价值观。预训练语料鱼龙混杂，问题不在量，在于模型没有学会"什么该说、什么不该说"。">不属于，这是预训练语料太少导致的，多收集数据就行</button>
+          <button class="opt" data-fb="SFT 主要教"模仿示范"，对示范覆盖不到的场景，安全边界需要专门的对齐手段（如 RLHF/DPO）来建立。">不属于，这是 SFT 没训好，重跑一次 SFT 即可</button>
+          <button class="opt" data-fb="对。模型一本正经地给出有害建议，是安全性（safety）问题，正是对齐（以及安全微调）要解决的。">属于：这是安全性问题，模型需要学会什么该说、什么不该说</button>
+          <div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">记住本课的灵魂拷问：<mark>"会说"是 SFT 给的，"说得好、说得对、说得安全"是对齐给的。</mark>评估是这一切的前提——你说你模型"更好了"，凭什么？下一章先解决这个问题。</div>
+    </section>
+
+    <!-- ==================== L1 测验 ==================== -->
+    <section class="chapter" data-level="1" data-title="L1 测验：直觉检查">
+      <h2>L1 测验：直觉检查</h2>
+      <p class="tldr">三道题，检验你是否建立了"评估—对齐—上线"的整体直觉。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">SFT 训练完成、损失降得很低，为什么模型上线后仍可能表现不佳？</p>
+        <button class="opt" data-fb="损失低只说明模型在"模仿训练数据"上做得好，不代表它理解了什么叫"好的回答"。人类的偏好维度（简洁、贴切、安全）不是交叉熵损失能完全衡量的。">因为损失函数算错了，应该换一个</button>
+        <button class="opt" data-fb">训练集的"好"不等于用户场景的"好"。模型可能过拟合了训练集的写法，在真实场景里啰嗦、跑题。">因为训练数据里的好答案，和用户真正想要的好答案，往往不是一回事</button>
+        <button class="opt" data-fb="正确。SFT 的"模仿示范"模式有两个盲区：一是示范覆盖不到的场景表现不可控，二是"像示范"不等于"用户喜欢"。对齐和评估补的正是这两块。">因为 SFT 只教模型模仿示范，没教它分辨"用户真正喜欢什么"，示范没覆盖的场景行为不可控</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">关于"对齐（Alignment）"，下列理解最准确的是？</p>
+        <button class="opt" data-fb="这是对齐的常见误解。对齐确实常包含安全维度，但"有用、简洁、听指令"同样是人类偏好，也是对齐的目标。对齐 ≠ 只是安全审查。">就是让模型变得更安全，别输出有害内容</button>
+        <button class="opt" data-fb="正确。对齐的核心是"按人类偏好行事"：安全是底线偏好，有用、诚实、简洁同样是偏好。">让模型的输出符合人类的偏好与意图——既包括安全，也包括有用、简洁、听指令</button>
+        <button class="opt" data-fb="多任务数据微调属于 SFT 范畴。对齐特指在 SFT 之后，用偏好信号（人喜欢 A 胜过 B）进一步塑形的过程。">用更多任务的数据做 SFT，任务越多越好</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">"评估、对齐、上线"三者的合理顺序是？</p>
+        <button class="opt" data-fb="正确。先能衡量"好不好"（评估），才知道对齐有没有用；对齐后的模型要部署上线（部署），上线后收集反馈再迭代（回流）。">先建立评估方法 → 用对齐改进模型 → 部署上线并持续收集反馈迭代</button>
+        <button class="opt" data-fb="没有评估就对齐，等于蒙着眼睛调参——你无法判断对齐是变好了还是变差了。">先对齐 → 再上线 → 最后再补评估</button>
+        <button class="opt" data-fb">部署只是交付环节，迭代永无止境。真实的闭环是：评估→对齐→上线→回流→再评估。">先上线跑起来 → 再对齐 → 评估可以最后再说</button>
+        <div class="feedback"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 2 章（L2） ==================== -->
+    <section class="chapter" data-level="2" data-title="评估方法全景：怎么证明你的模型变好了">
+      <h2>评估方法全景：怎么证明你的模型变好了</h2>
+      <p class="tldr">没有评估，一切"变好"都是自说自话。评估方法有四种主流：留出集损失、人工评测、公开基准测试、用大模型当裁判（LLM-as-Judge）。各自有适用的场景和著名的坑。</p>
+
+      <p>先定义<mark>评估（Evaluation）</mark>：用可复现的方法，定量或定性地判断模型输出质量的过程。微调工程师的日常就是"改一个配置 → 评估 → 决定要不要"。</p>
+
+      <h3>四种方法，一张表先记住</h3>
+      <table>
+        <tr><th>方法</th><th>是什么</th><th>适合什么</th><th>著名的坑</th></tr>
+        <tr><td><b>留出集损失</b><br><small>held-out loss</small></td><td>留一部分数据不训练，看模型在它上面的预测损失（预测下一个词有多"意外"）</td><td>训练监控、快速回归测试</td><td>损失低 ≠ 回答好；对啰嗦无感（啰嗦的话只要"可预测"，损失就低）</td></tr>
+        <tr><td><b>人工评测</b></td><td>真人盲评：两个模型的回答摆一起，人挑哪个好</td><td>小样本深度评估、对齐质量金标准</td><td>贵、慢、评分标准因人而异（主观偏差）</td></tr>
+        <tr><td><b>基准测试</b><br><small>benchmark</small></td><td>公开的标准化题库（如 MMLU 测知识、MT-Bench 测对话）</td><td>横向对比、宣称"达到某水平"</td><td>题目可能混进训练语料（数据污染）；数字高不代表你的场景好</td></tr>
+        <tr><td><b>LLM-as-Judge</b></td><td>让一个强模型按评分细则给回答打分/做比较</td><td>大批量自动评估，成本低</td><td>裁判自己有偏好（如偏爱长回答、自己风格的回答）</td></tr>
+      </table>
+
+      <div class="warn">最常见的评估事故：<mark>训练集和测试集泄漏</mark>。如果你的 SFT 数据里混进了基准测试题（benchmark 题目），评测分数会虚高得离谱——模型不是变聪明了，是"背过题"。开源数据去重是必修课。</div>
+
+      <div class="widget">
+        <div class="widget-title">翻卡：四个方法各自的"杀手锏与死穴"</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">留出集损失</div><div class="back">杀手锏：便宜、秒出结果，训练曲线一歪就知道出事。死穴：它只衡量"像不像训练文本"，回答啰嗦但通顺时损失照样低。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">人工评测</div><div class="back">杀手锏：最接近真实用户感受，是对齐质量的最终裁判。死穴：标注员培训成本高，标准不统一，500 条以上就贵得肉疼。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">基准测试</div><div class="back">杀手锏：标准化、可横向对比、发论文/做宣传必用。死穴：数据污染（题库泄漏进训练集）会让分数毫无意义。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">LLM-as-Judge</div><div class="back">杀手锏：成本只有人工的零头，一夜评完一万条。死穴：裁判有立场——偏爱长答案、偏爱自己的表达习惯，需要精心设计评分提示词和对照实验。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">匹配题：场景 → 最合适的评估方法</div>
+        <div class="widget quiz" data-answer="2">
+          <p class="q">场景 A：训练中每 100 步想快速确认"模型没训崩"，该用什么？</p>
+          <button class="opt" data-fb="基准测试太重，跑一次整套题库远超"每 100 步"的节奏；人工评测更不可能。训练监控要的是快和便宜。">基准测试（benchmark）</button>
+          <button class="opt" data-fb="人工评测准确但不适合高频训练监控，成本和速度都不允许。">人工评测</button>
+          <button class="opt" data-fb="正确。留出集损失几乎零成本、秒级出结果，曲线一抬头就说明学习率或数据有问题，是训练监控的标准做法。">留出集损失（held-out loss）</button>
+          <div class="feedback"></div>
+        </div>
+        <div class="widget quiz" data-answer="1">
+          <p class="q">场景 B：要发布新闻稿宣称"我们的模型行业领先"，该用什么支撑？</p>
+          <button class="opt" data-fb">留出集损失是你自己数据的指标，外界无法复现，撑不起"行业领先"这种横向宣称。">留出集损失</button>
+          <button class="opt" data-fb="正确。公开基准是第三方可复现的横向对比标准，"行业领先"必须靠公认基准说话。但要先排查数据污染。">公开基准测试（benchmark）</button>
+          <button class="opt" data-fb">LLM 裁判适合内部快速评估，但作为对外宣称的依据公信力不足，且裁判模型本身的水平会受质疑。">LLM-as-Judge</button>
+          <div class="feedback"></div>
+        </div>
+        <div class="widget quiz" data-answer="0">
+          <p class="q">场景 C：对齐后想知道"用户到底更喜欢哪个版本的回答"，金标准是什么？</p>
+          <button class="opt" data-fb="正确。人类偏好（human preference）的最终定义权在人，真人盲评是对齐效果的黄金标准；LLM 裁判只能作为它的廉价近似。">人工评测（真人盲评）</button>
+          <button class="opt" data-fb">基准题库测的是通用能力，不是你业务的偏好细节；对齐效果要看"人更喜欢哪个"。">基准测试</button>
+          <button class="opt" data-fb">留出集损失对"啰嗦但通顺"的回答不敏感，恰恰测不出对齐要解决的偏好问题。">留出集损失</button>
+          <div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">实践中是组合拳：<mark>训练时看损失，发布前刷基准，日常迭代用 LLM 裁判，关键版本上人工</mark>。只用一种方法，迟早被它的盲区坑一次。</div>
+    </section>
+
+    <!-- ==================== 第 3 章（L2） ==================== -->
+    <section class="chapter" data-level="2" data-title="对齐方法演进：从 SFT 到 DPO 的二十年脉络">
+      <h2>对齐方法演进：从 SFT 到 DPO 的二十年脉络</h2>
+      <p class="tldr">对齐技术的演进是一连串"上一步还缺什么"的故事：SFT 缺"好坏之分" → 奖励模型（RM）给出标量分数 → PPO 用 RL 把分数拉高 → DPO 发现可以干脆不要 RL。点击时间线节点，看每一步解决了什么问题。</p>
+
+      <div class="tl-wrap">
+        <svg class="tl-svg" id="tlSvg" viewBox="0 0 820 190" role="img" aria-label="对齐方法演进时间线">
+          <defs><marker id="tlArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="none" stroke="var(--muted)" stroke-width="1.2"/></marker></defs>
+          <line class="edge" x1="70" y1="95" x2="750" y2="95"/>
+          <g class="node" data-k="sft" transform="translate(80,95)"><circle r="26"/><text text-anchor="middle" dy="4" font-size="12" font-weight="700">SFT</text></g>
+          <g class="node" data-k="rm" transform="translate(232,95)"><circle r="26"/><text text-anchor="middle" dy="4" font-size="11" font-weight="700">RM</text></g>
+          <g class="node" data-k="ppo" transform="translate(384,95)"><circle r="26"/><text text-anchor="middle" dy="4" font-size="11" font-weight="700">PPO</text></g>
+          <g class="node" data-k="dpo" transform="translate(536,95)"><circle r="26"/><text text-anchor="middle" dy="4" font-size="11" font-weight="700">DPO</text></g>
+          <g class="node" data-k="orpo" transform="translate(688,95)"><circle r="26"/><text text-anchor="middle" dy="4" font-size="11" font-weight="700">ORPO/KTO</text></g>
+          <text x="80" y="150" text-anchor="middle" font-size="12">2019 前后</text>
+          <text x="232" y="150" text-anchor="middle" font-size="12">2020</text>
+          <text x="384" y="150" text-anchor="middle" font-size="12">2022（InstructGPT）</text>
+          <text x="536" y="150" text-anchor="middle" font-size="12">2023</text>
+          <text x="688" y="150" text-anchor="middle" font-size="12">2024</text>
+          <text x="80" y="40" text-anchor="middle" font-size="12" fill="var(--muted)">模仿示范</text>
+          <text x="232" y="40" text-anchor="middle" font-size="12" fill="var(--muted)">学会打分</text>
+          <text x="384" y="40" text-anchor="middle" font-size="12" fill="var(--muted)">RL 刷分</text>
+          <text x="536" y="40" text-anchor="middle" font-size="12" fill="var(--muted)">绕开 RL</text>
+          <text x="688" y="40" text-anchor="middle" font-size="12" fill="var(--muted)">简化/免偏好对</text>
+        </svg>
+      </div>
+      <div id="tlDetail"><p style="color:var(--muted);margin:0">👆 点击时间线上的节点，查看每一步的详情。</p></div>
+
+      <div class="analogy">把"训练一个得体员工"串起来：SFT = 发手册让他背示范对话；RM = 请资深客服给每段回答打分，训练出"自动打分器"；PPO = 让实习生对着打分器反复演练，哪句话分高就多说；DPO = 发现根本不用打分器，直接把"好回答 vs 差回答"摆在他面前对比着学；ORPO/KTO = 连"成对的对比"都省了，只给"这是好/这是坏"的单标签。</div>
+
+      <div class="key">术语预告（L3 会展开）：<b>RM</b>（Reward Model，奖励模型：输入一段话，输出一个分数的模型）；<b>PPO</b>（Proximal Policy Optimization，一种强化学习算法）；<b>DPO</b>（Direct Preference Optimization，直接用偏好数据优化，不开强化学习）。</div>
+
+      <div class="tip">演进的主线就一条：<mark>不断降低"把人类喜好灌进模型"的成本和复杂度</mark>。RLHF（PPO 那套）效果好但工程极重；DPO 家族用一点点效果换来了十倍的可维护性——这也是今天开源社区的主流选择。</div>
+    </section>
+
+    <!-- ==================== L2 测验 ==================== -->
+    <section class="chapter" data-level="2" data-title="L2 测验：概念把关">
+      <h2>L2 测验：概念把关</h2>
+      <p class="tldr">四道题，检验你对评估方法与对齐演进的理解。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">某基准测试上，你的微调模型分数暴涨 30%，远超同规模模型。第一时间应该怀疑什么？</p>
+        <button class="opt" data-fb">学习率异常通常让训练崩溃而非暴涨；分数暴涨首先该怀疑数据层面，而不是优化器。">学习率设高了</button>
+        <button class="opt" data-fb">LoRA rank 影响的是拟合容量，不会凭空带来远超同规模模型的基准分。">LoRA rank 设大了</button>
+        <button class="opt" data-fb="正确。基准题目泄漏进训练集会造成分数虚高，这是评测事故的第一大原因。先去重、查污染，再庆祝。">基准题目可能混进了训练数据（数据污染）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">关于 LLM-as-Judge（用大模型当裁判），下列说法错误的是？</p>
+        <button class="opt" data-fb">这说法本身没错：裁判模型的系统性偏好（偏爱长文、自己的风格）是被反复观察到的现象，需要校准。">它有系统性偏好，比如偏爱更长的回答</button>
+        <button class="opt" data-fb="错误。裁判只是人工评测的廉价近似，不能替代真人判断——尤其在对齐这种"最终定义权在人"的问题上，金标准永远是人。">它可以完全替代人工评测，从此不需要标注员</button>
+        <button class="opt" data-fb">对。评分提示词（rubric）设计、位置偏差（先出现的回答易占优）校正，都是实际使用中的必要工作。">它的评分提示词需要精心设计，否则结果不可靠</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">按演进脉络，DPO 相对 PPO（RLHF）最大的卖点是？</p>
+        <button class="opt" data-fb="正确。PPO 需要同时维护策略模型、奖励模型、参考模型和全套 RL 基础设施；DPO 把它简化成一次普通的监督式训练，效果和稳定性的综合性价比极高。">无需强化学习训练循环，把对齐变成一次简单的偏好数据训练，工程复杂度大降</button>
+        <button class="opt" data-fb">DPO 并不是在所有场景下效果都碾压 PPO，在部分任务上 PPO 的上限仍更高。它的核心优势是简单稳定，而不是绝对效果。">在所有任务上效果都碾压 PPO</button>
+        <button class="opt" data-fb">恰恰相反，DPO 最需要的就是成对的偏好数据（chosen vs rejected）。不需要偏好对的是更晚的 KTO。">完全不需要偏好数据</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">KTO（2024 提出）相对 DPO 的进一步简化在哪？</p>
+        <button class="opt" data-fb">两者方向相反：KTO 进一步简化的是数据要求，不是效果宣称。">它需要更复杂的强化学习</button>
+        <button class="opt" data-fb">恰恰相反，KTO 的卖点就是摆脱成对数据。">它必须有成对的偏好数据才能训练</button>
+        <button class="opt" data-fb="正确。KTO 只需每条样本一个"好/坏"标签（类似"点赞/点踩"），不再需要人工构造 A/B 对比对，数据获取门槛低得多。">它不再需要成对的偏好数据，只需要"这条好/这条坏"的二值标签</button>
+        <div class="feedback"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 4 章（L3） ==================== -->
+    <section class="chapter" data-level="3" data-title="RLHF 三步走与 reward hacking">
+      <h2>RLHF 三步走与 reward hacking</h2>
+      <p class="tldr">RLHF（Reinforcement Learning from Human Feedback，基于人类反馈的强化学习）= SFT → 训练奖励模型 → PPO 强化学习。它效果强大，但有一个著名的宿敌：reward hacking（奖励 hacking，模型钻奖励模型的空子、刷高分数却不真正变好）。</p>
+
+      <h3>三步走</h3>
+      <div class="widget steps">
+        <div class="widget-title">RLHF 全流程（点"下一步"逐步看）</div>
+        <div class="step"><b>第 1 步：SFT。</b>用高质量示范数据训练一个"会模仿"的模型。这一步你已经会了——它是 RLHF 的起点（称为策略模型，policy，即被训练的模型）。</div>
+        <div class="step"><b>第 2 步：训练奖励模型（RM）。</b>收集人类对同一问题多个回答的排序偏好（A 比 B 好），训练一个打分模型：输入问题和回答，输出一个标量分数。它的目标是逼近"人类的喜好函数"。</div>
+        <div class="step"><b>第 3 步：PPO 强化学习。</b>让策略模型生成回答，奖励模型给它打分，PPO 算法调高"得高分回答"的生成概率、调低低分回答的概率。如此循环，模型越来越"讨奖励模型喜欢"。</div>
+        <div class="step"><b>关键护栏：</b>PPO 训练时通常加入 KL 散度约束（KL penalty，限制新模型别偏离 SFT 模型太远），防止模型为了刷分而崩坏。β 系数控制约束松紧。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <h3>奖励 hacking：为什么防不胜防</h3>
+      <p>RM 只是人类偏好的<mark>近似</mark>。一旦策略模型发现 RM 的盲区——比如"RM 偏爱长回答"——它就会无限变长，哪怕人已经觉得啰嗦。这就是 <mark>reward hacking</mark>：优化指标取代了真正的目标（古德哈特定律的 AI 版：<b>"一项指标一旦成为目标，它就不再是好指标"</b>）。</p>
+
+      <div class="widget demo" id="hackDemo">
+        <div class="widget-title">Reward Hacking 情景模拟器：你是策略模型，RM 有隐藏偏好</div>
+        <canvas width="800" height="240"></canvas>
+        <div class="controls">
+          <label>回答长度 <span class="val" data-for="len"></span><input type="range" name="len" min="10" max="500" step="10" value="120"></label>
+          <label>emoji 密度 <span class="val" data-for="emo"></span><input type="range" name="emo" min="0" max="10" step="1" value="1"></label>
+          <label>KL 约束强度 β <span class="val" data-for="beta"></span><input type="range" name="beta" min="0" max="10" step="1" value="5"></label>
+        </div>
+        <p class="readout" style="font-size:14px;color:var(--muted)"></p>
+      </div>
+
+      <p>拖动滑块观察：RM 的秘密偏好是"超长 + 多 emoji"（一种夸张的模拟，真实案例见注）。不加约束时分数一路狂飙，但"人类满意度"（图里的绿线）在超过甜点后崩塌。<strong>β（KL 约束）越大，刷分越难，但也越难学好</strong>——这是 RLHF 的核心张力。</p>
+
+      <div class="warn">真实世界中 reward hacking 的案例包括：模型学会在回答里塞满看似专业的引用标记来骗过"有引用加分"的 RM；RM 偏好自信语气，模型便对不懂的问题也斩钉截铁（幻觉加剧）。<b>对策</b>：迭代重训 RM、混合人工抽检、保持 KL 约束、多奖励信号集成。没有一个能根治，只能持续盯防。</div>
+
+      <div class="tip">RLHF 的心法：<mark>你优化的从来不是"回答质量"，而是"奖励模型的打分"</mark>。打分的模型有多像人，上限就有多高；差多少，hack 的空间就有多大。</div>
+    </section>
+
+    <!-- ==================== 第 5 章（L3） ==================== -->
+    <section class="chapter" data-level="3" data-title="DPO 一族：绕开强化学习的对齐">
+      <h2>DPO 一族：绕开强化学习的对齐</h2>
+      <p class="tldr">DPO（Direct Preference Optimization，直接偏好优化）的证明很巧妙：PPO 想要的最优解有解析形式，直接代入奖励定义，就得到一个不需要奖励模型、不需要 RL 循环、甚至不需要采样的目标函数——只用成对偏好数据，像普通 SFT 一样训练。</p>
+
+      <h3>DPO 在优化什么</h3>
+      <p>DPO 的数据格式是<mark>偏好对</mark>：同一个问题，一个人类更喜欢的回答 $y_w$（win，胜方）和一个更差的 $y_l$（lose，负方）。DPO 直接提高"当前模型给 $y_w$ 相对 $y_l$ 的概率比"超过"参考模型（SFT 版）给出的概率比"，目标函数：</p>
+      $$\mathcal{L}_{\text{DPO}} = -\log \sigma\!\left(\beta \log\frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta \log\frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)}\right)$$
+      <p>逐项读：<mark>$\pi_\theta$</mark> 是当前正在训练的模型，<mark>$\pi_{\text{ref}}$</mark> 是冻结的 SFT 参考模型（相当于隐式的 KL 约束者），<mark>$\beta$</mark> 是温度系数（控制"离参考模型多远"），$\sigma$ 是 sigmoid 函数（把任意数压到 0–1，使整体变成一个"胜率"的概率）。直觉：<b>让模型 relative 地抬高好回答、压低差回答，同时别走太远</b>。</p>
+
+      <h3>家族成员</h3>
+      <table>
+        <tr><th>方法</th><th>数据要求</th><th>特点</th></tr>
+        <tr><td><b>DPO</b></td><td>成对偏好（好 vs 差）</td><td>简单稳定，开源社区事实标准</td></tr>
+        <tr><td><b>ORPO</b></td><td>成对偏好</td><td>把 SFT 和对齐合并进一个损失，连参考模型都不用（省显存）</td></tr>
+        <tr><td><b>KTO</b></td><td>只需二值标签（好/坏，各归各的）</td><td>数据门槛最低——真实用户的点赞/点踩就能用</td></tr>
+      </table>
+
+      <div class="widget">
+        <div class="widget-title">翻卡：DPO vs PPO 的取舍</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">PPO 的优势</div><div class="back">在线生成 + 在线打分，能利用奖励模型的精细分数信号，部分任务上限更高；可以叠多目标奖励（安全 + 有用分开建模再加权）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">PPO 的代价</div><div class="back">要同时维护策略、参考、奖励三个模型 + RL 训练循环，显存 ×3 起步，超参敏感（β、clip、KL 系数）， notoriously 难调。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">DPO 的优势</div><div class="back">一个模型、一份成对数据、一个交叉熵式的损失函数，稳定好调、复用全部 SFT 基建；小团队几天就能跑通。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">DPO 的代价</div><div class="back">离线数据、信号较粗（只有"谁好谁差"，没有"好多少"）；数据分布外的问题它学不到；长期迭代可能"越训越像 chosen 风格"而过拟合。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你只有一个 24GB 消费级显卡和 3000 条人工标注的"好/差回答对"，想给 7B 模型做对齐。最现实的选择是？</p>
+        <button class="opt" data-fb">PPO 需要同时加载策略+参考+奖励模型（7B 全精度约 84GB 起步），24GB 根本放不下，即使有偏好数据也跑不了。">PPO/RLHF</button>
+        <button class="opt" data-fb="正确。DPO 只需当前模型+冻结参考模型（QLoRA 下 24GB 足够），且 3000 条成对数据正是它的舒适区。">DPO（配合 QLoRA）</button>
+        <button class="opt" data-fb">再攒 100 倍数据解决的只是数据量，解决不了 PPO 的显存和工程复杂度问题；而且 30 万条人工偏好对成本惊人。">先攒 30 万条数据再做 RLHF</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话取舍：<mark>要极致效果且有算力团队 → PPO；要快速稳定落地 → DPO 家族</mark>。2024 年以来的行业现实是：绝大多数开源微调的对齐步骤，都停在 DPO。</div>
+    </section>
+
+    <!-- ==================== L3 测验 ==================== -->
+    <section class="chapter" data-level="3" data-title="L3 测验：机制拷问">
+      <h2>L3 测验：机制拷问</h2>
+      <p class="tldr">三道题，考 RLHF 与 DPO 的机制理解。</p>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">RLHF 第 2 步"训练奖励模型"用的标注数据长什么样？</p>
+        <button class="opt" data-fb="正确。RM 的数据是同一问题的多个回答加人类排序/打分，用它训练"输入回答→输出分数"的回归模型。">同一问题的多个回答 + 人类对它们的排序偏好</button>
+        <button class="opt" data-fb="那是 SFT 的数据格式。RM 需要的是比较信号，不是单条示范。">问题 + 一个标准答案</button>
+        <button class="opt" data-fb">分类标签训练不出细粒度分数，RM 要的是能反映偏好强弱的排序或分值信号。">问题 + "该回答属于哪一类"的分类标签</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">PPO 训练中 KL 散度约束（β）的作用是什么？</p>
+        <button class="opt" data-fb">方向反了：KL 约束是防止变化太快/太大，让训练更慢更稳，不是加速。">加快模型远离 SFT 模型，学得更快</button>
+        <button class="opt" data-fb">RM 的训练在 PPO 之前就结束了，PPO 阶段的 RM 是冻结的打分器。">防止奖励模型被重新训练</button>
+        <button class="opt" data-fb="正确。没有 KL 约束，策略会一路滑向 reward hacking 区域；约束太紧又学不动。β 是 RLHF 最要命的超参之一。">限制新模型别偏离 SFT 模型太远，给 reward hacking 上锁</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">关于 DPO 目标函数里的"参考模型 π_ref"，理解正确的是？</p>
+        <button class="opt" data-fb">参考模型必须冻结。它扮演"锚点"：DPO 是让模型相对锚点抬高好回答的概率比，锚点自己也动的话，相对比较就失去意义。">它是和当前模型一起联合训练的</button>
+        <button class="opt" data-fb="正确。π_ref 通常就是 SFT 完成的模型，冻结不动。它相当于 PPO 里 KL 约束的隐式实现，防止对齐训崩。">它是冻结的 SFT 模型，起隐式 KL 约束的作用</button>
+        <button class="opt" data-fb">方向相反：DPO 的动机正是摆脱奖励模型——它把 RM 的解析最优解直接代入了目标函数，不再需要显式 RM。">它是训练中的奖励模型</button>
+        <div class="feedback"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 6 章（L4） ==================== -->
+    <section class="chapter" data-level="4" data-title="上线与部署：导出、推理加速与数据回流闭环">
+      <h2>上线与部署：导出、推理加速与数据回流闭环</h2>
+      <p class="tldr">训练完只是上半场。上线 = 把权重导出成推理引擎认的格式（merge），用 vLLM/llama.cpp 等引擎跑起来（必要时量化），再把线上 badcase 回流成下一轮训练数据——<mark>微调上线 → 收集 badcase → 数据回流再训练</mark>，闭环转起来模型才持续变好。</p>
+
+      <h3>上线三步</h3>
+      <table>
+        <tr><th>步骤</th><th>做什么</th><th>常用选择</th></tr>
+        <tr><td>① Merge / 导出</td><td>把 LoRA 等小模块的增量权重合回基座，或直接导出全量权重为通用格式</td><td>merge 成 safetensors / GGUF；注意导出前先做最终评估</td></tr>
+        <tr><td>② 推理引擎</td><td>加载权重、服务请求。关键是吞吐（每秒多少 token）和延迟（首字多快）</td><td>GPU 服务器：<b>vLLM</b>（PagedAttention，高吞吐）；本地/边缘：<b>llama.cpp</b>（CPU 可跑）</td></tr>
+        <tr><td>③ 量化推理</td><td>把权重精度降低换显存/速度，如 INT8、4bit</td><td>AWQ / GPTQ（GPU）、Q4_K_M 等（GGUF）；注意：量化有轻微质量损失，对齐后的模型对量化更敏感，要复评</td></tr>
+      </table>
+
+      <div class="warn">最常见的上线事故：训练评估全过，量化部署后用户投诉"变傻了"。<mark>对齐后的模型（尤其 DPO 后）行为分布更尖锐，量化误伤更明显</mark>。务必在"最终部署形态"（量化后、引擎里）再跑一遍评估。</div>
+
+      <h3>badcase 回流闭环</h3>
+      <div class="widget steps">
+        <div class="widget-title">数据回流闭环（点"下一步"逐步看）</div>
+        <div class="step"><b>上线服务：</b>模型部署到真实流量，记录所有请求、回答、用户反馈（点赞/点踩/人工接管）。</div>
+        <div class="step"><b>badcase 挖掘：</b>从日志里筛出问题样本——错误回答、被点踩的、触发安全拦截的、用户重复追问的（没答好的信号）。聚类归因：是知识问题、格式问题还是对齐问题？</div>
+        <div class="step"><b>构造修复数据：</b>badcase 改写进训练集：知识错 → 补 RAG 或加事实数据；格式/偏好问题 → 改造成 DPO 偏好对（修好的是 chosen，线上的是 rejected）。</div>
+        <div class="step"><b>增量训练 + 回归评估：</b>小步再训练（防止灾难性遗忘，参考第 1 课），<b>必须跑回归集</b>：确认新数据修了 bug，又没弄坏旧能力。</div>
+        <div class="step"><b>灰度发布：</b>新版本先给 5% 流量，对比线上指标（点踩率、接管率、延迟），稳定后全量。闭环回到第一步。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="key">判断一个团队微调是否成熟，不看它训出过什么模型，看它的<mark>回流闭环转了几圈</mark>。只训不回流，模型上线第一天就是它最好的一天。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">线上用户大量点踩"回答太啰嗦"的样本，回流时最高效的用法是？</p>
+        <button class="opt" data-fb">原样塞回 SFT 会稀释训练集，而且"啰嗦"的负面对比信号恰恰是 DPO 偏好对的用武之地：它专门学"差在哪"。">原样加入下一轮 SFT 训练集</button>
+        <button class="opt" data-fb">删掉啰嗦回答浪费了大量"真实失败信号"——它正是 rejected 侧的最佳原料。">直接从数据集中删掉这些啰嗦回答</button>
+        <button class="opt" data-fb="正确。线上啰嗦版做 rejected，人工改写简洁版做 chosen，构造偏好对喂给 DPO——这正是回流闭环的标准操作。">把啰嗦版做 rejected、人工改写的简洁版做 chosen，构造 DPO 偏好对</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">上线口诀：<mark>导出要 merge，推理选引擎，量化必复评，badcase 要回流</mark>。部署不是终点，是模型生命周期里"数据最多"的起点。</div>
+    </section>
+
+    <!-- ==================== 第 7 章（L4） ==================== -->
+    <section class="chapter" data-level="4" data-title="落地决策器：你的场景该怎么选">
+      <h2>落地决策器：你的场景该怎么选</h2>
+      <p class="tldr">学完本课，回到最现实的问题：给你具体的场景约束，评估、对齐、部署三条线分别怎么选？下面这个决策器把你的输入实时映射成一套方案组合，并解释为什么。</p>
+
+      <div class="widget demo" id="advisor">
+        <div class="widget-title">微调落地决策器（改动任意选项，推荐实时更新）</div>
+        <div class="controls adv-grid">
+          <label>模型用途
+            <select name="scene">
+              <option value="chat">对话/客服（C 端体验）</option>
+              <option value="extract">结构化抽取（JSON/字段）</option>
+              <option value="write">内容创作（营销/文案）</option>
+              <option value="code">代码助手</option>
+            </select>
+          </label>
+          <label>延迟要求
+            <select name="lat">
+              <option value="strict">严格（&lt; 1s，实时交互）</option>
+              <option value="mid">中等（1–3s，可接受等待）</option>
+              <option value="loose">宽松（异步/批处理）</option>
+            </select>
+          </label>
+          <label>预算/算力
+            <select name="budget">
+              <option value="low">紧张（单卡 ≤ 24GB 或 API 计费敏感）</option>
+              <option value="mid">中等（单卡 40–80GB）</option>
+              <option value="high">充足（多卡/集群）</option>
+            </select>
+          </label>
+          <label>合规要求
+            <select name="reg">
+              <option value="no">一般（无特殊要求）</option>
+              <option value="yes">高（金融/医疗/政企，需审计）</option>
+            </select>
+          </label>
+          <label>是否持续迭代
+            <select name="iter">
+              <option value="yes">是（每周/每月要更新模型）</option>
+              <option value="no">否（训一次用很久）</option>
+            </select>
+          </label>
+        </div>
+        <div id="advOut"></div>
+      </div>
+
+      <div class="warn">决策器输出是<mark>经验法则，不是定理</mark>。真实选型还要考虑团队经验、底座模型许可证、数据隐私等未纳入的维度。把它当作"第一版方案草稿"，再用第 2 章的评估方法验证。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">决策器给"高合规 + 持续迭代"的场景推荐了什么关键动作？（动手前先猜）</p>
+        <button class="opt" data-fb">基准分数只是通用能力 proxy，合规场景要的是"高风险类别一条都不能错"——这需要定向评测集 + 人工抽检。">只刷公开基准分数</button>
+        <button class="opt" data-fb="正确。高合规场景必须建自己的高危用例评测集（红队集），人工抽检兜底；持续迭代则要求回归集常驻，防"修了 A 坏了 B"。">建立定向评测集（含高危红队用例）+ 人工抽检 + 每次迭代跑回归</button>
+        <button class="opt" data-fb">LLM 裁判是辅助，合规审计需要人签字背书；且裁判模型自身偏见在合规场景风险更大。">全部用 LLM-as-Judge 自动评</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本课收束成一张图：<mark>评估定方向 → 对齐出质量 → 部署产生数据 → 数据回流再评估</mark>。这个环转得越快，你的模型就离用户越近。</div>
+    </section>
+
+    <!-- ==================== L4 综合测验 ==================== -->
+    <section class="chapter" data-level="4" data-title="L4 综合测验：毕业考">
+      <h2>L4 综合测验：毕业考</h2>
+      <p class="tldr">五道题，覆盖全课。全对说明你已具备独立做"评估—对齐—上线"全链路的能力。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">1. 对齐后模型在 RM 分数大涨，但人工评测显示回答质量下降。最可能的解释是？</p>
+        <button class="opt" data-fb">分数打架不罕见，但"RM 涨、人评降"指向的是 RM 与人类脱节，而不是人评失效。">人工评测标注出错，应以 RM 为准</button>
+        <button class="opt" data-fb="正确。这是 reward hacking 的标准症状：模型找到了 RM 的系统性盲区，分数学到了，质量没学到。应回到第 4 章的对策：重训 RM、加约束、人工介入。">模型 reward hacking 了——钻了 RM 的盲区刷分，而非真正变好</button>
+        <button class="opt" data-fb">KL 约束太紧只会学不动（RM 分涨不动），不会造成 RM 涨而人评降。">KL 约束 β 太大导致的</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">2. 下面哪一组"评估方法 ↔ 用途"的配对是错误的？</p>
+        <button class="opt" data-fb="错误配对。损失对啰嗦不敏感（啰嗦但可预测的文本损失照样低），对齐后的偏好提升必须用 LLM 裁判或人工评，损失只能做辅助监控。">用留出集损失衡量对齐后的偏好提升 ✅此配对错误</button>
+        <button class="opt" data-fb">配对正确：对外横向宣称必须靠第三方可复现的公开基准。">用公开基准支撑"行业领先"的宣称</button>
+        <button class="opt" data-fb="配对正确：LLM 裁判的成本优势就在大批量场景。">用 LLM-as-Judge 做日常迭代的大批量筛选</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">3. 关于 ORPO 相对 DPO 的改动，正确的是？</p>
+        <button class="opt" data-fb">KTO 才是免成对的那个；ORPO 仍需要偏好对。">它不再需要偏好对</button>
+        <button class="opt" data-fb">参考模型正是 ORPO 想要省掉的东西——它把 SFT 损失和偏好损失合一，无需 π_ref。">它需要额外训练一个奖励模型</button>
+        <button class="opt" data-fb="正确。ORPO 把传统的 SFT 项和对齐的 odds-ratio 偏好项合并，一次训练同时完成学格式 + 学偏好，省掉了参考模型。">它把 SFT 与对齐合进同一个损失，连参考模型都省了</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">4. 用 vLLM 部署对齐后的模型前，最容易被漏掉的一步是？</p>
+        <button class="opt" data-fb="正确。对齐后模型分布更尖锐，量化误伤更明显；必须在部署形态（量化+引擎）下复评，不能只看训练时的分数。">在量化后的最终形态上复跑评估</button>
+        <button class="opt" data-fb">合并/导出当然是必须步骤，但它属于标准流程，不算"最容易被漏掉"的——漏掉它模型根本起不来，漏掉的是更隐蔽的量化复评。">把 LoRA 权重 merge 回基座</button>
+        <button class="opt" data-fb">延迟压测重要，但它不直接决定"模型质量"，不是最容易漏且代价最大的。">做压测测首 token 延迟</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">5. 上线后第一周，哪个信号最应该触发一次"回流再训练"迭代？</p>
+        <button class="opt" data-fb">平均响应时长是工程指标，交给推理引擎优化（vLLM 调参/加卡），不需要重训模型。">平均响应时长涨了 200ms</button>
+        <button class="opt" data-fb="正确。同一问题被反复追问/改写重问，是"上一个回答没满足用户"的强信号——正是该挖掘 badcase 构造偏好对、走一轮 DPO 的时刻。">某类问题被用户反复追问（重问率高）</button>
+        <button class="opt" data-fb">单条恶意提示触发拦截恰恰说明安全层在正常工作，属于对抗常态，不足以单独触发再训练。">有一条恶意提示词触发了安全拦截</button>
+        <div class="feedback"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 20px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="series-link" style="padding:0 16px 40px">← 返回 <a href="llm-finetuning.html">大模型微调 · 系列入口</a></div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示 ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 演示通用（支持 select） ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root).concat($$('select', root));
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : (i.tagName === 'SELECT' ? i.value : +i.value); const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.tagName === 'SELECT' ? i.options[i.selectedIndex].text : i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+
+// 演进时间线交互
+(() => {
+  const DATA = {
+    sft: {
+      name: 'SFT（监督微调）', time: '2019 年前后成为主流（GPT-2 时代起）',
+      solves: '解决"不会说话"：让预训练模型学会按指令格式、按示范风格作答。',
+      limit: '盲区：只学到"模仿示范"，示范之外的行为不可控；对"好/坏"没有概念——啰嗦但通顺的回答在训练目标里和简洁回答一样"合格"。'
+    },
+    rm: {
+      name: 'RM（奖励模型）', time: '2020（OpenAI《Learning to Summarize from Human Feedback》）',
+      solves: '解决"好坏无法量化"：把人类偏好转变成一个可自动计算的标量分数，为后续优化提供目标。',
+      limit: '盲区：它只是人类偏好的近似——近似的程度决定了后来能被钻的空子有多大（reward hacking 的种子在此埋下）。'
+    },
+    ppo: {
+      name: 'PPO / RLHF', time: '2022（InstructGPT；2022 底 ChatGPT 将其带入大众视野）',
+      solves: '解决"有了分数怎么优化"：用强化学习（PPO 算法）直接推高奖励模型认可的回答的生成概率，首次让模型大规模对齐人类偏好。',
+      limit: '盲区：工程极其复杂（策略/参考/奖励三模型同训）、超参敏感、reward hacking 高发。效果强，但只有头部团队玩得起。'
+    },
+    dpo: {
+      name: 'DPO（直接偏好优化）', time: '2023（Rafailov et al.）',
+      solves: '解决"RLHF 太重"：数学上证明了 PPO 的最优解有解析形式，代入后消掉奖励模型和 RL 循环——成对偏好数据 + 一次监督式训练即可完成对齐。',
+      limit: '盲区：离线数据信号较粗（只有谁好谁差、没有好多少）；分布外问题学不到；数据质量决定一切。'
+    },
+    orpo: {
+      name: 'ORPO / KTO（2024）', time: '2024',
+      solves: '解决"DPO 还是麻烦"：ORPO 把 SFT 与对齐合进一个损失，连参考模型都省掉；KTO 更进一步，只要"好/坏"二值标签——真实产品的点赞点踩直接可用。',
+      limit: '盲区：都是仍在活跃演进中的新方法，长周期、大规模场景的效果验证还不如 DPO 充分；工程便利性换来了一些理论上的粗糙。'
+    }
+  };
+  const nodes = document.querySelectorAll('#tlSvg .node');
+  const out = document.getElementById('tlDetail');
+  nodes.forEach(n => n.addEventListener('click', () => {
+    nodes.forEach(x => x.classList.toggle('active', x === n));
+    const d = DATA[n.dataset.k];
+    out.innerHTML = `<h4>${d.name} <small style="color:var(--muted);font-weight:400">${d.time}</small></h4>
+      <p class="solves">✅ 解决：${d.solves}</p>
+      <p>⚠️ 仍缺：${d.limit}</p>`;
+  }));
+})();
+
+// Reward hacking 模拟器（第 4 章）
+demo('#hackDemo', ({ len, emo, beta }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const mu = (len - 120) / 200;
+  const rmScore = Math.tanh(mu * 0.8) * 45 + emo * 3.2 + 50;           // RM 偏爱长+emoji（隐藏偏好）
+  const sweet = 150;
+  const human = 96 * Math.exp(-Math.pow(len - sweet, 2) / (2 * 130 * 130)) - emo * 3.2;
+  const kl = Math.abs(len - 120) * 0.04 + emo * 0.9;                    // 偏离 SFT 模型的程度
+  const hackGain = Math.max(0, rmScore - 50 - kl * (beta / 2));         // β 越强刷分越被压制
+  const rmShown = Math.max(0, Math.min(100, 50 + hackGain));
+  const bars = [
+    { v: rmShown, c: '#a855f7', label: `RM 分数：${rmShown.toFixed(0)}` },
+    { v: Math.max(0, Math.min(100, human)), c: '#16a34a', label: `人类满意度：${Math.max(0, human).toFixed(0)}` }
+  ];
+  const bw = 200, gap = 90, x0 = (W - (bw * 2 + gap)) / 2, base = H - 44, maxH = H - 90;
+  bars.forEach((b, i) => {
+    const h = maxH * b.v / 100, x = x0 + i * (bw + gap);
+    ctx.fillStyle = b.c; ctx.globalAlpha = .85;
+    ctx.beginPath(); ctx.roundRect(x, base - h, bw, h, 6); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = css.getPropertyValue('--text'); ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(b.label, x + bw / 2, base - h - 10);
+    ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '12px sans-serif';
+    ctx.fillText(i === 0 ? '（紫色=你优化的目标）' : '（绿色=你真正想要的）', x + bw / 2, base + 18);
+  });
+  ctx.strokeStyle = css.getPropertyValue('--border');
+  ctx.beginPath(); ctx.moveTo(20, base); ctx.lineTo(W - 20, base); ctx.stroke();
+  ctx.textAlign = 'left';
+  root.querySelector('.readout').textContent =
+    (human > rmShown - 25
+      ? '当前区域：RM 分与人评基本同步，良性优化区。'
+      : '⚠️ 进入 reward hacking 区：RM 高分靠的是长度和 emoji，人类满意度在跌。') +
+    ` KL 偏离=${kl.toFixed(1)}，β=${beta} → 刷分被压制 ${Math.min(95, Math.round((1 - Math.exp(-kl * beta / 8)) * 100))}%。`;
+});
+
+// 落地决策器（第 7 章）
+demo('#advisor', (p, ctx, cv, root) => {
+  const out = document.getElementById('advOut');
+  const S = { scene: {}, lat: {}, budget: {}, reg: {}, iter: {} };
+  // --- 评估方案 ---
+  const evalParts = [];
+  evalParts.push('留出集损失做训练监控');
+  if (p.reg === 'yes') {
+    evalParts.push('自建<b>高危用例评测集</b>（红队集，覆盖合规风险类别）');
+    evalParts.push('<b>人工抽检</b>作为发布门禁');
+  }
+  if (p.scene === 'extract') evalParts.push('<b>程序化校验</b>：JSON Schema 合法性 + 字段准确率，自动回归');
+  if (p.scene === 'chat' || p.scene === 'write') evalParts.push('LLM-as-Judge 批量初筛 + 小样本人工复核');
+  if (p.iter === 'yes') evalParts.push('<b>回归集常驻</b>：每次迭代必跑，防灾难性遗忘');
+  const evalWhy = p.reg === 'yes'
+    ? '合规场景下"一条高危错误 = 一票否决"，公开基准再高也替代不了定向红队评测和人工背书。'
+    : '组合评估覆盖各自盲区：损失盯训练、裁判盯批量、人工盯关键版本。';
+  // --- 对齐方案 ---
+  let align;
+  if (p.budget === 'high') align = { rec: 'SFT → RM → PPO（经典 RLHF）', why: '算力充足时 RLHF 上限最高；可叠加安全与有用双奖励加权，且能多卡摊薄三模型并行的显存压力。' };
+  else if (p.budget === 'low') align = { rec: 'SFT → DPO（QLoRA）', why: '单卡资源下 PPO 的显存和调参成本不可承受；DPO 只多需要一个冻结参考模型，QLoRA 后 24GB 可跑 7B 级对齐。' };
+  else align = { rec: 'SFT → DPO / ORPO', why: '中等算力下 DPO 家族的性价比最优；若希望合并 SFT 与对齐省一次训练，可试 ORPO。' };
+  if (p.iter === 'yes') align.why += ' 持续迭代场景建议把"线上点踩样本构造偏好对"做成例行管线，小步快跑。';
+  // --- 部署方案 ---
+  let dep;
+  if (p.lat === 'strict' && p.budget !== 'low') dep = { rec: 'vLLM + 量化（AWQ/GPTQ INT4 起步）', why: '实时交互要首 token 快；vLLM 的连续批处理保吞吐，量化压显存换速度。注意：对齐后模型量化必须复评。' };
+  else if (p.budget === 'low' && p.lat !== 'strict') dep = { rec: 'llama.cpp（GGUF Q4）或托管 API', why: '预算紧张时自建 GPU 不划算；本地 CPU/边缘用 llama.cpp，流量小直接调 API 反而总成本低。' };
+  else dep = { rec: 'vLLM（INT8 或 FP16）', why: '中等延迟要求下，vLLM 开启动态批处理即可兼顾吞吐与首字延迟，量化带来的质量风险相对可控。' };
+  if (p.reg === 'yes') dep.why += ' 合规要求：保留全部请求审计日志，模型版本留档可回滚。';
+  // --- 场景加成 ---
+  let sceneNote = '';
+  if (p.scene === 'extract') sceneNote = '结构化抽取的输出格式校验要放在"评估"和"回流"两端的必经路上：程序能判对错，就别浪费人工。';
+  if (p.scene === 'chat') sceneNote = '对话场景的重问率/点踩率是最灵敏的 badcase 信号，回流管线优先盯这两个指标。';
+  if (p.scene === 'code') sceneNote = '代码场景建议在评测集里放"可执行性检查"（生成代码能否通过测试），比主观打分可靠得多。';
+  if (p.scene === 'write') sceneNote = '创作场景风格偏好因人而异，偏好对数据要多来源标注，避免对齐到单一标注员的口味。';
+
+  out.innerHTML = `
+    <div class="rec">🎯 推荐组合：${align.rec.split('→').pop().trim()} ｜ ${dep.rec.split('（')[0].trim()}</div>
+    <div class="block"><b>📏 评估方案</b><span>${evalParts.join('；')}。</span></div>
+    <div class="block"><b>🧭 对齐方案</b><span>${align.rec}</span></div>
+    <div class="block"><b>🚀 部署方案</b><span>${dep.rec}</span></div>
+    <div class="why">为什么这样选 —— 评估：${evalWhy}<br>对齐：${align.why}<br>部署：${dep.why}${sceneNote ? '<br>场景提示：' + sceneNote : ''}</div>`;
+});
+</script>
+</body>
+</html>

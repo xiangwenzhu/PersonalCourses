@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型微调 02 · LoRA 原理与调参</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* 本课定制样式 */
+.demo select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px}
+.series-link{max-width:860px;margin:0 auto;text-align:center;font-size:14px;color:var(--muted)}
+.series-link a{color:var(--primary);font-weight:600}
+.bar-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;margin-top:8px}
+.bar-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tuner-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.tuner-grid label{display:flex;flex-direction:column;font-size:14px;gap:4px}
+.tuner-grid select,.tuner-grid input[type=range]{width:100%}
+#tunerResult{border-radius:10px;padding:14px 16px;margin-top:14px;border:1px solid var(--border);background:var(--card)}
+#tunerResult .rec{font-size:19px;font-weight:700;margin-bottom:6px}
+#tunerResult .why{font-size:14.5px;color:var(--text)}
+#tunerResult .alt{font-size:13.5px;color:var(--muted);margin-top:6px}
+#loraReadout{font-size:15px;margin:10px 0 0}
+#loraReadout b{color:var(--primary)}
+.rank-viz-note{font-size:13px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>大模型微调 · 第 2 课：LoRA 原理与调参</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ==================== 第 1 章 ==================== -->
+    <section class="chapter" data-level="1" data-title="为什么需要 LoRA：只改一点点">
+      <h2>为什么需要 LoRA：只改一点点</h2>
+      <p class="tldr">第 1 课算过账：全量微调要把模型的每个参数连同梯度和优化器状态都搬进显存，动辄几十上百 GB。LoRA 的想法朴素得惊人——既然原来的模型已经很好，我们只训练一小片"补丁"，不去动整本书。</p>
+
+      <p>回忆第 1 课的结论：7B 模型全量微调，仅静态显存（参数 + 梯度 + Adam 状态）就约 84 GB，一张 24 GB 的消费级显卡连门都进不了。但我们微调的目的通常不是"重新教模型说话"，而是"让它学会一点点新习惯"——换一种口吻、记一套格式、懂一个领域的行话。</p>
+
+      <p>既然是"一点点新习惯"，为什么要重写整本书？这就是 <mark>LoRA（Low-Rank Adaptation，低秩适配）</mark> 的出发点：<strong>冻结原模型的全部参数，只往关键位置插入并训练两个小矩阵</strong>。训练结束后，两个小矩阵加起来往往只占原模型参数的千分之几，却足够让模型学会你的任务。</p>
+
+      <div class="analogy">出版社要修订一本 1000 页的畅销书。重印全书（全量微调）成本巨大，而且一不小心改错字还会把原本对的内容改坏。聪明的做法是：正文一字不动，随书附一小叠"修订便签"（LoRA），读者把便签贴到对应的页面上就得到了新版。想回退？撕掉便签即可，原书毫发无损。</div>
+
+      <div class="key">LoRA 的三重好处：① 显存省——只训练千分之几的参数，梯度与优化器状态也只需为这千分之几准备；② 不动原模型——旧能力天然被保护，灾难性遗忘大幅减轻（回想第 1 课的"防遗忘锁"）；③ 可插拔——一个底座可以配多个"便签"，针对不同任务随时切换。</div>
+
+      <div class="widget">
+        <div class="widget-title">翻卡：建立第一直觉</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">LoRA 是什么？</div><div class="back">一种参数高效微调方法：冻结原模型，只训练插入的小矩阵（"修订便签"），用它来改变模型行为。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">为什么省显存？</div><div class="back">梯度与优化器状态只需为"被训练的少量参数"准备。训练 0.1% 的参数，优化器账就变成原来的约 0.1%。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">原模型会变吗？</div><div class="back">不会。原参数全程冻结、数值不变。新能力全部来自小矩阵，因此遗忘旧能力的风险也小得多。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">什么时候用它？</div><div class="back">你想改变模型的行为/风格/格式，但又没有全量微调那么大的显存预算时——尤其是一块消费级显卡想微调大模型。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">LoRA 最核心的省钱原理是什么？</p>
+        <button class="opt" data-fb="量化是 QLoRA 的手段，不是 LoRA 本身的原理。LoRA 省显存首先靠的是『只训练极少数参数』。">把原模型参数压缩到 4bit 存储</button>
+        <button class="opt" data-fb="正确。只训练千分之几的新增参数，梯度与 Adam 状态也只按这些参数计算，显存大幅下降。">只训练少量新增参数，不为全部参数保存梯度和优化器状态</button>
+        <button class="opt" data-fb">LoRA 恰恰是不动原参数，只新增小矩阵；原参数冻结是它能防遗忘的原因。">把原模型参数全部重新初始化再训练</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话记住本章：全量微调是"重印全书"，LoRA 是"贴修订便签"。便签虽小，选对位置（后面讲 target_modules）就能起到大作用。</div>
+    </section>
+
+    <!-- ==================== 第 2 章 ==================== -->
+    <section class="chapter" data-level="1" data-title="低秩直觉：变化也许很简单">
+      <h2>低秩直觉：变化也许很简单</h2>
+      <p class="tldr">LoRA 赌的是一件事：微调带来的权重变化，可能"远比你想象的简单"。一种叫"秩"（rank）的量，就是用来衡量"一张表格的变化到底需要多少独立信息"的。</p>
+
+      <p>先做个思想实验。你要给一张照片调色：把整体调亮、加一点暖色调。这张照片有 100 万个像素，但你的修改其实只由两三个参数决定（亮度、色温）。换句话说：<mark>修改很复杂（100 万像素），描述修改的方式却很简单（两三个旋钮）</mark>。</p>
+
+      <p>LoRA 的作者发现，大模型微调时也存在类似现象：权重矩阵的变化 $\Delta W$，虽然本身很大，却常常可以由"很少的几行几列"近似表示。这个"很少的几"就是<mark>秩（rank）</mark>——粗略地说，秩是"这张表里有多少行是真正独立的、谁也代替不了谁"的度量。</p>
+
+      <div class="analogy">一个班级 50 个学生的身高和体重表，看起来是两列独立数据；但如果大家只是按"壮实程度"不同成比例地又高又重，那这 50 行其实只由 1 个隐藏因素决定——秩就是 1。秩越低，表格里"冗余"越多，用少量信息就能近似还原整张表。</div>
+
+      <p>下面的演示帮你建立手感：拖动"独立因素数"滑块，看一张由隐藏因素生成的表格如何被"低秩近似"重建。注意重建误差随秩增加而下降的速度——你会发现<mark>误差下降很快趋缓</mark>，这正是 LoRA 敢用小矩阵的底气。</p>
+
+      <div class="widget demo" id="rankDemo">
+        <div class="widget-title">低秩近似演示：秩越小，需要的"独立信息"越少</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>近似用的秩 r <span class="val" data-for="r"></span><input type="range" name="r" min="1" max="12" value="2"></label>
+          <label>原始表格的秩（真实独立因素数）<span class="val" data-for="true"></span><input type="range" name="true" min="2" max="12" value="8"></label>
+        </div>
+        <p class="readout"></p>
+        <p class="rank-viz-note">示意：用随机因素矩阵模拟"真实变化表"，再用截断到前 r 个因素的方式重建，展示近似误差如何随 r 变化。真实权重变化不会这么规则，但"误差快速趋缓"的定性规律一致（LoRA 论文与大量后续实验的观察）。</p>
+      </div>
+
+      <div class="key">把"秩"翻译成微调语言：<mark>微调要教会模型的"新变化"，可能只需要很少几个独立方向</mark>。既然如此，与其更新整个大矩阵，不如只学习这几个方向——这就是下一章公式 $\Delta W = BA$ 的全部秘密。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">"权重更新的秩很低"这句话，最贴近的直觉解释是？</p>
+        <button class="opt" data-fb">低秩不等于权重小，而是说它的变化可以由很少几个独立方向近似描述。">微调后每个参数的变化量都非常小</button>
+        <button class="opt" data-fb="列多列少是矩阵的形状，秩衡量的是"行/列之间有多少是真正独立的"。">这个矩阵的行数一定很少</button>
+        <button class="opt" data-fb="正确。秩低 = 真正独立的信息少，因此可以用一个小得多的矩阵近似这个大变化——这正是 LoRA 的假设。">这个大变化里真正"独立、不可替代"的信息很少，可以被少量信息近似</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章你只需要带走一个直觉：大变化 ≠ 复杂描述。微调带来的权重变化可能"内在很简单"（低秩），这为"只训练小矩阵"提供了依据。记住这个词——秩，下一章它会变成公式里的 r。</div>
+    </section>
+
+    <!-- ==================== L1 测验 ==================== -->
+    <section class="chapter" data-level="1" data-title="L1 测验：直觉检查">
+      <h2>L1 测验：直觉检查</h2>
+      <p class="tldr">三道题，检验"修订便签"和"低秩"两个直觉是否到位。</p>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">用"修订便签"类比 LoRA，哪一点是准确的？</p>
+        <button class="opt" data-fb="正确。便签对应新增的小矩阵，原书（原模型）不动；撕掉便签 = 回到原模型，正是 LoRA 的可插拔性。">便签贴上去书就变了，但原书正文（原参数）一字未动，撕掉便签即可还原</button>
+        <button class="opt" data-fb">LoRA 只插入小矩阵、不修改原参数，这与"重印全书"相反。">书越厚（模型越大），需要重印的部分就越多</button>
+        <button class="opt" data-fb="便签可以是多份（多 LoRA），不是只能有一份。">一本书只能贴一张便签</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">关于"秩"，下列说法正确的是？</p>
+        <button class="opt" data-fb"">参数多寡与秩无关。一个很大的矩阵也可以秩很低（行/列高度相关），一个很小矩阵也可以满秩。">矩阵越大，秩一定越大</button>
+        <button class="opt" data-fb="正确。秩衡量的是"行与列之间真正独立的成分有多少"，与矩阵尺寸没有必然关系。">秩衡量矩阵中"真正独立、不可互相推导"的成分数量</button>
+        <button class="opt" data-fb"">低秩恰恰意味着"信息高度相关、冗余大"，用少量信息就能近似。">秩低说明这张表里的信息彼此都不相关</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">为什么说 LoRA"天然更不容易灾难性遗忘"？</p>
+        <button class="opt" data-fb"">训练步数多少与遗忘没有这种直接因果关系，关键在参数是否被改动。">因为 LoRA 训练步数更少，模型来不及遗忘</button>
+        <button class="opt" data-fb"">小矩阵本身不防遗忘，防遗忘的是"原参数没变"。">因为新增的矩阵太小，装不下旧知识</button>
+        <button class="opt" data-fb="正确。旧能力储存在原参数里，LoRA 全程冻结它们，承载旧能力的旋钮没被重调。">因为承载旧能力的原参数全程冻结，改动被限制在新增的小矩阵里</button>
+        <div class="feedback"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 3 章 ==================== -->
+    <section class="chapter" data-level="2" data-title="LoRA 核心公式拆解">
+      <h2>LoRA 核心公式拆解</h2>
+      <p class="tldr">全部内容浓缩成一行公式：$W' = W + \Delta W$，而 $\Delta W = BA$。原矩阵 $W$ 冻结，只训练又矮又胖的 $B$ 与又瘦又高的 $A$，两个矩阵相乘就得到一个"高瘦"的变化量。</p>
+
+      <p>先看结论公式，再逐项拆解：</p>
+      <p>$$W' = W + \Delta W, \qquad \Delta W = B A, \qquad A \in \mathbb{R}^{r \times k},\ B \in \mathbb{R}^{d \times r}$$</p>
+      <p>推理（或继续训练）时，输出变成 $W'x = Wx + BAx$：<mark>前半段走原模型，后半段走补丁</mark>。训练时只有 $A$、$B$ 里的数在更新，$W$ 一个数都不动。</p>
+
+      <div class="widget steps">
+        <div class="widget-title">公式分步揭示：一步步看每一项是什么</div>
+        <div class="step"><strong>第 1 步：$W$ 是什么？</strong> 原模型某一层里已有的权重矩阵，比如把"注意力查询向量"投影到新的空间。它有 $d$ 行 $k$ 列，微调时它<b>全程冻结</b>。</div>
+        <div class="step"><strong>第 2 步：$\Delta W$ 是什么？</strong> 我们希望权重的"变化量"。LoRA 的关键假设（上一章的直觉）：$\Delta W$ 是<b>低秩</b>的，可以被两个小矩阵的乘积近似。</div>
+        <div class="step"><strong>第 3 步：$A$ 和 $B$ 各是什么？</strong> $A$ 形状是 $r \times k$（"矮行"），$B$ 形状是 $d \times r$（"高列"）。它们相乘 $B A$ 恰好得到 $d \times k$，和 $W$ 一样大——但参数量只有 $(d{+}k) \times r$。</div>
+        <div class="step"><strong>第 4 步：$r$ 是什么？</strong> 秩（rank），那个"独立方向的数量"，也是 LoRA 最重要的超参数。$r$ 越小，参数越少、越省显存，但表达能力上限也越低。</div>
+        <div class="step"><strong>第 5 步：为什么参数量骤减？</strong> 若 $d=k=4096$、$r=16$：原矩阵 1680 万参数，LoRA 只需 $4096 \times 16 \times 2 \approx 13$ 万——<b>约为原来的 0.8%</b>。这就是"只改一点点"的数学表达。</div>
+        <div class="step"><strong>第 6 步：scaling $\alpha / r$。</strong> 实际使用时常写成 $\Delta W = \frac{\alpha}{r} B A$。$A$ 初始化时乘了一个缩放系数，让新增部分在训练初期不至于太猛、影响训练稳定性；$\alpha$ 是另一个可调旋钮，常见做法是令 $\alpha$ 等于 $r$（即缩放为 1）作为起点。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="key">把公式读成一句话：<mark>一个"高"的变化 = 一个"高瘦"的矩阵 × 一个"矮"的矩阵</mark>。用极少的参数（$r$ 控制）拼出足够的变化，这就是 LoRA 的数学核心。注意 $B$ 通常初始化为 0（保证训练起点时 $\Delta W = 0$，模型从原能力出发），$A$ 用很小的随机值初始化——不同实现细节可能略有差异。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">LoRA 中 $A \in \mathbb{R}^{r \times k}$、$B \in \mathbb{R}^{d \times r}$，当 $d=k=4096$、$r=8$ 时，可训练参数量约为多少？</p>
+        <button class="opt" data-fb="正确。参数量 = d×r + r×k = 4096×8 + 8×4096 = 65536，远小于原矩阵的 1678 万。">约 6.6 万</button>
+        <button class="opt" data-fb">那是 r=16 时的数字（约 13 万）。r=8 时减半。">约 13 万</button>
+        <button class="opt" data-fb">那是原矩阵的参数量（d×k），LoRA 的意义恰恰是不训练它。">约 1680 万</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么很多 LoRA 实现把 $B$ 初始化为 0、$A$ 用很小的随机值初始化？</p>
+        <button class="opt" data-fb">如果 B 是随机的，训练一开始 ΔW 就是一个大随机扰动，等于一上来就破坏了原模型的输出。">这样可以让两个矩阵都从随机状态开始学习，更"公平"</button>
+        <button class="opt" data-fb="正确。B=0 时 BA=0，ΔW=0，模型初始行为与原始模型完全一致，训练从"不改变任何东西"的状态平稳出发。">保证训练开始时 ΔW = 0，新增分支不影响原输出，训练更稳定</button>
+        <button class="opt" data-fb">初始化为 0 是手段不是目的，目的是让初始增量为 0、保护原能力。">为了节省显存，零不占空间</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">公式总结：$W' = W + \frac{\alpha}{r}BA$。$W$ 冻结；$A$、$B$ 是仅有的可训练参数；$r$ 是表达能力和省显存之间的旋钮；$\alpha/r$ 是稳定训练的缩放。别背，理解形状（高瘦 × 矮 = 高）就够了。</div>
+    </section>
+
+    <!-- ==================== 第 4 章 ==================== -->
+    <section class="chapter" data-level="2" data-title="LoRA 四大超参数">
+      <h2>LoRA 四大超参数</h2>
+      <p class="tldr">rank（r）控制补丁的"厚度"，alpha 控制补丁的"力度"，dropout 是防过拟合的"噪音"，target_modules 决定补丁"贴在哪"。前三个是数，最后一个是关键的选择题。</p>
+
+      <p>用翻卡过一遍四大超参数，再看常见取值经验。</p>
+
+      <div class="widget">
+        <div class="widget-title">翻卡：四大超参数</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">rank (r)</div><div class="back">小矩阵的中间维度，决定补丁的表达能力。常见 8–64。r 越大参数越多、可能效果更好，但收益递减、显存也随之上涨。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">alpha (α)</div><div class="back">与 r 一起构成缩放 α/r，控制 LoRA 分支输出的整体力度。常见做法 α=r（缩放为 1）起步，效果不够再调。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">dropout</div><div class="back">在 LoRA 分支里随机丢弃一部分信号，防止小数据下过拟合。常用 0–0.1；数据少或任务窄时可以调大一点点试试。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">target_modules</div><div class="back">决定给哪些层贴补丁：注意力里的 q/k/v/o 投影、MLP 里的 gate/up/down 投影。选得准比选得多更重要。</div></div></div>
+        </div>
+      </div>
+
+      <h3>target_modules：贴在哪比贴多少重要</h3>
+      <p>Transformer 层的每个注意力块里有四个投影矩阵：查询（q）、键（k）、值（v）、输出（o）；MLP 块里通常还有 gate、up、down 三个矩阵。你可以只对其中一部分插入 LoRA：</p>
+      <ul>
+        <li><strong>只贴 q、v</strong>（LoRA 论文验证过的经典最小配置）：参数最少，很多任务已够用，适合先跑通流程。</li>
+        <li><strong>q、k、v、o 全贴</strong>：最常见的默认选择，效果与成本的平衡点。</li>
+        <li><strong>再加上 MLP（gate/up/down）</strong>：表达上限更高，常用于更难的任务或数据相对充足时，但参数量与训练成本也明显上升。</li>
+      </ul>
+
+      <div class="warn">不要默认"贴越多越好"。每层都贴、还加上 MLP，参数量可能翻好几倍，而过拟合和训练不稳定的概率也随之上升。从 q+v 或 qkvo 起步，效果不够再逐步扩大覆盖面——这和调学习率"宁小勿大"是同一个哲学。</div>
+
+      <table>
+        <tr><th>超参数</th><th>作用</th><th>常见起点</th></tr>
+        <tr><td>rank r</td><td>补丁的表达能力（厚度）</td><td>8 或 16；效果不够再加到 32、64</td></tr>
+        <tr><td>alpha</td><td>缩放 α/r，控制力度</td><td>令 α = r（缩放 1）</td></tr>
+        <tr><td>dropout</td><td>防过拟合</td><td>0.05 左右，或数据少时试 0.1</td></tr>
+        <tr><td>target_modules</td><td>补丁贴在哪</td><td>q、k、v、o 四个注意力投影</td></tr>
+      </table>
+      <p style="font-size:14px;color:var(--muted)">注：以上是社区与论文中反复出现的经验区间，不是保证最优的定律。不同任务、不同底座的最优值差异可以很大，请以你自己的验证集为准。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">如果你的 LoRA 训练出现了过拟合（训练集表现越来越好、验证集变差），优先考虑调哪个超参数、怎么调？</p>
+        <button class="opt" data-fb">增大 r 会增加参数量，过拟合时通常应该往反方向考虑。">把 rank r 调大</button>
+        <button class="opt" data-fb">target_modules 扩大覆盖面同样增加参数量，过拟合时不宜扩大。">把 target_modules 扩大，加上全部 MLP 层</button>
+        <button class="opt" data-fb="正确。dropout 是 LoRA 里直接对抗过拟合的手段，0.05→0.1 是常见的第一步；也可以配合减小 r。">适当增大 dropout（如 0.05 → 0.1）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">第一次跑 LoRA，想以最小成本先验证流程跑通，target_modules 怎么选比较合理？</p>
+        <button class="opt" data-fb="正确。q+v 是论文验证过的最小配置，参数量小、跑得快，效果不够再扩展到 qkvo 乃至 MLP。">先只贴 q 和 v（最小配置），效果不够再扩大</button>
+        <button class="opt" data-fb">一上来就全贴（含 MLP）参数量大很多，不适合"最小成本验证流程"这个阶段。">一次性贴上所有注意力矩阵和全部 MLP 层</button>
+        <button class="opt" data-fb">只贴 o 一个投影不是常见做法，表达通道太窄，不如 q+v 稳妥。">只贴 o（输出投影）就够了</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">调参起手式：<mark>r=16、α=16、dropout=0.05、target=qkvo</mark>。这是"不会错得太离谱"的默认配方；遇到过拟合就加 dropout / 减 r，遇到欠拟合就加 r / 扩大 target。</div>
+    </section>
+
+    <!-- ==================== L2 测验 ==================== -->
+    <section class="chapter" data-level="2" data-title="L2 测验：概念把关">
+      <h2>L2 测验：概念把关</h2>
+      <p class="tldr">公式与超参数，各用三道题钉牢。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">在 $W' = W + \frac{\alpha}{r}BA$ 中，训练时哪些参数会被更新？</p>
+        <button class="opt" data-fb">LoRA 的核心就是冻结 W，只训练 A、B；W 参与前向计算但不接收梯度更新。">W 和 A、B 都会被更新</button>
+        <button class="opt" data-fb="正确。W 全程冻结（只前向计算），梯度只流向 A 和 B，因此优化器状态也只为 A、B 准备。">只有 A 和 B 会被更新，W 只参与计算、不更新</button>
+        <button class="opt" data-fb">如果只训练 A，ΔW=BA 的秩就被 A 的秩限制，表达能力受损；实践中 A、B 都参与训练。">只有 A 会被更新，B 保持初始化不变</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">把 rank r 从 8 调到 64，会发生什么？</p>
+        <button class="opt" data-fb="正确。r 变大 → A、B 参数量变大 → 梯度与优化器状态也变大，显存占用上升；表达能力上限提高但收益递减。">可训练参数量和显存占用都增加，表达能力上限提高</button>
+        <button class="opt" data-fb">r 与参数量正相关：r 翻倍，A、B 参数量约翻倍，不会减少。">可训练参数量减少，因为矩阵被"压扁"了</button>
+        <button class="opt" data-fb">r 只影响 LoRA 分支，W 的显存与 r 无关（冻结参数本就不占训练状态的账）。">显存占用不变，因为 W 的大小没变</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">关于 alpha 与缩放 $\alpha/r$，下列说法正确的是？</p>
+        <button class="opt" data-fb">alpha 控制的是 LoRA 分支输出的整体缩放，与学习率有关但不是一个东西。">alpha 就是学习率</button>
+        <button class="opt" data-fb">缩放是 α/r，所以 r 翻倍而 α 不变时，实际缩放会减半，不是不变。">r 变化时缩放不变，所以 alpha 设多少无所谓</button>
+        <button class="opt" data-fb="正确。α/r 是 LoRA 分支输出的缩放系数；常见起点令 α=r（缩放为 1），需要更强/更弱的补丁力度时再调整。">α/r 缩放 LoRA 分支的输出力度，常见起点是令 α = r</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">什么时候应该考虑扩大 target_modules（比如从 qkvo 扩到加上 MLP）？</p>
+        <button class="opt" data-fb">扩大 target 会增加参数量与过拟合风险，验证集表现好说明当前配置已够，不应扩大。">验证集效果已经不错，想锦上添花时</button>
+        <button class="opt" data-fb="正确。欠拟合（训练集和验证集都差）说明表达能力不足，扩大覆盖面是合理方向；同时也要考虑增大 r。">当前配置明显欠拟合、效果不够时，作为提高表达上限的手段之一</button>
+        <button class="opt" data-fb">过拟合时应缩小覆盖面或加 dropout，扩大 target 会火上浇油。">出现过拟合迹象时</button>
+        <div class="feedback"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 第 5 章 ==================== -->
+    <section class="chapter" data-level="3" data-title="rank–参数量–效果：核心演示">
+      <h2>rank–参数量–效果：核心演示</h2>
+      <p class="tldr">这是本课最重要的演示：拖一拖 rank、输入维度、目标模块，实时看"可训练参数量、相对全量微调的比例、显存估计、经验性效果提示"怎么联动。所有数字都是示意估算，帮你建立数量级直觉。</p>
+
+      <p>先明确估算口径。对一层 $d \times k$ 的矩阵贴上 LoRA，可训练参数 = $d \times r + r \times k$（即 $A$ 与 $B$ 之和）。显存估算沿用第 1 课的简化口径：每个被训练参数约占 12 字节（FP16 参数 + FP16 梯度 + 2×FP32 Adam 状态），<mark>不含激活值</mark>。底座无论 LoRA 还是全量微调都要加载，所以两者可比的部分是"训练状态的增量"。</p>
+
+      <div class="widget demo" id="loraDemo" style="border-style:solid;border-color:var(--primary)">
+        <div class="widget-title">rank–参数量–效果三联滑块（示意估算）</div>
+        <canvas width="800" height="230"></canvas>
+        <div class="controls">
+          <label>rank r <span class="val" data-for="r"></span><input type="range" name="r" min="1" max="128" value="16"></label>
+          <label>矩阵维度 d = k <span class="val" data-for="d"></span><input type="range" name="d" min="512" max="8192" step="512" value="4096"></label>
+          <label>贴上 LoRA 的矩阵数量 <span class="val" data-for="n"></span><input type="range" name="n" min="1" max="112" value="32"></label>
+        </div>
+        <p id="loraReadout"></p>
+        <div class="bar-legend">
+          <span><i style="background:var(--primary)"></i>LoRA 可训练参数</span>
+          <span><i style="background:var(--border)"></i>全量微调参数（对照）</span>
+        </div>
+        <p class="rank-viz-note">示意：矩阵数量 32 大致对应"只贴 qkvo"（7B 级模型约 32 层 × 4 个投影 ≈ 128 个矩阵；112 是再加 MLP 的上限附近）。效果是相对示意，不是实测数据；真实任务请以你的验证集为准。</p>
+      </div>
+
+      <h3>怎么读这个演示</h3>
+      <ul>
+        <li><strong>参数量随 r 线性增长</strong>：r 翻倍，A、B 参数翻倍。但相对全量微调始终是"零头"——这正是 LoRA 省显存的来源。</li>
+        <li><strong>效果的"经验曲线"</strong>：r 从 1 加到 16 左右时，绝大多数任务的效果提升明显；16→64 仍有收益但明显放缓；64 以上常常接近饱和，除非任务本身特别复杂。注意这是社区经验的方向性描述，不是承诺。</li>
+        <li><strong>显存的两部分</strong>：底座加载（无论怎么微调都要付）+ 训练状态增量（LoRA 把它压到很小）。下一章的 QLoRA 会把第一部分也砍下来。</li>
+      </ul>
+
+      <div class="key">把滑块玩一遍，记住三句话：<mark>r 是线性旋钮</mark>（参数 ∝ r）、<mark>效果收益递减</mark>（8→16 常常值得，64→128 常常不值）、<mark>显存大头永远是底座</mark>（LoRA 只省训练状态，QLoRA 才动底座）。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">在这个演示里，把"矩阵维度 d"从 4096 拉到 8192（r 不变），可训练参数量大约怎么变？</p>
+        <button class="opt" data-fb"">参数量 = d×r + r×k，d 翻倍则参数量近似翻倍，不是不变。">不变，因为 r 没变</button>
+        <button class="opt" data-fb"">参数量近似翻倍（线性关系），不是平方；平方增长是"全量微调"（d×k）的特征。">变为 4 倍，因为是平方关系</button>
+        <button class="opt" data-fb="正确。参数量 = (d+k)×r，d 翻倍 → 参数量约翻倍；而全量微调是 d×k，会翻 4 倍——这正是 LoRA 在大模型上优势更大的原因。">约翻倍；而同样改动下全量微调参数会翻 4 倍</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">数量级锚点：7B 模型、qkvo 全贴、r=16，LoRA 可训练参数通常在<b>千万级</b>，约占全量的 0.1%–1%。这就是"一张消费级显卡也能微调大模型"的数学基础（再叠加 4bit 加载底座，就是下一章的 QLoRA）。</div>
+    </section>
+
+    <!-- ==================== 第 6 章 ==================== -->
+    <section class="chapter" data-level="3" data-title="merge、多 LoRA 与 QLoRA">
+      <h2>merge、多 LoRA 与 QLoRA</h2>
+      <p class="tldr">训练好的 LoRA 有两条出路：merge（把便签内容誊写进书里，得到单文件模型）或多 LoRA 热插拔（一个底座挂多个便签，按需切换）。而 QLoRA 再进一步：用 4bit 加载底座，把显存账砍到消费级显卡能扛住的程度。</p>
+
+      <h3>merge：什么时候把补丁写回去</h3>
+      <p>训练完成后，你可以把 $\Delta W$ 直接加回 $W$，得到一个新的完整权重文件。这个过程叫<mark>merge（合并）</mark>。</p>
+      <ul>
+        <li><strong>适合 merge</strong>：微调结果定型、准备上线部署。合并后就是普通模型，推理时不再多算 $BA$ 这一支，没有额外计算开销，部署最简单。</li>
+        <li><strong>不适合 merge</strong>：还想在多个任务间切换（见下），或想随时退回原模型。merge 是单向的，合并后再想拆回来就麻烦了。</li>
+      </ul>
+
+      <div class="analogy">便签贴久了想定型成正式出版物，就把修订内容誊写进正文（merge），读者拿到的就是一本完整的新书，不用再贴便签。但如果你同时要维护"儿童版""专业版""英文版"多个修订方向，誊写三遍就太低效了——这时不如保留一叠便签，按需取用。</div>
+
+      <h3>多 LoRA 热插拔</h3>
+      <p>LoRA 文件通常只有几十 MB 到几百 MB，远小于完整模型。因此可以让一个底座同时挂载多个 LoRA 适配器，<mark>按请求动态切换</mark>：这个请求用"客服口吻 LoRA"，下一个请求切到"代码风格 LoRA"。这在服务多租户、多风格场景非常划算——底座只加载一份，显存里多出来的只是几个小文件。</p>
+
+      <h3>QLoRA：4bit 加载底座</h3>
+      <p>LoRA 把"训练状态"的账压下来了，但底座模型本身还是要完整加载进显存：7B FP16 ≈ 14 GB，13B ≈ 26 GB。<mark>QLoRA（Quantized LoRA）</mark>的思路：底座用 4bit 量化加载（参数缩到约 1/4），训练时按需反量化，而 LoRA 分支保持在较高精度正常训练。两者结合：</p>
+      <ul>
+        <li><strong>NF4</strong>（4-bit NormalFloat）：一种专为已近似正态分布的神经网络权重设计的量化格式，信息损失更小。</li>
+        <li><strong>双重量化</strong>（Double Quantization）：连量化所用的缩放系数也再次量化，再抠出一点显存。</li>
+        <li><strong>paged_adamw_8bit</strong>：把 Adam 优化器状态压到 8bit，并用分页机制缓解显存峰值（应对长序列时显存突然不够的问题）。</li>
+      </ul>
+
+      <div class="widget demo" id="qloraDemo">
+        <div class="widget-title">显存对比：全量微调 vs LoRA vs QLoRA（示意估算，7B 模型）</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls">
+          <label><input type="checkbox" name="showLora" checked> 显示 LoRA</label>
+          <label><input type="checkbox" name="showQlora" checked> 显示 QLoRA</label>
+          <label style="min-width:230px">底座的加载精度
+            <select name="prec">
+              <option value="4">FP16（2 字节）</option>
+              <option value="2" selected>4bit 量化（约 0.5 字节）</option>
+            </select>
+          </label>
+        </div>
+        <p class="readout"></p>
+        <div class="bar-legend">
+          <span><i style="background:#3b82f6"></i>底座参数</span>
+          <span><i style="background:#a855f7"></i>训练状态（参数/梯度/优化器）</span>
+          <span><i style="background:#f59e0b"></i>24GB 消费卡参考线</span>
+        </div>
+        <p class="rank-viz-note">示意估算：底座按所选精度，训练状态按"每被训练参数 12 字节"（LoRA 只算 r=16/qkvo 的可训练参数，QLoRA 的优化器用 8bit 另算），均不含激活值。真实数值随框架与配置浮动。</p>
+      </div>
+
+      <div class="key">QLoRA 的一句话定位：<mark>4bit 加载底座 + LoRA 只训小矩阵</mark>，两招叠加让 7B–13B 级模型的微调在 24GB–48GB 显存内可行。它是"一张消费卡微调大模型"的现实答案，也是第 3 课实战的主角。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">训练好一个 LoRA 适配器后，准备上线部署、不再改动，且只服务这一个任务。最合理的做法是？</p>
+        <button class="opt" data-fb">保留适配器不 merge 也能上线（推理时多算一支 BA），但部署更复杂、有额外开销；既然定型且单任务，merge 更干净。">保留独立的 LoRA 文件，推理时动态加载</button>
+        <button class="opt" data-fb="正确。单任务、已定型的场景 merge 后得到普通模型，部署最简单、没有额外计算开销。">merge 回底座，得到一个单文件的完整模型再部署</button>
+        <button class="opt" data-fb">merge 是可选的优化，不是必须步骤；不 merge 也能正常推理。">必须先 merge 才能推理</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">QLoRA 相比普通 LoRA，额外做的关键一步是？</p>
+        <button class="opt" data-fb="正确。普通 LoRA 的底座仍按 FP16 等精度加载；QLoRA 把底座压到 4bit（配合 NF4、双重量化等），显存进一步大降。">把底座模型用 4bit 量化加载，训练时按需反量化</button>
+        <button class="opt" data-fb">QLoRA 的 LoRA 分支仍用较高精度训练，4bit 的是底座，不是 LoRA 矩阵本身。">把 LoRA 的 A、B 矩阵也量化到 4bit</button>
+        <button class="opt" data-fb">QLoRA 仍然只训练 LoRA 小矩阵，不改变"训多少"，改变的是"底座怎么存"。">把全量微调的参数也量化</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">一个底座想同时支持"正式公文风格"和"轻松口语风格"两种风格，按请求切换，怎么做最省？</p>
+        <button class="opt" data-fb">merge 是单向的，两个 merge 后的模型是两份完整模型，显存与存储都翻倍。">训练两个 LoRA 并分别 merge，得到两个完整模型</button>
+        <button class="opt" data-fb">全量微调两个模型是最贵方案，完全违背"省"的目标。">做两次全量微调，得到两个独立模型</button>
+        <button class="opt" data-fb="正确。底座只加载一份，两个 LoRA 小文件按需切换，是多 LoRA 热插拔的典型用法。">底座加载一份，挂两个 LoRA 适配器，按请求动态切换</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">三条出路记清楚：定型上线 → merge；多任务切换 → 多 LoRA 热插拔；显存不够 → QLoRA（4bit 底座 + LoRA）。第 3 课会带你完整跑一遍 QLoRA 训练流程。</div>
+    </section>
+
+    <!-- ==================== L3 测验 ==================== -->
+    <section class="chapter" data-level="3" data-title="L3 测验：机制拷问">
+      <h2>L3 测验：机制拷问</h2>
+      <p class="tldr">参数量估算与 QLoRA 机制，四道题收尾。</p>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">一层 4096×4096 的矩阵，贴 r=32 的 LoRA，可训练参数量约为多少？占原矩阵参数的比例约为多少？</p>
+        <button class="opt" data-fb="正确。参数 = 2×4096×32 ≈ 26.2 万；原矩阵 = 1678 万；比例 ≈ 1.6%。">约 26 万，约占 1.6%</button>
+        <button class="opt" data-fb">13 万是 r=16 的数字；r=32 时约 26 万。">约 13 万，约占 0.8%</button>
+        <button class="opt" data-fb">4096×32 只是一半（A 或 B 其中一个），两个矩阵都要算。">约 13 万，约占 1.6%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">LoRA 训练中，为什么优化器状态的显存能大幅下降？</p>
+        <button class="opt" data-fb">梯度检查点省的是激活值，不是优化器状态。">因为梯度检查点把优化器状态也压缩了</button>
+        <button class="opt" data-fb="正确。Adam 等优化器为"每个被训练的参数"维护状态；LoRA 只训练约 1% 的参数，优化器账随之缩到约 1%。">Adam 状态按被训练参数的数量计算，只训练约 1% 的参数，状态也只有约 1%</button>
+        <button class="opt" data-fb">FP16 降低的是参数与梯度本身的字节数；LoRA 省优化器状态的机制是"少训练参数"。">因为 Adam 被替换成了 8bit 版本</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">关于 NF4 和双重量化，下列说法正确的是？</p>
+        <button class="opt" data-fb">NF4 是 QLoRA 提出的 4bit 量化格式，双重量化也是 QLoRA 论文中的技术，目的是进一步省显存。">NF4 是 LoRA 论文提出的训练技巧，双重量化是推理加速技术</button>
+        <button class="opt" data-fb">恰恰相反：双重量化把量化参数本身再量化，省的是显存而非时间。">双重量化是一种加快推理速度的技术</button>
+        <button class="opt" data-fb="正确。两者都是 QLoRA 的显存压缩手段：NF4 面向权重分布设计，双重量化连缩放系数也量化。">NF4 是适配权重分布的 4bit 格式，双重量化把量化缩放系数再次量化，二者都为省显存</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">第 1 课说全量微调 7B 模型静态显存约 84 GB。用"4bit 加载底座（≈3.5 GB）+ LoRA（约 0.1% 参数的训

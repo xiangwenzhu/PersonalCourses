@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网拓扑结构 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* topoCompare 定制 */
+#topoCompare .radios{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0}
+#topoCompare .radios label{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:15px;min-width:0;cursor:pointer}
+#topoCompare .radios input{accent-color:var(--primary);width:16px;height:16px}
+#topoCompare .readout{margin-top:12px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:10px;padding:10px 16px;font-size:14.5px;line-height:1.8}
+#topoCompare .note{margin-top:8px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>微电网拓扑结构：交流、直流与交直流混合</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章 ========== -->
+    <section class="chapter" data-level="2" data-title="为什么拓扑很重要">
+      <h2>为什么拓扑很重要</h2>
+      <p class="tldr">拓扑就是电力设备的「连接方式」——谁先接谁、分几路、有没有备用路径，直接决定微电网的效率、成本和可靠性。</p>
+
+      <p>在电力系统里，<mark>拓扑（Topology）</mark>描述的是电源、母线（汇集电能的公共节点，可理解为「总接线排」）、变换器和负荷之间的连接关系。设计一个微电网，本质上是回答三个问题：</p>
+      <ul>
+        <li>电从电源到负荷，中间要经过几次<mark>电能变换</mark>（AC/DC、DC/DC、DC/AC）？</li>
+        <li>负荷挂在哪里——挂在同一条母线上，还是分成若干子网？</li>
+        <li>线路是一根独路（断了就停电），还是留了备用回路？</li>
+      </ul>
+      <p>同样的电源和负荷，连接方式不同，结果天差地别。变换次数多则损耗大、设备贵；路径多则可靠性高、造价也高。后面几章你会反复看到这组「不可能三角」：<strong>效率、成本、可靠性，拓扑决定它们怎么取舍</strong>。</p>
+
+      <div class="analogy">家里的插座全串在一根插线板上（串联）：一个设备短路，全家断电，这就是「辐射状、无冗余」。而配电箱里每个房间一条支路、各有空开（分路），坏一路不影响其他路，这就是「分路 + 选择性保护」。微电网的拓扑设计，干的正是家装电工这件事——只不过电压更高、钱更多、容错要求更苛刻。</div>
+
+      <!-- 互动：翻卡 -->
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：一个设计选择，牵动三个指标</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">「多绕一级变换器」</div><div class="back">效率 ↓ 每级变换有 3%~8% 损耗<br>成本 ↑ 多一台设备<br>但隔离与控制能力 ↑</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">「加一条备用回路」</div><div class="back">可靠性 ↑ 单点故障不停电<br>成本 ↑ 线路与开关翻倍<br>但利用率可能 ↓</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">「母线合并、减少层级」</div><div class="back">成本 ↓ 结构简单<br>效率 ↑ 路径短<br>但一处故障影响面 ↑</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">先问「源和荷是什么电（AC/DC）」，再谈「怎么连」。源荷类型决定变换次数的底线，可靠性要求决定冗余的多少，预算决定最终取舍。</div>
+      <div class="tip">本章小结：拓扑 = 连接方式。它影响效率（变换次数）、成本（设备与线路数量）、可靠性（有没有备用路径）三个维度，是微电网设计的第一个决策。</div>
+    </section>
+
+    <!-- ========== 第 2 章 ========== -->
+    <section class="chapter" data-level="2" data-title="交流微电网 AC Microgrid">
+      <h2>交流微电网 AC Microgrid</h2>
+      <p class="tldr">交流微电网的母线电压是交流（AC），与传统电网完全一致：变换环节少、成熟设备即插即用，直接带交流负荷毫无压力。</p>
+
+      <p>交流微电网的内部母线采用交流电压（常见 380V/400V 三相或 220V 单相）。它的突出优势是<strong>兼容</strong>：</p>
+      <ul>
+        <li>交流母线 ↔ 传统电网之间不需要电压型变换，并网最简单，往往只隔一台工频变压器；</li>
+        <li>市电里的「存量世界」——风机水泵、压缩机、家电、照明——绝大多数是交流设备，直接接入即可；</li>
+        <li>交流变压器升压降压技术非常成熟，扩容容易。</li>
+      </ul>
+      <p>但它继承了交流电网的「祖传烦恼」，微电网里反而被放大：</p>
+      <ul>
+        <li><mark>无功</mark>：交流电压电流存在相位差，电机等负荷要「吃」无功，需要额外的无功补偿设备；</li>
+        <li><mark>谐波</mark>：逆变器、整流器等电力电子设备产生非正弦电流，污染波形，要靠滤波器治理；</li>
+        <li><mark>相位同步</mark>：多个电源并联（如光伏逆变器与柴油发电机）时，必须同频同相同幅，否则环流甚至跳闸。</li>
+      </ul>
+
+      <table>
+        <tr><th>优点</th><th>缺点</th></tr>
+        <tr><td>与传统电网技术一致，并网简单</td><td>存在无功与谐波问题</td></tr>
+        <tr><td>变换环节少（电网侧无需整流）</td><td>多电源并联需相位/频率同步</td></tr>
+        <tr><td>可直接带动大量存量交流负荷</td><td>电压升降依赖变压器，体积大</td></tr>
+      </table>
+
+      <div class="warn">「交流微电网 = 简单」是个误区。交流本身成熟，但把光伏、电池、充电桩这些直流设备接进交流母线，每台都要配逆变/整流设备，数量一多，谐波与同步问题就会变得很棘手。</div>
+
+      <!-- 互动：测验 -->
+      <div class="widget quiz" data-answer="3">
+        <p class="q">下列负荷中，哪一种<strong>不能</strong>由交流母线「直接」供电（必须经变换环节）？</p>
+        <button class="opt" data-fb="冰箱压缩机由交流电机驱动，可直接接交流母线。">冰箱</button>
+        <button class="opt" data-fb="水泵电机同样直接用交流电。">水泵</button>
+        <button class="opt" data-fb="传统照明（白炽/荧光灯）直接用工频交流即可点亮。">传统照明</button>
+        <button class="opt" data-fb="LED 灯珠、服务器内部都是直流，接交流母线必须先整流成直流——所以它要「多绕一道弯」。">LED 灯与服务器</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：交流微电网赢在「兼容存量、并网简单」，输在「无功、谐波、相位同步」。它最适合以传统交流负荷为主、又想并入市电做备用的场合。</div>
+    </section>
+
+    <!-- ========== 第 3 章 ========== -->
+    <section class="chapter" data-level="2" data-title="直流微电网 DC Microgrid">
+      <h2>直流微电网 DC Microgrid</h2>
+      <p class="tldr">光伏、电池、LED、服务器「天生是直流」，直流母线让源和荷直接对话，省掉 AC/DC 之间的往返变换——这是它最大的效率优势。</p>
+
+      <p>先看一个基本事实：今天新增能源设备里，直流占了半壁江山。</p>
+      <ul>
+        <li><strong>光伏</strong>：组件输出直流；<strong>电池</strong>：充放电都是直流；</li>
+        <li><strong>LED</strong>：灯珠是低压直流，靠驱动电源里的整流+降压环节工作；</li>
+        <li><strong>服务器</strong>：电源单元（PSU）把交流整流成直流供主板使用；</li>
+        <li>电动车、充电桩、充电宝——内部全是直流。</li>
+      </ul>
+      <p>把它们接在<strong>交流</strong>母线上，电能往往要「兜圈子」：光伏先 DC→AC 逆变上网，服务器再把 AC 整流回 DC，一来一回两次变换，每次都有损耗。<strong>直流母线</strong>则让光伏 DC/DC 直接升压挂网、电池直接挂网、服务器直接挂网，把「源→荷」之间的变换次数压到最低。综合下来，直流微电网相对交流方案的系统效率提升<strong>约在 5%~15% 量级（典型工程估计，视场景与变换器效率而定）</strong>。</p>
+
+      <div class="analogy">同样从 A 点（光伏）到 B 点（服务器），交流方案像「先下高速进市区、再重新上高速」——两次上下匝道；直流方案是全程高速直达。省下的就是匝道口的排队损耗。</div>
+
+      <div class="key">直流微电网的效率账，本质是「变换次数 × 每级效率」。每少一级 AC↔DC 往返，就少一次 3%~8% 的损耗。</div>
+
+      <p>但直流也有自己的短板：</p>
+      <ul>
+        <li><mark>直流开断难</mark>：交流电流每周期有过零点，灭弧容易；直流没有自然过零点，断开时电弧难熄灭，需要专门的直流断路器，又贵又难；</li>
+        <li><mark>标准少</mark>：交流有统一的电压等级（220V/380V）和插头标准，直流的电压等级（48V？375V？±750V？）尚未完全统一，设备选型与互换性受限；</li>
+        <li>升压不像交流那样随手一台变压器就能搞定，大容量 DC/DC 变换器成本不低。</li>
+      </ul>
+
+      <div class="warn">效率提升 5%~15% 是「典型估计」而非承诺值。如果交流方案本来就近并网、负荷又以交流电机为主，直流的收益会明显缩水——是否上直流，要看源荷构成。</div>
+
+      <!-- 互动：翻卡 -->
+      <div class="widget">
+        <div class="widget-title">点击翻面：直流母线的「贵客」与「稀客」</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">光伏阵列</div><div class="back">直流贵客：输出天然直流，经一级 DC/DC 即可挂直流母线。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">储能电池</div><div class="back">直流贵客：充放皆直流，是直流微电网最顺滑的搭档。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">数据中心服务器</div><div class="back">直流贵客：PSU 内部本来就是直流供电，直挂母线可省掉整流环节。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">空调压缩机</div><div class="back">直流稀客：大功率交流电机，接直流母线需额外逆变，不划算。</div></div></div>
+        </div>
+      </div>
+
+      <div class="tip">本章小结：直流微电网用「减少 AC/DC 往返变换」换效率，天然适配光伏、电池、LED、服务器；代价是直流开断难、标准不成熟。</div>
+    </section>
+
+    <!-- ========== 第 4 章 ========== -->
+    <section class="chapter" data-level="3" data-title="交直流混合微电网">
+      <h2>交直流混合微电网</h2>
+      <p class="tldr">交流做主干、直流做子网，两台母线之间由双向变流器（BIC）互联——光伏、电池、服务器进直流子网，大电机与并网走交流主干。</p>
+
+      <p>交流微电网和直流微电网各有拥趸，现实中的越来越多答案是：<strong>都要</strong>。交直流混合微电网（Hybrid AC/DC Microgrid）的结构是：</p>
+      <ul>
+        <li><strong>交流主干母线</strong>：负责连接外部电网（PCC，Point of Common Coupling，公共连接点——微电网与电网之间的产权与电气分界点）、柴油发电机等旋转电源、以及空调压缩机等大功率交流负荷；</li>
+        <li><strong>直流子网母线</strong>：汇集光伏、储能电池、LED 照明、服务器等天然直流的设备；</li>
+        <li><strong>双向变流器</strong>（Bidirectional Interlinking Converter，BIC）架在两母线之间，能量可以双向流动：光伏发电富余时送交流主干上网，不足时从交流侧取电给直流子网兜底。</li>
+      </ul>
+
+      <p>典型应用：<strong>数据中心</strong>（IT 负载直流化、配电损耗敏感）、<strong>光储直柔建筑</strong>（光伏+储能+直流配电+柔性用电，是近年建筑节能的热点方向）、以及含充电站的园区微电网。</p>
+
+      <!-- 互动：定制演示 topoCompare -->
+      <div class="widget demo" id="topoCompare">
+        <div class="widget-title">三种拓扑单线图对比：切换 AC / DC / 混合，看变换次数与适用场景</div>
+        <canvas width="880" height="430"></canvas>
+        <div class="radios">
+          <label><input type="radio" name="topo" value="ac" checked> 交流拓扑</label>
+          <label><input type="radio" name="topo" value="dc"> 直流拓扑</label>
+          <label><input type="radio" name="topo" value="hybrid"> 交直流混合</label>
+        </div>
+        <div class="readout"></div>
+        <p class="note">注：效率数值为典型工程估计（含各级变换器损耗），仅用于量级对比；每条箭头表示一次电能变换（AC↔DC 或 DC→DC）。</p>
+      </div>
+
+      <div class="key">混合拓扑的关键器件是双向变流器（BIC）：它决定两条母线之间能交换多少功率（容量）、以什么方式交换（并网/孤岛控制），是混合微电网的「咽喉」。</div>
+
+      <div class="warn">别为了「看起来先进」而做混合。BIC 本身有损耗与成本，两条母线意味着两套保护与两套标准；只有源荷两端都足够「直流密集」时，混合拓扑的收益才盖得过复杂度。</div>
+
+      <div class="tip">本章小结：交流主干保兼容、直流子网省变换、BIC 负责双向能量调度。数据中心与光储直柔建筑是它最自然的战场。</div>
+    </section>
+
+    <!-- ========== 第 5 章 ========== -->
+    <section class="chapter" data-level="3" data-title="组网结构：辐射状、环形、单母线">
+      <h2>组网结构：辐射状、环形、单母线</h2>
+      <p class="tldr">可靠性排序是<strong>环形 &gt; 单母线 &gt; 辐射状</strong>；造价排序恰好相反。组网结构就是在这两端之间选位置。</p>
+
+      <p>母线内部的「配电线怎么拉」也有学问，三种基本结构：</p>
+      <ul>
+        <li><mark>辐射状（Radial）</mark>：电源在树干，负荷挂在分支末端，一条线到家。结构最简单、最便宜；但一处断线，下游全部停电——可靠性最低。农村低压配电网、简单园区常用。</li>
+        <li><mark>单母线（Single Busbar）</mark>：所有进线和出线都接在同一条公共母线上。任一条出线故障只影响该回路，其他负荷照常供电，比辐射状可靠；但母线本身是「命门」，母线检修/故障全站受影响。</li>
+        <li><mark>环形（Ring）</mark>：负荷由首尾相连的双回线供电，开环运行、任一侧断线可转供。单点故障时负荷不失电，可靠性最高；代价是线路、开关与保护配置都翻倍。</li>
+      </ul>
+
+      <div class="analogy">回家路线：辐射状 = 只有一条路，修路就回不了家；单母线 = 大家先到大广场再分头走，广场封了就全完；环形 = 内环 + 外环双保险，堵一段还能绕。</div>
+
+      <!-- 互动：排序题 -->
+      <div class="widget order" data-answer="c,a,b">
+        <div class="widget-title">排序题：把三种组网按「供电可靠性从高到低」排列（用上移/下移调整）</div>
+        <div class="item" data-id="a">单母线 Single Busbar</div>
+        <div class="item" data-id="b">辐射状 Radial</div>
+        <div class="item" data-id="c">环形 Ring</div>
+        <button class="btn check">检查答案</button>
+        <div class="feedback"></div>
+      </div>
+
+      <!-- 互动：填空 -->
+      <div class="widget fill">
+        <div class="widget-title">填空：哪种组网结构在一处断线后仍能转供，负荷不停电？</div>
+        <p>答案是「<input data-answer="环形">」结构（两个字）。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">可靠性与成本近似互为倒数。选拓扑时先问「停电一次的代价有多大」：医院、数据中心买可靠性；农业灌溉、临时工地买便宜。</div>
+
+      <div class="tip">本章小结：辐射状最便宜最脆弱，环形最韧最贵，单母线居中。可靠性 环形&gt;单母线&gt;辐射状，成本排序正好反过来。</div>
+    </section>
+
+    <!-- ========== 第 6 章 ========== -->
+    <section class="chapter" data-level="3" data-title="并网点 PCC 与容量配置">
+      <h2>并网点 PCC 与容量配置</h2>
+      <p class="tldr">PCC（公共连接点）是微电网与外部电网的「唯一关口」；它的位置和电压等级决定孤岛范围，源荷容量匹配决定系统能否平稳运行。</p>
+
+      <h3>PCC：一个点，多重身份</h3>
+      <p><mark>PCC = Point of Common Coupling，公共连接点</mark>。它是微电网与上级电网之间的电气连接点，同时还是：</p>
+      <ul>
+        <li><strong>计量点</strong>：买卖电量的电表装在这里；</li>
+        <li><strong>保护分界</strong>：并离网切换开关通常装在 PCC，断开它就是「孤岛模式」，合上就是「并网模式」；</li>
+        <li><strong>电能质量责任分界</strong>：谐波、电压波动等考核以 PCC 为界划分责任。</li>
+      </ul>
+      <p>PCC 的电压等级要与微电网容量匹配：小型户用/楼宇微电网一般接低压 380V/220V；园区级、容量达兆瓦（MW）级的微电网常接 10kV（或 6kV）中压配电网，再往上则进入高压等级。</p>
+
+      <h3>容量匹配：源与荷要「门当户对」</h3>
+      <p>三条朴素原则：</p>
+      <ul>
+        <li>电源总容量要覆盖<strong>最大负荷</strong>并留裕度（备用），常用估算：电源总额定容量 ≥ 最大负荷 ÷ 同时率 + 备用裕度；</li>
+        <li>容量与 PCC 电压等级匹配——容量越大、送电距离越远，越应选高电压等级以降低线损与电流；</li>
+        <li>储能按「要撑多久」配：备用时长 = 储能可用能量 ÷ 关键负荷功率，关键负荷（安防、通信、应急）应单独核算。</li>
+      </ul>
+
+      <!-- 互动：测验 -->
+      <div class="widget quiz" data-answer="1">
+        <p class="q">直流微电网最大的效率优势是什么？</p>
+        <button class="opt" data-fb="直流输电的线损优势主要体现在远距离高压输电；微电网规模小，主要收益不在线损。">直流输电没有集肤效应，线路损耗小</button>
+        <button class="opt" data-fb="对。光伏、电池、LED、服务器都是直流设备，直流母线省掉 AC↔DC 往返变换，系统效率可提升约 5%~15%（典型估计）。">多数源荷路径是直流对直流，省掉 AC/DC 往返变换损耗</button>
+        <button class="opt" data-fb="直流确实没有无功，但这不是它「最大的效率优势」，主要受益仍在减少变换级数。">直流没有无功功率，输电效率天然更高</button>
+        <button class="opt" data-fb="直流开断恰恰更难——没有自然过零点，灭弧困难，这是直流微电网的缺点。">直流断路器便宜，开关损耗小</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">环形组网结构的核心优势是什么？</p>
+        <button class="opt" data-fb="环形的造价恰恰更高——双回线路和配套保护都要翻倍。">造价最低，施工最简单</button>
+        <button class="opt" data-fb="对。任一区段故障可转供，负荷由另一侧继续供电，供电可靠性最高。">任一处断线都能转供，负荷不停电</button>
+        <button class="opt" data-fb="电压质量取决于无功与调压设备，不是环形的核心优势。">电压质量天然最好，无需调压</button>
+        <button class="opt" data-fb="容量取决于电源与变压器，与环网结构无直接关系。">输电容量比辐射状大一倍</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">在交直流混合微电网中，直流子网最适合接入哪类负荷？</p>
+        <button class="opt" data-fb="电梯电机是交流电机，接直流子网反而要多一级逆变。">电梯</button>
+        <button class="opt" data-fb="空调压缩机是大功率交流电机，更适合交流主干。">空调</button>
+        <button class="opt" data-fb="对。服务器 PSU、LED 驱动、电池与光伏都是天然直流设备，接直流子网可省掉整流/逆变环节。">服务器与 LED 照明</button>
+        <button class="opt" data-fb="电饭锅是交流加热负载，不属于直流子网的目标负荷。">电饭锅</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：PCC 是微电网与电网的电气、计量与保护分界点；容量配置遵循「源覆盖荷 + 备用裕度 + 电压等级匹配」。至此，交流/直流/混合的选型、组网结构与并网点配置就串成了一条完整的设计思路。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示：<div class="steps"><div class="step">..</div>...<button class="btn next-step">下一步</button></div> ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空：<input data-answer="答案1|答案2"> + <button class="btn check"> ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序：<div class="order" data-answer="a,b,c"><div class="item" data-id="a">..</div>.. <button class="btn check"> ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调。用法：demo('#id', (params, ctx, canvas) => {...}) ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：三种微电网拓扑单线图对比 ================= */
+demo('#topoCompare', ({ topo }, ctx, cv, root) => {
+  const css = getComputedStyle(document.documentElement);
+  const col = k => css.getPropertyValue(k).trim();
+  const W = cv.width, H = cv.height;
+  const HL = col('--primary'), DIM = col('--muted'), BUSC = col('--warn'), TXT = col('--text'), BORD = col('--border');
+  ctx.font = '13px "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+
+  const node = (x, y, label, color) => {
+    ctx.fillStyle = color || TXT;
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill();
+    ctx.fillStyle = TXT; ctx.textAlign = 'center';
+    ctx.fillText(label, x, y + 26);
+  };
+  const conv = (x, y, label) => {
+    ctx.strokeStyle = HL; ctx.lineWidth = 1.5;
+    ctx.strokeRect(x - 26, y - 14, 52, 28);
+    ctx.fillStyle = TXT; ctx.textAlign = 'center';
+    ctx.fillText(label, x, y + 4);
+  };
+  const wire = (pts, active) => {
+    ctx.strokeStyle = active ? HL : DIM; ctx.lineWidth = active ? 2.5 : 1.5;
+    ctx.setLineDash(active ? [] : [6, 4]);
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.stroke(); ctx.setLineDash([]);
+  };
+  const bus = (x1, x2, y, active) => {
+    ctx.strokeStyle = active ? BUSC : DIM; ctx.lineWidth = active ? 5 : 3;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+    ctx.fillStyle = DIM; ctx.textAlign = 'center'; ctx.font = '12px sans-serif';
+    ctx.fillText('母线', (x1 + x2) / 2, y + 18);
+    ctx.font = '13px "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  };
+  const title = t => { ctx.fillStyle = TXT; ctx.textAlign = 'center'; ctx.font = 'bold 16px "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif'; ctx.fillText(t, W / 2, 28); ctx.font = '13px "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif'; };
+
+  if (topo === 'ac') {
+    title('交流微电网单线图（AC Bus）');
+    bus(140, 740, 210);
+    node(110, 110, '光伏阵列 PV'); conv(240, 110, 'DC/AC 逆变器');
+    wire([[110, 110], [214, 110]]); wire([[266, 110], [300, 110], [300, 210], [140, 210]], true);
+    node(760, 120, '外部电网'); conv(640, 120, '变压器');
+    wire([[760, 120], [666, 120]]); wire([[614, 120], [560, 120], [560, 210], [740, 210]]);
+    node(380, 330, '交流负荷'); conv(380, 272, '');
+    wire([[380, 330], [380, 286]]); wire([[380, 258], [380, 210]]);
+    node(600, 330, '直流负荷（服务器）'); conv(600, 272, 'AC/DC 整流');
+    wire([[600, 330], [600, 286]]); wire([[600, 258], [600, 210]]);
+  } else if (topo === 'dc') {
+    title('直流微电网单线图（DC Bus）');
+    bus(150, 730, 210);
+    node(100, 110, '光伏阵列 PV'); conv(220, 110, 'DC/DC');
+    wire([[100, 110], [194, 110]]); wire([[246, 110], [280, 110], [280, 210], [150, 210]], true);
+    node(430, 110, '储能电池'); conv(540, 110, 'DC/DC 双向');
+    wire([[430, 110], [514, 110]]); wire([[566, 110], [600, 110], [600, 210], [440, 210]], true);
+    node(340, 330, '直流负荷（LED/服务器）');
+    wire([[340, 330], [340, 210]]);
+    node(620, 330, '交流负荷'); conv(620, 272, 'DC/AC 逆变');
+    wire([[620, 330], [620, 286]]); wire([[620, 258], [620, 210]]);
+    node(795, 210, '外部电网'); conv(782, 280, '');
+    wire([[795, 210], [795, 266]]); wire([[782, 294], [782, 360], [640, 360], [640, 210]]);
+  } else {
+    title('交直流混合微电网单线图（Hybrid AC/DC）');
+    bus(140, 560, 150);
+    bus(140, 560, 330);
+    ctx.fillStyle = DIM; ctx.textAlign = 'left';
+    ctx.fillText('交流主干 AC', 572, 154);
+    ctx.fillText('直流子网 DC', 572, 334);
+    node(90, 60, '外部电网'); conv(210, 60, '变压器');
+    wire([[90, 60], [184, 60]]); wire([[236, 60], [280, 60], [280, 150], [140, 150]]);
+    node(400, 60, '交流负荷（空调等）');
+    wire([[400, 60], [400, 150]]);
+    node(90, 400, '光伏阵列 PV'); conv(210, 400, 'DC/DC');
+    wire([[90, 400], [184, 400]]); wire([[236, 400], [280, 400], [280, 330], [140, 330]], true);
+    node(430, 400, '储能电池');
+    wire([[430, 400], [430, 330]]);
+    node(650, 400, '直流负荷（服务器/LED）');
+    wire([[650, 400], [650, 330]]);
+    conv(350, 240, '双向变流器 BIC');
+    wire([[350, 226], [350, 150]], true); wire([[350, 254], [350, 330]], true);
+  }
+
+  const info = {
+    ac:     { n: 2, chain: '光伏 → DC/AC 逆变器 → 交流母线 → AC/DC 整流 → 直流负荷', eff: '≈ 90%（典型估计）', use: '以交流负荷为主、需并网的园区 / 乡村微电网' },
+    dc:     { n: 1, chain: '光伏 → DC/DC → 直流母线 → 直流负荷（服务器 / LED）', eff: '≈ 95%（典型估计，省掉 1~2 级 AC↔DC 往返）', use: '数据中心、光储直柔建筑、直流负荷密集的楼宇' },
+    hybrid: { n: 2, chain: '光伏 → DC/DC → 直流子网 → BIC（双向）→ 交流主干（或反向由电网取电）', eff: '≈ 93%（典型估计，直流子网内部近无损传递）', use: '数据中心、光储直柔建筑、含充电站的园区' }
+  }[topo];
+  $('.readout', root).innerHTML =
+    '<b>电能变换次数：</b>' + info.n + ' 次 ｜ <b>变换链路：</b>' + info.chain + '<br>' +
+    '<b>端到端效率：</b>' + info.eff + ' ｜ <b>典型应用：</b>' + info.use;
+});
+</script>
+</body>
+</html>

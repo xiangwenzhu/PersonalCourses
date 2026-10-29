@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网标准、经济与工程实践 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>微电网标准、经济与工程实践 · 互动课程</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章 ========== -->
+    <section class="chapter" data-level="3" data-title="标准地图：互操作性与安全底线">
+      <h2>标准地图：标准解决什么问题</h2>
+      <p class="tldr">微电网标准解决两件事：设备与设备能不能「对话」（互操作性），以及任何情况下系统都不能失控（安全底线）。</p>
+
+      <p>微电网不是一台设备，而是一个「微型电力系统」：光伏、储能、负荷、控制器、并网点，往往来自不同厂商。如果没有统一标准，就会出现「A 家的储能听不懂 B 家的控制器」的混乱。标准正是这个行业的「通用语言」和「交通规则」。</p>
+
+      <p>先看国际与国内最核心的几张标准地图：</p>
+
+      <table>
+        <tr><th>标准</th><th>核心内容</th><th>适用范围</th></tr>
+        <tr><td><b>IEEE 2030.7</b></td><td>定义微电网控制器（MGCC）的功能——调度、并离网切换、黑启动；规定控制器必须能执行哪些「核心功能」</td><td>微电网控制器（控制器级）</td></tr>
+        <tr><td><b>IEEE 2030.8</b></td><td>规定如何<b>测试</b>微电网控制器——测试流程、用例、通过判据</td><td>控制器测试与验收（测试级）</td></tr>
+        <tr><td><b>IEEE 1547</b></td><td>分布式电源（DG）并网的技术规定：并网逆变器的电压/频率穿越、无功支撑、并离网保护配合</td><td>所有并网型分布式电源</td></tr>
+        <tr><td><b>IEC 62898</b> 系列</td><td>微电网的规划、设计与运行指导性标准</td><td>微电网项目全生命周期</td></tr>
+        <tr><td><b>GB/T 33589</b></td><td>《微电网接入电力系统技术规定》：接入电压等级、并网运行指标、保护与通信要求</td><td>国内微电网接入公共电网</td></tr>
+        <tr><td><b>GB/T 36274</b> 等</td><td>电化学储能电站运行指标及并网技术要求</td><td>国内储能系统</td></tr>
+      </table>
+
+      <p class="key">记住三组对应关系：<b>IEEE 2030.7 规定控制器「该会什么」，2030.8 规定「怎么考它」；IEEE 1547 管每一台并网电源；GB/T 33589 管整个微电网接入电网这件事。</b></p>
+
+      <!-- 互动：翻卡 -->
+      <div class="widget">
+        <div class="widget-title">点击卡片，回顾标准管什么</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">IEEE 2030.7</div><div class="back">管<b>微电网控制器</b>：定义调度、并离网切换、黑启动等核心功能——「大脑该会什么」</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">IEEE 2030.8</div><div class="back">管<b>控制器测试</b>：测试用例、流程与通过判据——「怎么验收大脑」</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">IEEE 1547</div><div class="back">管<b>每台并网分布式电源</b>：电压频率穿越、无功支撑、保护配合</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">GB/T 33589</div><div class="back">管<b>微电网接入国内电网</b>：接入电压等级、并网指标、通信要求</div></div></div>
+        </div>
+      </div>
+
+      <div class="analogy">标准之于微电网，就像交通规则之于城市：不规定红绿灯（安全底线），路口会撞车；不规定靠哪边行驶（互操作性），不同牌子的车无法同行。开车不需要认识每个司机，只要都遵守交规。</div>
+
+      <div class="warn">误区：「项目规模小，标准可以宽松点。」恰恰相反——微电网容量小、设备杂、操作人员少，任何单点失效影响占比更大。并离网切换时的非同期并列，可能几秒内损坏设备，标准底线不能省。</div>
+
+      <div class="tip">本章小结：微电网标准地图 = 控制器标准（2030.7/2030.8）+ 电源并网标准（1547 / GB/T 33589）+ 运行指导（IEC 62898 等）。它们共同回答：系统能对话吗？出事能兜住吗？</div>
+    </section>
+
+    <!-- ========== 第 2 章 ========== -->
+    <section class="chapter" data-level="4" data-title="项目经济性：钱从哪来">
+      <h2>项目经济性：钱从哪来，多久回本</h2>
+      <p class="tldr">微电网的收入由「省下的电费 + 市场收益」构成，成本由「初投资 + 运维 + 电池更换」构成；静态回收期 ≈ 初投资 ÷ 年净收益。</p>
+
+      <h3>收入侧：一份电，五次赚钱机会</h3>
+      <table>
+        <tr><th>收入来源</th><th>机理</th><th>备注</th></tr>
+        <tr><td>电费节省（自发自用）</td><td>光伏发的电自己用，少买电网的电</td><td>通常是最主要、最稳定的收入来源</td></tr>
+        <tr><td>峰谷套利</td><td>谷时充电、峰时放电，赚峰谷价差</td><td>取决于价差与当地分时电价政策</td></tr>
+        <tr><td>需求响应补偿</td><td>电网紧张时主动降负荷，获得补偿</td><td>各地政策差异大</td></tr>
+        <tr><td>备用容量/容量租赁</td><td>储能作为备用电源或容量资源获得费用</td><td>市场化程度高的地区常见</td></tr>
+        <tr><td>辅助服务</td><td>调频、调峰等电网辅助服务出清收益</td><td>准入门槛较高，小型项目多通过聚合商参与</td></tr>
+      </table>
+
+      <h3>成本侧</h3>
+      <ul>
+        <li><b>初投资</b>：光伏按元/W、储能按元/Wh 计价。例如储能系统单位造价 1.5 元/Wh（<mark>典型值，随市场波动</mark>），2 MWh 储能初投资约 300 万元。</li>
+        <li><b>运维</b>：每年约初投资的 1%~2%（<mark>典型值</mark>）。</li>
+        <li><b>电池衰减与更换</b>：锂电池循环寿命有限，10~15 年可能需更换（<mark>典型值</mark>），是常被低估的隐性成本。</li>
+      </ul>
+
+      <p>核心指标——静态回收期（不计资金时间价值的简化指标）：</p>
+      $$T_{\text{回收}} = \frac{C_{\text{初投资}}}{R_{\text{年}} - C_{\text{年运维}}}$$
+
+      <p>其中 $C_{\text{初投资}}$ 为一次性投入，$R_{\text{年}}$ 为年收入，$C_{\text{年运维}}$ 为年运维费。</p>
+
+      <!-- 互动：定制 ROI 测算器 -->
+      <div class="widget demo" id="roiDemo">
+        <div class="widget-title">园区微电网投资回报测算器（简化模型）</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>储能容量 <span class="val" data-for="kwh"></span> kWh<input type="range" name="kwh" min="100" max="5000" step="100" value="2000"></label>
+          <label>光伏装机 <span class="val" data-for="kw"></span> kW<input type="range" name="kw" min="100" max="3000" step="50" value="1200"></label>
+          <label>峰谷价差 <span class="val" data-for="spread"></span> 元/kWh<input type="range" name="spread" min="0.3" max="1.0" step="0.05" value="0.6"></label>
+          <label>系统单位造价 <span class="val" data-for="cost"></span> 元/Wh<input type="range" name="cost" min="1.0" max="2.5" step="0.05" value="1.5"></label>
+        </div>
+        <div class="readout" style="margin-top:12px;font-size:15px;line-height:2"></div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0">模型假设：光伏自用比例 70%（年发电小时 1000h，电价 0.8 元/kWh，<mark>典型值</mark>）；储能每天 1 次充放循环、年运行 330 天、放电深度 90%、系统效率 88%；年运维费为初投资的 1.5%。<b>全部为简化估算，仅供教学。</b></p>
+      </div>
+
+      <div class="key">回收期公式的分子是「一次性花出去的钱」，分母是「每年净进来的钱」。想缩短回收期，要么压低分子（降造价），要么抬高或拉长分母（增收、多运行）。</div>
+      <div class="warn">误区：只算初投资，忽略电池更换与效率衰减，会把 8 年回本算成 6 年。做可研时务必把 10~15 年内的电池更换列入现金流。</div>
+      <div class="tip">本章小结：收入 = 电费节省 + 峰谷套利 + 需求响应 + 备用容量 + 辅助服务；成本 = 初投资 + 运维 + 电池更换。静态回收期是衡量项目的第一块试金石。</div>
+    </section>
+
+    <!-- ========== 第 3 章 ========== -->
+    <section class="chapter" data-level="4" data-title="敏感性分析思维">
+      <h2>敏感性分析：哪个变量决定生死</h2>
+      <p class="tldr">回收期对有些变量很「迟钝」，对另一些变量「一碰就动」——敏感性分析就是找出那些「一碰就动」的变量，优先锁定它们。</p>
+
+      <p>投资人最怕的不是测算结果，而是<b>假设变了</b>：电池降价了？峰谷价差政策调整了？项目实际利用小时没达到？敏感性分析逐一回答：某个变量变化 ±10%/±20% 时，回收期会变化多少。</p>
+
+      <h3>最常用的两种图</h3>
+      <ul>
+        <li><b>龙卷风图（Tornado Diagram）</b>：把每个变量的乐观/悲观取值对结果的影响画成横条，最长的条就是「最敏感的变量」，像一场龙卷风。</li>
+        <li><b>蛛网图（Spider Plot）</b>：横轴是变量变化幅度（如 −20% ~ +20%），纵轴是结果（回收期），每条线代表一个变量，线越陡越敏感。</li>
+      </ul>
+
+      <p>对园区储能类微电网，通常的结论是：</p>
+      <ol>
+        <li><b>单位造价</b>（分子）：造价降 10%，回收期大约缩短 10%——线性、直接。</li>
+        <li><b>利用小时数 / 循环次数</b>（分母）：每天多一次循环，收入几乎翻倍，回收期大幅缩短。</li>
+        <li><b>峰谷价差</b>（分母）：政策敏感，价差收窄 20% 可能直接击穿收益。</li>
+      </ol>
+
+      <!-- 互动：quiz -->
+      <div class="widget quiz" data-answer="1">
+        <p class="q">对典型的「光伏 + 储能」园区微电网，静态回收期通常对下列哪个变量最敏感？</p>
+        <button class="opt" data-fb="物业管理水平间接影响运维成本，但通常不是回收期的主导变量。">物业管理水平</button>
+        <button class="opt" data-fb="对——单位造价直接决定回收期公式的分子，造价每降 10%，回收期约缩短 10%，是线性的第一敏感变量；利用小时数则决定分母大小。">系统单位造价（以及利用小时数）</button>
+        <button class="opt" data-fb="监控界面的美观程度与收益现金流几乎无关。">EMS 监控界面的美观程度</button>
+        <button class="opt" data-fb="补贴有影响，但园区项目多数省份已退补；长期看造价与利用小时才是主导。">国家补贴金额</button>
+        <div class="feedback"></div>
+      </div>
+
+      <details class="reveal">
+        <summary>思考：为什么「造价」比「运维费」更敏感？</summary>
+        <p>因为运维费只是分母中的一个小减项（约初投资的 1%~2%），而造价占分子的 100%。一个 300 万的项目，造价降 10% 省 30 万；运维费即便从 1.5% 降到 1%，每年只省 1.5 万。数量级完全不同。</p>
+      </details>
+
+      <div class="analogy">敏感性分析像拧音响的旋钮：有的旋钮（音量）轻轻一碰声音就炸，有的旋钮（高低音）拧到头也没多少变化。工程决策就是把精力花在大旋钮上。</div>
+      <div class="tip">本章小结：先用龙卷风图找出敏感变量（通常是单位造价与利用小时），再在合同与设计中锁定它们——设备价格封顶、最低利用小时承诺，都是对敏感变量的「保险」。</div>
+    </section>
+
+    <!-- ========== 第 4 章 ========== -->
+    <section class="chapter" data-level="3" data-title="案例拆解：校园微电网">
+      <h2>案例拆解：一所校园的微电网</h2>
+      <p class="tldr">校园白天负荷高、屋顶与车棚资源充足，是「自发自用」模式的最佳场景之一——首要设计目标是提升自发自用率。</p>
+
+      <h3>背景画像</h3>
+      <ul>
+        <li><b>负荷</b>：教学楼 + 宿舍 + 实验楼，白天（8:00–17:00）负荷高，寒暑假骤降（<mark>示例画像</mark>），典型日用电约 6000 kWh。</li>
+        <li><b>资源</b>：教学楼屋顶约 1 万 m²、停车场车棚约 2000 m²，可装光伏合计约 1.2 MW；车棚位置恰好适合做「光伏 + 充电桩」一体化。</li>
+      </ul>
+
+      <h3>方案配置</h3>
+      <table>
+        <tr><th>组成</th><th>规模</th><th>作用</th></tr>
+        <tr><td>屋顶 + 车棚光伏</td><td>1.2 MW</td><td>白天直供校园负荷，余电上网或充电</td></tr>
+        <tr><td>磷酸铁锂储能</td><td>2 MWh</td><td>谷充峰放、平滑光伏波动、应急支撑</td></tr>
+        <tr><td>智能 EMS</td><td>1 套</td><td>负荷预测、策略调度、并离网管理</td></tr>
+        <tr><td>充电桩</td><td>20 台</td><td>就地消纳午间光伏富余电力</td></tr>
+      </table>
+
+      <h3>运行策略</h3>
+      <p><b>自发自用优先 → 余电上网 → 峰谷套利</b>：白天光伏优先供负荷，富余时给储能充电和充电桩供电；峰段（如 8:00–10:00、18:00–21:00）储能放电顶荷；谷段（如 23:00–7:00）储能从电网充电。</p>
+
+      <h3>效果量级（示例）</h3>
+      <p>投运后：<b>自发自用率从约 55% 提升到约 85%</b>（储能挪峰 + 充电桩就地消纳），<b>年电费下降约 20%~30%</b>。以上数字为<b>示例量级</b>，实际取决于当地电价、负荷曲线与光照资源。</p>
+
+      <!-- 互动：分步揭示 -->
+      <div class="widget steps">
+        <div class="widget-title">从勘察到投运：项目六步流程（点击逐步揭示）</div>
+        <div class="step"><b>① 勘察</b>：测绘屋顶/车棚可用面积，调取近 12 个月电费单与 15 分钟负荷曲线。</div>
+        <div class="step"><b>② 资源评估</b>：核算可装光伏容量（1.2 MW）、当地年等效利用小时（约 1000 h，<mark>典型值</mark>）。</div>
+        <div class="step"><b>③ 方案设计</b>：确定光伏/储能/充电桩容量配比，初拟 EMS 策略。</div>
+        <div class="step"><b>④ 仿真验证</b>：用 8760 小时全年负荷数据跑仿真，验证自发自用率与套利收益。</div>
+        <div class="step"><b>⑤ 并网审批</b>：按 GB/T 33589 准备接入方案，通过供电部门评审。</div>
+        <div class="step"><b>⑥ 建设运维</b>：施工并网，EMS 上线，进入「策略按月复盘」的持续运营。</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+
+      <div class="key">校园场景的第一设计目标是<b>提升自发自用率</b>，而不是追求余电上网收益——自用一度电抵一度电的零售电价，上网一度电只拿到较低的上网电价，差价可达 3~5 倍。</div>
+      <div class="warn">误区：「光伏装得越多越好」。若储能容量不足以挪峰、充电桩消纳不足，午间富余电力只能低价上网，反而拉低整体收益率——容量配比必须与负荷曲线匹配。</div>
+      <div class="tip">本章小结：校园微电网 = 1.2 MW 光伏 + 2 MWh 储能 + 智能 EMS；策略是自发自用优先、余电上网、峰谷套利；勘察→评估→设计→仿真→审批→建设是落地主线。</div>
+    </section>
+
+    <!-- ========== 第 5 章 ========== -->
+    <section class="chapter" data-level="4" data-title="从案例回到方法论">
+      <h2>从案例回到方法论：七步法</h2>
+      <p class="tldr">任何微电网项目都可归纳为七步：需求分析 → 资源评估 → 方案设计 → 仿真验证 → 经济测算 → 并网审批 → 建设运维。顺序不可随意颠倒。</p>
+
+      <p>校园案例走通的就是这七步。把它抽象出来，就是可复用的方法论：</p>
+
+      <table>
+        <tr><th>步骤</th><th>关键问题</th><th>主要产出</th></tr>
+        <tr><td><b>1 需求分析</b></td><td>客户要什么？省钱、保电、还是绿电指标？</td><td>负荷画像 + 需求优先级</td></tr>
+        <tr><td><b>2 资源评估</b></td><td>有多少屋顶/土地/光照/接入容量可用？</td><td>可开发容量清单</td></tr>
+        <tr><td><b>3 方案设计</b></td><td>源-储-荷怎么配比？EMS 策略是什么？</td><td>系统方案书</td></tr>
+        <tr><td><b>4 仿真验证</b></td><td>8760 小时仿真下策略是否成立？</td><td>仿真报告（自用率、收益）</td></tr>
+        <tr><td><b>5 经济测算</b></td><td>回收期、IRR 是否过门槛？敏感性如何？</td><td>可研/测算报告</td></tr>
+        <tr><td><b>6 并网审批</b></td><td>接入方案是否符合 GB/T 33589 等要求？</td><td>并网批复</td></tr>
+        <tr><td><b>7 建设运维</b></td><td>按图施工、并网调试、策略复盘优化</td><td>投运 + 月度运营报告</td></tr>
+      </table>
+
+      <div class="warn">为什么顺序不能乱？<b>仿真验证必须早于经济测算</b>——收益数字来自仿真；<b>经济测算必须早于并网审批</b>——没有可行测算就没有投资决策；跳过需求分析直接谈设备选型，是项目返工的第一大原因。</div>
+
+      <!-- 互动：排序题 -->
+      <div class="widget order" data-answer="b,d,a,g,c,f,e">
+        <div class="widget-title">排序题：把下面流程排成正确的七步顺序</div>
+        <div class="item" data-id="a"><b>方案设计</b>——源储荷配比与 EMS 策略</div>
+        <div class="item" data-id="b"><b>需求分析</b>——先搞清楚客户要什么</div>
+        <div class="item" data-id="c"><b>经济测算</b>——回收期与敏感性分析</div>
+        <div class="item" data-id="d"><b>资源评估</b>——屋顶、光照、接入容量</div>
+        <div class="item" data-id="e"><b>建设运维</b>——施工并网与持续运营</div>
+        <div class="item" data-id="f"><b>并网审批</b>——按接入标准通过评审</div>
+        <div class="item" data-id="g"><b>仿真验证</b>——8760 小时运行仿真</div>
+        <div class="feedback"></div>
+        <button class="btn check">检查顺序</button>
+      </div>
+
+      <div class="analogy">七步法像做菜：先问客人想吃什么（需求），再看冰箱里有什么（资源），然后定菜谱（设计）、试做尝味（仿真），算成本划不划算（测算），确认厨房安全规范（审批），最后正式上桌（建设运维）。跳过尝味直接上桌，是外卖差评的开始。</div>
+      <div class="tip">本章小结：方法论的力量在于「顺序即逻辑」——每一步的产出是下一步的输入。背下七步顺序，你就掌握了从任意场景出发的微电网项目主线。</div>
+    </section>
+
+    <!-- ========== 第 6 章 ========== -->
+    <section class="chapter" data-level="4" data-title="本章综合测验">
+      <h2>综合测验：标准 · 经济 · 案例</h2>
+      <p class="tldr">用三道题检验你是否真正把标准、公式与案例串成了一条线。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">1. IEEE 2030.7 主要针对微电网中的哪一部分提出功能要求？</p>
+        <button class="opt" data-fb="光伏逆变器主要受 IEEE 1547 / GB/T 相关并网标准约束。">光伏逆变器</button>
+        <button class="opt" data-fb="对——2030.7 定义了微电网控制器（MGCC）的核心功能：调度、并离网切换、黑启动等；而 2030.8 规定如何测试它。">微电网控制器（MGCC）</button>
+        <button class="opt" data-fb="锂电池储能的并网与安全另有 IEC/GB 系列标准，不是 2030.7 的对象。">锂电池储能系统</button>
+        <button class="opt" data-fb="变压器属于一次设备，2030.7 关注的是控制与调度层。">并网变压器</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">2. 静态回收期的计算公式是？</p>
+        <button class="opt" data-fb="对——$T = C_{初投资} / (R_{年净收益})$，分子是一次性投入，分母是每年净现金流（已扣除运维）。">初投资 ÷ 年净收益</button>
+        <button class="opt" data-fb="分子分母颠倒了，算出来的是「每年回收比例」的倒数概念，量纲都不对。">年净收益 ÷ 初投资</button>
+        <button class="opt" data-fb="初投资是分子不是分母，且年收益不能放在分母做除法。">年净收益 ÷ 初投资 × 20 年</button>
+        <button class="opt" data-fb="IRR 是另一种指标（净现值为零的折现率），与静态回收期不同。">使 IRR 等于银行利率的年数</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">3. 校园微电网（白天负荷高、寒暑假骤降）的<b>首要</b>设计目标是什么？</p>
+        <button class="opt" data-fb="保电是微电网的能力之一，但校园作为一般负荷，供电可靠性通常不是首要痛点。">提升供电可靠性</button>
+        <button class="opt" data-fb="上网电价低于零售电价，追求上网量大会拉低收益，与经济性背道而驰。">最大化余电上网电量</button>
+        <button class="opt" data-fb="对——自用一度电抵零售电价（约 0.8 元/kWh），上网只有较低上网电价；储能挪峰 + 充电桩就地消纳可把自用率从约 55% 提升到 85%（示例）。">提升光伏自发自用率</button>
+        <button class="opt" data-fb="并网容量是审批环节的技术条件，不是设计追求的目标。">最大化并网容量</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">三题一条线：2030.7 管「控制器」，回收期 = 初投资 ÷ 年净收益，校园场景死磕「自发自用率」——标准、经济、案例，到此闭环。</div>
+      <div class="tip">恭喜完成全部章节！你已掌握微电网标准地图、项目经济性测算、敏感性思维、校园案例与七步方法论。下一课可以深入 EMS 调度算法或电力市场交易策略。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示：<div class="steps"><div class="step">..</div>...<button class="btn next-step">下一步</button></div> ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空：<input data-answer="答案1|答案2"> + <button class="btn check"> ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序：<div class="order" data-answer="a,b,c"><div class="item" data-id="a">..</div>.. <button class="btn check"> ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调。用法：demo('#id', (params, ctx, canvas) => {...}) ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：园区微电网 ROI 测算器 ================= */
+demo('#roiDemo', (p, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const years = 20, days = 330;
+
+  // ---- 简化模型（系数均为典型值，仅供教学）----
+  const pvHours = 1000;            // 光伏年等效利用小时 h
+  const selfRatio = 0.7;           // 光伏自用比例
+  const retailPrice = 0.8;         // 零售电价 元/kWh
+  const dod = 0.9, eff = 0.88;     // 放电深度、系统效率
+  const opexRate = 0.015;          // 年运维 = 初投资 1.5%
+  const batterySwapYear = 12;      // 第 12 年更换电池（示例）
+
+  const pvEnergy = p.kw * pvHours;                       // 年光伏发电 kWh
+  const pvSave = pvEnergy * selfRatio * retailPrice;     // 光伏节省 元/年
+  const arbitrage = p.kwh * dod * eff * days * p.spread; // 储能年套利 元/年
+  const annualRev = pvSave + arbitrage;                  // 年总收入 元
+  const capex = p.kwh * 1000 * p.cost;                   // 初投资 元（储能）
+  const opex = capex * opexRate;                         // 年运维 元
+  const netAnnual = annualRev - opex;                    // 年净现金流
+  const swapCost = capex * 0.6;                          // 更换电池按初投资 60%（示例）
+  const payback = netAnnual > 0 ? capex / netAnnual : Infinity;
+
+  // ---- readout ----
+  const fmt = n => n >= 1e8 ? (n / 1e8).toFixed(2) + ' 亿' : n >= 1e4 ? (n / 1e4).toFixed(1) + ' 万' : n.toFixed(0);
+  let net20 = -capex;
+  for (let y = 1; y <= years; y++) net20 += netAnnual - (y === batterySwapYear ? swapCost : 0);
+  $('.readout', root).innerHTML =
+    `初投资 <b>${fmt(capex)}</b> 元 ｜ 年收益（节省+套利）<b>${fmt(annualRev)}</b> 元 ｜ 年净收益 <b>${fmt(netAnnual)}</b> 元<br>` +
+    `静态回收期 <b style="color:${payback <= 10 ? 'var(--ok)' : payback <= 20 ? 'var(--warn)' : 'var(--bad)'}">${isFinite(payback) ? payback.toFixed(1) + ' 年' : '无法回本'}</b> ｜ 20 年净收益（含第 12 年换电池 ${fmt(swapCost)} 元）<b>${fmt(net20)}</b> 元`;
+
+  // ---- 累计现金流曲线 ----
+  const cum = [ -capex ];
+  for (let y = 1; y <= years; y++) cum.push(cum[y - 1] + netAnnual - (y === batterySwapYear ? swapCost : 0));
+  const minV = Math.min(...cum), maxV = Math.max(...cum);
+  const padL = 60, padR = 16, padT = 20, padB = 32;
+  const x = i => padL + (W - padL - padR) * i / years;
+  const y0 = v => padT + (H - padT - padB) * (1 - (v - minV) / (maxV - minV || 1));
+
+  // 零线
+  if (minV < 0 && maxV > 0) {
+    ctx.strokeStyle = css.getPropertyValue('--border');
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, y0(0)); ctx.lineTo(W - padR, y0(0)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // 曲线
+  ctx.strokeStyle = css.getPropertyValue('--primary'); ctx.lineWidth = 2.5; ctx.beginPath();
+  cum.forEach((v, i) => { i ? ctx.lineTo(x(i), y0(v)) : ctx.moveTo(x(i), y0(v)); });
+  ctx.stroke();
+  // 轴
+  ctx.strokeStyle = css.getPropertyValue('--muted'); ctx.fillStyle = css.getPropertyValue('--muted');
+  ctx.font = '11px sans-serif'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+  for (let yr = 0; yr <= years; yr += 5) { ctx.fillText('第' + yr + '年', x(yr) - 12, H - padB + 16); }
+  ctx.fillText('累计现金流（元）', padL, padT - 6);
+
+  // 回收期转折点
+  if (isFinite(payback) && payback <= years) {
+    const py = payback, pv = 0;
+    ctx.fillStyle = css.getPropertyValue('--ok');
+    ctx.beginPath(); ctx.arc(x(py), y0(pv), 6, 0, 7); ctx.fill();
+    ctx.fillText('回收期 ≈ ' + payback.toFixed(1) + ' 年', Math.min(x(py) + 8, W - 130), y0(pv) - 10);
+  } else if (!isFinite(payback) || payback > years) {
+    ctx.fillStyle = css.getPropertyValue('--bad');
+    ctx.fillText('20 年内未回本', W - 140, padT + 12);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型微调 04 · 训练机制与超参</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar a.back{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap;font-weight:600}
+.topbar a.back:hover{text-decoration:underline}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto;font-size:13.5px;line-height:1.65}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none;font-size:14.5px;line-height:1.65}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px;font-family:inherit}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.demo select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px;z-index:25}
+/* ===== 本课定制 ===== */
+.readout{font-size:14.5px;margin-top:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.bar-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;margin-top:8px;color:var(--muted)}
+.bar-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* 曲线识别 */
+.curve-btn{display:flex;flex-direction:column;gap:8px;width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer;font-size:14px;text-align:left}
+.curve-btn:hover{border-color:var(--primary)}
+.curve-btn.selected{border-color:var(--primary);background:var(--primary-soft)}
+.curve-btn svg{width:100%;height:130px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.curve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:10px 0}
+/* 有效 batch 计算器 */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:10px 0}
+.calc-grid label{display:flex;flex-direction:column;font-size:14px;gap:4px}
+.calc-grid input[type=number]{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:15px;width:100%}
+.calc-out{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:15px;margin-top:8px}
+.calc-out b{color:var(--primary)}
+/* 诊断器 */
+.sym-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:10px 0}
+.sym-grid .btn.on{background:var(--primary);color:#fff}
+.diag-out{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:10px}
+.diag-out .rec{font-size:17px;font-weight:700;color:var(--primary);margin-bottom:6px}
+.diag-out .why{font-size:14.5px}
+.diag-out .alt{font-size:13.5px;color:var(--muted);margin-top:8px}
+.series-link{max-width:860px;margin:0 auto;text-align:center;font-size:14px;color:var(--muted)}
+.series-link a{color:var(--primary);font-weight:600}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <a class="back" href="llm-finetuning.html">← 系列目录</a>
+  <h1>大模型微调 · 第 4 课：训练机制与超参</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+  <!-- ==================== 第 1 章（L1） ==================== -->
+  <section class="chapter" data-level="1" data-title="一个训练步到底发生了什么">
+    <h2>一个训练步到底发生了什么</h2>
+    <p class="tldr">你已经在第 3 课跑通了 SFT。现在把镜头拉近到一个「训练步」：模型答一遍题 → 对答案算错多少 → 找出每个旋钮该往哪拧、拧多少 → 真正拧一下。四个动作循环上千万次，模型就学成了。</p>
+
+    <p>先对齐两个第 3 课用过的词：<mark>样本</mark>（一条「提问 + 标准回答」的例题）和 <mark>loss</mark>（损失，一个打分：模型这次答得有多离谱，越大越离谱）。微调做的事，本质上就是拿着样本反复训练，把 loss 一点点压低。</p>
+
+    <div class="analogy">把训练想象成<strong>考完试逐题订正</strong>：①<b>先作答</b>——不看答案自己写一遍；②<b>对答案</b>——红笔批改，算出扣了多少分；③<b>复盘</b>——不是简单说"我错了"，而是想清楚"哪一步的思路导致扣分，以后遇到同类题该怎么调整"；④<b>订正</b>——把真正想明白的那一个习惯改掉一点。一题一题循环下去，成绩就上去了。模型的一个训练步，就是完整做一遍这四件事。</div>
+
+    <p>这四件事在深度学习里有正式名字，第 2 层会经常用到，先混个脸熟（点开看解释，现在记不住也没关系）：</p>
+    <details class="reveal"><summary>前向传播（Forward）—— 第 ① 步「作答」</summary>把样本里的提问从输入层一路算到输出层，得到模型自己的「作答」。之所以叫「前向」，是因为数据是从网络的入口向出口单向流动的。</details>
+    <details class="reveal"><summary>损失（Loss）—— 第 ② 步「扣分」</summary>把模型的作答和标准答案逐词对比，算出一个分数。分数越大表示错得越离谱。训练的目标就是让它的平均値越来越小。</details>
+    <details class="reveal"><summary>反向传播（Backpropagation）—— 第 ③ 步「复盘」</summary>从 loss 出发，往回逐层推算：刚才的每一个内部「旋钮」（参数）对这次扣分各负多大责任。结果就是每个旋钮得到一个「该往哪个方向拧、拧多少合适」的建议。</details>
+    <details class="reveal"><summary>参数更新（Update）—— 第 ④ 步「订正」</summary>按复盘建议，把所有旋钮同时微调一小步。微调一小步是故意的：步子太大容易改过头，把原来会的东西也改坏了。</details>
+
+    <div class="key">一个训练步 = 前向（作答）→ 算 loss（扣分）→ 反向传播（复盘每个旋钮的责任）→ 更新（订正）。训练 = 把这个循环重复成千上万次，直到 loss 降到满意的水平。</div>
+
+    <div class="widget steps">
+      <div class="widget-title">分步走一遍：一个训练步的完整过程</div>
+      <div class="step"><b>第 1 步 · 取一批样本。</b>从训练集里取一小撮例题（比如 4 条），这叫一个 batch（一批）。为什么取一批而不是一条？一批的平均表现更稳定，不容易被个别怪题带偏。</div>
+      <div class="step"><b>第 2 步 · 前向作答。</b>把这 4 条提问喂给模型，它逐词生成自己的回答——这就是它此刻的真实水平。</div>
+      <div class="step"><b>第 3 步 · 算 loss。</b>把 4 条回答分别和标准答案对比，算出每条错多少，取平均得到这一批的 loss。</div>
+      <div class="step"><b>第 4 步 · 反向传播复盘。</b>从 loss 往回推算：模型内部几十亿个旋钮，每一个对这次的错「贡献」了多少，各自该往哪个方向拧。</div>
+      <div class="step"><b>第 5 步 · 更新旋钮。</b>把所有旋钮按建议各挪一小步。挪完，模型就比一秒前好了一点点。</div>
+      <div class="step"><b>第 6 步 · 循环。</b>取下一批样本，重复以上全部。几万步之后，loss 曲线缓缓下降，模型就「学会」了你的数据。</div>
+      <button class="btn primary next-step">下一步</button>
+    </div>
+
+    <div class="tip">一个训练步就是一次「作答→扣分→复盘→订正」的完整循环。四个环节里最值得注意的是「复盘」：它能精确说出每个旋钮该往哪拧——这正是训练能自动进行的奥秘。</div>
+  </section>
+
+  <!-- ==================== 第 2 章（L1） ==================== -->
+  <section class="chapter" data-level="1" data-title="loss 曲线长什么样">
+    <h2>loss 曲线长什么样</h2>
+    <p class="tldr">训练时最重要的仪表盘就是 loss 曲线——把每一步的 loss 画成折线。它只有三种基本形态：健康下降、一直降不动（没学会）、训练集降测试集涨（学过头了）。会读这张图，排障就成功了一半。</p>
+
+    <p>为什么曲线比单个数字重要？因为<mark>一张曲线的「形状」比某一点的取值信息量大多了</mark>：它下降得快还是慢、是否平稳、两条曲线是否分道扬镳……每种形状都对应一种明确的「病情」。</p>
+
+    <ul>
+      <li><b>形态一：健康下降。</b>训练集 loss 稳定下降并趋于平缓。这是最想要的样子。</li>
+      <li><b>形态二：一直降不动。</b>loss 从一开始就几乎不动。模型基本没从数据里学到东西。</li>
+      <li><b>形态三：训练集一路降，测试集反而上升。</b>模型把训练题背下来了，却不会做新题。这有个专门的名字叫<mark>过拟合</mark>（overfitting，学过头：只记住了例题，没学到规律）。「测试集」是留给模型「考它没见过的题」的一批数据，用来检验真本事。</li>
+    </ul>
+
+    <div class="widget" id="curveWidget">
+      <div class="widget-title">曲线诊断：三张图，分别是什么「病情」？（先猜，再点）</div>
+      <div class="curve-grid">
+        <button class="curve-btn" data-k="good">
+          <svg viewBox="0 0 220 130"><rect x="28" y="10" width="180" height="100" fill="none" stroke="var(--border)"/><path d="M30,105 C70,100 110,60 205,32" fill="none" stroke="var(--l3)" stroke-width="2.5"/></svg>
+          <b>图 A</b>
+        </button>
+        <button class="curve-btn" data-k="under">
+          <svg viewBox="0 0 220 130"><rect x="28" y="10" width="180" height="100" fill="none" stroke="var(--border)"/><path d="M30,42 C90,46 150,44 205,45" fill="none" stroke="var(--warn)" stroke-width="2.5"/></svg>
+          <b>图 B</b>
+        </button>
+        <button class="curve-btn" data-k="over">
+          <svg viewBox="0 0 220 130"><rect x="28" y="10" width="180" height="100" fill="none" stroke="var(--border)"/><path d="M30,45 C90,60 150,88 205,100" fill="none" stroke="var(--ok)" stroke-width="2.5"/><path d="M30,45 C90,42 150,30 205,24" fill="none" stroke="var(--bad)" stroke-width="2.5" stroke-dasharray="5 4"/></svg>
+          <b>图 C</b>
+        </button>
+      </div>
+      <div class="feedback" id="curveFb"></div>
+    </div>
+
+    <div class="analogy">loss 曲线像孩子的成绩单曲线：稳步上升是健康学习（图 A）；原地踏步是根本没学进去（图 B）；「课堂测验分越来越高、期末统考越来越差」则是背题不求甚解（图 C）。看出形状，就知道该换教材、换方法还是调整强度。</div>
+
+    <div class="tip">记住三形态：①稳定下降＝正常；②原地不动＝欠拟合（没学会，常见原因是学习率太小、数据或模板有问题）；③训练降、测试升＝过拟合（学过头，该早停、加数据或正则）。这三张图是后面所有排障的基础。</div>
+  </section>
+
+  <!-- ==================== L1 测验 ==================== -->
+  <section class="chapter" data-level="1" data-title="L1 测验：直觉检查">
+    <h2>L1 测验：直觉检查</h2>
+    <p class="tldr">三道题，检验你对「训练步」和「loss 曲线」的直觉。</p>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">一个训练步的正确顺序是？</p>
+      <button class="opt" data-fb="先复盘（反向传播）才能知道每个旋钮该往哪调，它发生在更新之前；先更新再算 loss 就搞反了因果。">反向传播 → 更新 → 前向 → 算 loss</button>
+      <button class="opt" data-fb="对：先作答（前向），再扣分（loss），再复盘（反向传播），最后订正（更新）。">前向 → 算 loss → 反向传播 → 更新</button>
+      <button class="opt" data-fb="反向传播必须发生在 loss 之后——它是从「错得多离谱」往回推责任的，没有 loss 就无从复盘。">前向 → 反向传播 → 算 loss → 更新</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="2">
+      <p class="q">训练时 loss 曲线「几乎不下降」，最可能说明什么？</p>
+      <button class="opt" data-fb">loss 不动恰恰是「欠拟合」的典型信号——模型没有从数据里学到东西。">模型已经学得很好，不需要再降了</button>
+      <button class="opt" data-fb">训练正常进行。曲线不降才是异常，即使数据本身有问题，模型也多少会学出一点偏差。">正常情况，每个模型都会这样</button>
+      <button class="opt" data-fb="对：loss 长期不动是欠拟合（没学会）的标志性形态，常见原因包括学习率太小、对话模板错配、数据本身有问题。">模型没从数据中学到东西（欠拟合）</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">「训练集 loss 一路降、测试集 loss 一路升」是哪种现象？该怎么办？</p>
+      <button class="opt" data-fb="这个现象叫过拟合：模型把训练题背下来了但没学到规律。多训只会更严重。">训练还不够，继续多训几个 epoch</button>
+      <button class="opt" data-fb="对：两条曲线分叉是过拟合的标志，应提前停止训练、补充更多数据，或加强正则（如增大 dropout）。">过拟合：提前停止训练 / 补充数据</button>
+      <button class="opt" data-fb="学习率过大通常表现为 loss 震荡或发散（上下剧烈波动），而不是两条曲线平稳地分道扬镳。">学习率太大：把学习率调小十倍</button>
+      <div class="feedback"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 第 4 章（L2） ==================== -->
+  <section class="chapter" data-level="2" data-title="学习率：步子多大，才走得稳">
+    <h2>学习率：步子多大，才走得稳</h2>
+    <p class="tldr">学习率（learning rate）控制每次「订正」时旋钮挪动的幅度。太大：围着正确答案来回震荡甚至跑飞；太小：慢得离谱还容易被卡在小沟里。SFT 的 LoRA 典型值是 1e-4 ~ 2e-4，全参微调约 1e-5 ~ 2e-5。</p>
+
+    <p>回到「考试订正」的类比：复盘告诉你「这题你的解题习惯有问题」，而<mark>学习率决定你「这次下决心改多少」</mark>。</p>
+    <ul>
+      <li><b>学习率太大</b>：每次大改，改完发现过头了，下次又大幅改回来——成绩上蹿下跳，甚至越改越差。这在曲线上表现为 <mark>震荡</mark>，严重时 loss 直接飙上天（发散）。</li>
+      <li><b>学习率太小</b>：每次只改一丁点。方向也许对，但考试都结束了你还没改完。曲线上表现为下降缓慢，且容易困在一个「还凑合但不够好」的局部区域。</li>
+    </ul>
+
+    <div class="widget demo" id="lrDemo">
+      <div class="widget-title">拖动学习率滑块，看「订正轨迹」如何变化（示意）</div>
+      <canvas width="800" height="300"></canvas>
+      <div class="controls">
+        <label>学习率（对数刻度）<span class="val" data-for="lr"></span><input type="range" name="lr" min="-5" max="-1" step="0.1" value="-3"></label>
+        <label>训练步数 <span class="val" data-for="steps"></span><input type="range" name="steps" min="20" max="200" step="10" value="100"></label>
+      </div>
+      <p class="readout"></p>
+      <div class="bar-legend"><span><i style="background:var(--warn)"></i>订正轨迹（从 ● 出发，★ 是目标）</span></div>
+    </div>
+
+    <h3>warmup：为什么开头要「先慢后快」</h3>
+    <p>直接用一个很大的学习率从头训，往往会震荡。一个简单有效的办法是 <mark>warmup（预热）</mark>：前 3%~10% 的训练步里，让学习率从一个很小的值线性爬到目标值，然后再正常训练。直觉是：训练开始时模型内部状态还很混乱，梯度方向不可靠，这时小步走避免「一开跑就摔跤」；等走稳了再放开速度。</p>
+
+    <h3>学习率调度器：后期为什么要「减速」</h3>
+    <p>越接近目标，步子越应该小——否则容易在最佳点附近反复 overshoot（冲过头）。<mark>调度器（scheduler）</mark>就是「按训练进度自动调整学习率」的时间表，三种最常见的：</p>
+    <table>
+      <tr><th>调度器</th><th>形状（学习率随步数）</th><th>直觉</th><th>适用</th></tr>
+      <tr><td>constant（恒定）</td><td>一条横线</td><td>始终匀速改</td><td>极少数情况；多数时候不如衰减</td></tr>
+      <tr><td>linear（线性衰减）</td><td>斜向下的一条直线</td><td>后期稳定地慢下来</td><td>常见、稳妥的默认选择</td></tr>
+      <tr><td>cosine（余弦衰减）</td><td>先慢降、后陡降、尾部平缓的「钟形曲线」</td><td>后期花更多时间在细调上</td><td>SFT 中最常用，效果通常略好于 linear</td></tr>
+    </table>
+    <p>实践中的标准配方是 <mark>warmup + cosine/linear</mark>：开头先热身，然后一路减速到训练结束。</p>
+
+    <div class="warn">「loss 震荡 = 学习率太大」是必要不充分条件：学习率大只是最常见的原因，数据里的脏样本、模板错配也可能造成异常波动。降学习率前，先看几条原始样本。</div>
+
+    <div class="widget quiz" data-answer="2">
+      <p class="q">loss 曲线在高位剧烈震荡、不下降，最可能是什么原因？</p>
+      <button class="opt" data-fb="学习率太小只会让训练慢，不会造成剧烈震荡。">学习率太小</button>
+      <button class="opt" data-fb">batch 小会让曲线「毛糙」，但不会让 loss 在高位震荡不下降。">batch size 太小</button>
+      <button class="opt" data-fb="对：学习率过大是最常见原因——每次更新幅度太大，围着最优点来回冲。先降一个数量级试试。">学习率太大</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="tip">学习率是「第一超参」：震荡先降它，太慢先看它。记住 LoRA ≈ 1e-4~2e-4、全参 ≈ 1e-5~2e-5，配合 warmup + cosine，能避开大多数坑。</div>
+  </section>
+
+  <!-- ==================== 第 5 章（L2） ==================== -->
+  <section class="chapter" data-level="2" data-title="batch size 与梯度累积">
+    <h2>batch size 与梯度累积</h2>
+    <p class="tldr">有效 batch = 单卡 batch × 梯度累积步数 × 卡数。显卡装不下大 batch 时，梯度累积让你「多算几小步、再合并成一大步」——效果和一口气跑大批次几乎一样。</p>
+
+    <p>一次训练步处理多少条样本，由 batch size（批大小）决定。为什么不是一次只处理一条、或者一次全塞进显卡？因为：<mark>一批样本算出来的「平均梯度」比单条样本稳定得多</mark>——单条样本可能是怪题，把模型带偏；一批的平均就像「全班平均分」，方向更靠谱。但 batch 越大，显存占用也越大，显卡装不下就得想办法。</p>
+
+    <p>办法有两个：</p>
+    <ul>
+      <li><b>多卡并行</b>：数据切到多张显卡上同时算，最后合并梯度。</li>
+      <li><b>梯度累积（gradient accumulation）</b>：显存只装得下 4 条？那就每次算 4 条、但先不更新参数，把梯度「攒着」；攒够比如 8 次，把这 8 小步的梯度加起来，一次性做一次大更新。<mark>效果约等于一次处理了 32 条</mark>。代价是同样的总步数里参数更新的次数变少了，训练显得「慢一些」。</li>
+    </ul>
+
+    <p>三者相乘就是「模型每次更新参数时，实际看过多少条样本」，称为<mark>有效 batch size</mark>：</p>
+    $$ \text{有效 batch} = \text{单卡 batch} \times \text{梯度累积步数} \times \text{GPU 数} $$
+
+    <div class="widget" id="effBatchWidget">
+      <div class="widget-title">有效 batch 计算器：输入三个因子，实时计算</div>
+      <div class="calc-grid">
+        <label>单卡 batch size（per_device）<input type="number" id="effPd" min="1" max="512" value="4"></label>
+        <label>梯度累积步数（accumulation）<input type="number" id="effAcc" min="1" max="64" value="8"></label>
+        <label>GPU 数量<input type="number" id="effGpu" min="1" max="16" value="1"></label>
+      </div>
+      <div class="calc-out" id="effOut"></div>
+    </div>
+
+    <h3>大 batch 要配大学习率</h3>
+    <p>有一个来自实践的经验法则：<mark>有效 batch 越大，学习率也可以（且应该）适当调大</mark>。直觉很直白：大批次的梯度估计更准，迈步子可以更有底气；反过来，小批次配大学习率容易被个别样本带得震荡。所以你看到别人「batch 64 + lr 2e-4」效果好，直接照抄成「batch 8 + lr 2e-4」很可能翻车——有效 batch 差了 8 倍。这不是严格定律，不同任务敏感度不同，但当有效 batch 改动超过 4 倍时，值得相应调整学习率。</p>
+
+    <div class="analogy">batch 像「一次批改多少张卷子」：改一张就下结论，容易被某张奇葩卷子误导；改一叠再总结规律，结论稳得多。而梯度累积就是「桌子小放不下整叠卷子，分批拿上来，但最后只写一次总结」。</div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">单卡 batch=2、梯度累积=16、1 张 GPU，有效 batch 是多少？</p>
+      <button class="opt" data-fb="那是单卡 batch × 卡数。梯度累积的步数也要乘进去。">2</button>
+      <button class="opt" data-fb="对：有效 batch = 2 × 16 × 1 = 32。">32</button>
+      <button class="opt" data-fb="多乘了一次 2。公式是三者相乘：2 × 16 × 1。">64</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="tip">有效 batch = per_device × accum × GPUs。OOM 先降 per_device 并用 accum 补回来，保持有效 batch 不变，学习率就不用重调。改动有效 batch 超过 4 倍时，记得联动调整学习率。</div>
+  </section>
+
+  <!-- ==================== L2 测验 ==================== -->
+  <section class="chapter" data-level="2" data-title="L2 测验：概念检查">
+    <h2>L2 测验：概念检查</h2>
+    <p class="tldr">四道题，检验学习率、warmup、调度器与 batch 的概念是否扎实。</p>
+
+    <div class="widget quiz" data-answer="0">
+      <p class="q">warmup（预热）的作用是什么？</p>
+      <button class="opt" data-fb="对：训练初期梯度方向不可靠，先用小学习率走稳，再爬到目标值，可避免一开训就震荡。">让学习率先从小涨到目标值，避免初期震荡</button>
+      <button class="opt" data-fb="warmup 是「先慢后快」，不是「先快后慢」——后者是调度器（cosine/linear）后半段做的事。">让学习率先从大到小快速降温</button>
+      <button class="opt" data-fb">warmup 改变的是学习率的时间表，不直接节省显存；省显存靠混合精度、梯度检查点等手段。">节省显存</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">cosine（余弦衰减）调度器的学习率变化形状是？</p>
+      <button class="opt" data-fb="那是 linear（线性衰减）的形状——一条斜向下的直线。">一条斜向下的直线</button>
+      <button class="opt" data-fb="对：先慢降、后陡降、尾部趋平的钟形曲线，让后期花更多时间细调。">先慢降、后陡降、尾部平缓的钟形曲线</button>
+      <button class="opt" data-fb="恒定不变是 constant（恒定）调度器。">始终保持不变</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">显存装不下 batch=32，但你想要有效 batch=32，怎么办？</p>
+      <button class="opt" data-fb="梯度累积不是让单卡装下更多样本，而是「多攒几步再更新」，效果等价于大批次。">硬塞：把 batch 改成 32，赌显卡扛得住</button>
+      <button class="opt" data-fb="对：比如 batch=4、accum=8：显存只按 4 条准备，攒 8 步再更新，等效 batch=32。">调小单卡 batch（如 4），用梯度累积（如 8 步）补到 32</button>
+      <button class="opt" data-fb">调大 batch 会让 OOM（显存溢出）更严重。方向反了。">调大单卡 batch，同时调大学习率</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">把有效 batch 从 8 增大到 64，学习率应该怎么动？（经验法则）</p>
+      <button class="opt" data-fb">经验法则恰恰相反：大批次梯度估计更稳，可以（且通常应该）配更大的学习率。">必须调小</button>
+      <button class="opt" data-fb="对：batch 扩大约一个数量级时，按经验适当调大学习率更合理；这不是严格定律，但「直接照抄原学习率」更危险。">可适当调大（大 batch 梯度更稳，步子可以更自信）</button>
+      <button class="opt" data-fb">batch 规模是学习率调整的重要参考，不是完全无关的两个旋钮。">完全无关，不用动</button>
+      <div class="feedback"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 第 7 章（L3） ==================== -->
+  <section class="chapter" data-level="3" data-title="混合精度 bf16/fp16">
+    <h2>混合精度 bf16/fp16</h2>
+    <p class="tldr">训练时大多数运算改用 16 位浮点数（bf16 或 fp16），权重和梯度仍保留一份 32 位副本：显存几乎减半、矩阵计算更快，而精度损失在微调场景几乎无感。这正是现代训练默认开启的加速手段。</p>
+
+    <p>先解释「精度」。模型里的数值（权重、梯度）默认用 <mark>fp32</mark>（32 位浮点数）存储：小数点前后的有效数字多，表达精确。而 <mark>bf16 / fp16</mark>（16 位浮点数）只有它一半的位数：数字占的存储空间减半，显卡做矩阵乘法也快得多。代价是有效数字变少——就像把「3.14159265」记成「3.14」，粗略了，但很多时候够用了。</p>
+
+    <p>那为什么不全程用 16 位？因为有个麻烦：<mark>反向传播算出来的梯度往往非常小</mark>（比如 0.0001 这种量级）。16 位数的「表达能力」有限，太小的数可能被直接表示成 0——<mark>梯度一旦变 0，对应的旋钮就永远停住不学了</mark>。这个现象叫「下溢」。</p>
+
+    <p><b>bf16 与 fp16 的区别</b>正好在这里：bf16 位数少但「指数范围」和 fp32 一样大，不容易下溢，所以基本不需要特殊处理；fp16 范围窄，更容易下溢，但部分老显卡（如 V100）不支持 bf16，只能用 fp16。</p>
+
+    <p>fp16 时代为此发明了 <mark>loss scaling（损失缩放）</mark>：训练前先把 loss 人为乘上一个很大的数（如 2^16），于是梯度也跟着放大，远离「小到被表示成 0」的危险区；更新参数前再除回去，数值恢复原样。<mark>对训练逻辑完全透明</mark>，只是给数「穿件大衣」再脱掉的技巧。用 bf16 时这一步基本可以省掉。</p>
+
+    <div class="key">「混合精度」= 前向/反向用 16 位（快、省）＋ 关键数值保留 32 位副本（稳）。bf16 是首选：不需要 loss scaling，也不牺牲数值范围；硬件不支持时才退回 fp16 + loss scaling。</div>
+
+    <div class="widget quiz" data-answer="0">
+      <p class="q">用 fp16 训练时 loss scaling（损失缩放）是为了解决什么问题？</p>
+      <button class="opt" data-fb="对：fp16 能表达的最小正数有限，反向传播的小梯度容易「下溢」成 0，导致参数不再更新；先把 loss 放大再还原，可避开下溢区。">梯度太小在 fp16 里被表示成 0（下溢）</button>
+      <button class="opt" data-fb">省显存是「用 16 位」本身的效果，scaling 不改变存储位数。">进一步节省显存</button>
+      <button class="opt" data-fb="缩放不改变「步子大小」这个语义——更新前会把缩放除回去，等效学习率不变。">让学习率自动变大</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="tip">混合精度 = 快与省的手段，不是「偷工减料」：bf16 因其指数范围与 fp32 相同而成为首选；fp16 需要 loss scaling 防下溢。两者都让显存近似减半——下一章你会看到这个省下来的空间可以用来换更长的序列。</div>
+  </section>
+
+  <!-- ==================== 第 8 章（L3） ==================== -->
+  <section class="chapter" data-level="3" data-title="梯度检查点：用时间换显存">
+    <h2>梯度检查点：用时间换显存</h2>
+    <p class="tldr">反向传播需要前向传播的中间结果，默认全部存着——这是显存大头。梯度检查点（gradient checkpointing）只存一小部分「快照」，其余需要时重算：显存可省一大截，代价是训练慢约 20%~30%。OOM 时的标准手段。</p>
+
+    <p>把前向传播想象成解一道多步大题：每一步的中间结果（每一层的输出）默认都被写在草稿纸上，因为<mark>反向传播「复盘」时要逐层往回用</mark>。草稿纸越堆越多——层数多、序列长时，这些中间结果比模型权重本身还占地方。</p>
+
+    <p>梯度检查点的做法很「抠门」也很聪明：<mark>只在网络的少数几个位置保存快照</mark>（草稿纸只留关键页），反向传播需要某层的中间结果时，<mark>从最近的快照把那一段前向计算重算一遍</mark>。用重复计算（时间）换回了存储（显存）。</p>
+
+    <p>什么时候开？</p>
+    <ul>
+      <li><b>开了混合精度仍然 OOM</b> → 开。</li>
+      <li><b>想训更长的序列 / 更大的 batch</b>（把省下的显存投资回去）→ 开。</li>
+      <li><b>7B 及以上全参微调</b> → 基本都开。</li>
+      <li><b>训练速度已经很吃紧、显存又够用</b> → 可以不开。</li>
+    </ul>
+    <p>大多数框架里它是一个布尔开关，只决定「开不开」；少数实现允许你设置「每隔多少层存一个快照」——存得越频繁，显存省得越少、重算也越少。</p>
+
+    <div class="widget demo" id="memDemo">
+      <div class="widget-title">显存-速度权衡台：开关两个特性，实时看影响（数值为教学示意）</div>
+      <canvas width="800" height="300"></canvas>
+      <div class="controls">
+        <label><span>混合精度（bf16/fp16，省显存+提速）</span><input type="checkbox" name="amp" checked></label>
+        <label><span>梯度检查点（省显存、变慢）</span><input type="checkbox" name="ckpt" checked></label>
+      </div>
+      <p class="readout"></p>
+      <div class="bar-legend">
+        <span><i style="background:var(--l3)"></i>模型权重</span>
+        <span><i style="background:var(--warn)"></i>优化器状态（动量等）</span>
+        <span><i style="background:var(--l1)"></i>梯度</span>
+        <span><i style="background:var(--l4)"></i>中间结果</span>
+      </div>
+    </div>
+
+    <div class="analogy">中间结果好比装修房子的过程照片。默认全留着（万一要用）；检查点就是只留开工、水电、木工等几个节点的照片，需要某个具体画面时按节点照片「补拍」一次。相册薄了，但要花点时间重拍。</div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">开启梯度检查点的主要代价是什么？</p>
+      <button class="opt" data-fb">它改变的只有「存多少中间结果」，和学习率没有任何关系。">学习率必须调小</button>
+      <button class="opt" data-fb="对：部分中间结果被丢弃、反向传播时重算，约多花 20%~30% 的额外计算时间。">训练变慢（重算部分前向）</button>
+      <button class="opt" data-fb">恰恰相反——它是「省显存」的手段，换来的是变慢。">显存占用变大</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="tip">显存四大件：权重、优化器状态、梯度、中间结果。bf16 砍前两种的大小，检查点砍第四种。组合拳（bf16 + 检查点）是 7B 全参微调能装进单卡的关键。</div>
+  </section>
+
+  <!-- ==================== L3 测验 ==================== -->
+  <section class="chapter" data-level="3" data-title="L3 测验：机制检查">
+    <h2>L3 测验：机制检查</h2>
+    <p class="tldr">四道题，检验你对 bf16/fp16、loss scaling 与梯度检查点的理解。</p>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">bf16 相比 fp16 的最大优势是？</p>
+      <button class="opt" data-fb">恰恰相反，bf16 只有 8 位指数、7 位尾数；fp16 是 5 位指数、10 位尾数——bf16 的有效数字更少。">有效数字更多，更精确</button>
+      <button class="opt" data-fb="对：bf16 的指数范围与 fp32 相同，小梯度不容易「下溢」成 0，所以通常不需要 loss scaling。">指数范围与 fp32 相同，小梯度不易下溢，基本不用 loss scaling</button>
+      <button class="opt" data-fb="两者都是 16 位，存储占用相同。">存储占用只有 fp16 的一半</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="2">
+      <p class="q">反向传播时需要用到前向传播的什么？梯度检查点如何处理它？</p>
+      <button class="opt" data-fb">反向传播本身不直接需要原始输入文本，它需要的是各层的中间输出。">原始输入文本；直接丢弃后重新读取数据</button>
+      <button class="opt" data-fb">模型权重本来就始终保存在显存里，不是检查点要省的对象。">模型权重；只保存权重不保存其他</button>
+      <button class="opt" data-fb="对：反向传播逐层往回算时需要各层的中间输出；检查点只存少数快照，其余需要时从快照重算前向。">各层的中间输出；只存少数快照，需要时重算</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">训练 7B 模型全参微调时 OOM（显存溢出），最先尝试的两个手段是？</p>
+      <button class="opt" data-fb">增大 batch 会让 OOM 更严重；调大学习率也只是饮鸩止渴。">调大 batch size 和调大学习率</button>
+      <button class="opt" data-fb="对：混合精度把权重/梯度/优化器状态的体积砍半；检查点大幅压缩中间结果。两者都是为省显存而生。">开混合精度（bf16）＋ 开梯度检查点</button>
+      <button class="opt" data-fb">两个手段都是「省显存」方向的，与「跑更多步」无关。">关混合精度、关掉梯度检查点，先多跑几步</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="0">
+      <p class="q">开启了梯度检查点后，大约要多花多少训练时间？（典型范围）</p>
+      <button class="opt" data-fb="对：经验上重算前向的开销约为 20%~30%（具体数值依实现与网络结构浮动）。">约 20%~30%</button>
+      <button class="opt" data-fb">2~3 倍是严重高估；重算只涉及「被丢弃的那部分」前向。">约 2~3 倍</button>
+      <button class="opt" data-fb">检查点一定会变慢（重算不免费），只是幅度通常可控。">完全不变</button>
+      <div class="feedback"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 第 10 章（L4） ==================== -->
+  <section class="chapter" data-level="4" data-title="超参速查与训练诊断器">
+    <h2>超参速查与训练诊断器</h2>
+    <p class="tldr">训练出问题不用慌：症状和旋钮之间是一张「表」。先看 loss 曲线的形状，对应到行，再按顺序调。这张表 + 下面的诊断器，覆盖微调 90% 的日常排障。</p>
+
+    <table>
+      <tr><th>症状（loss 曲线 / 表现）</th><th>最可能的原因</th><th>该动哪个旋钮</th></tr>
+      <tr><td>震荡不下降、甚至飙高（发散）</td><td>学习率过大</td><td>学习率降一个数量级；确认 warmup 生效</td></tr>
+      <tr><td>下降缓慢或几乎不动（欠拟合）</td><td>学习率过小 / 模板错配 / 数据有问题</td><td>调大学习率；先抽 10 条样本人工检查；核对对话模板</td></tr>
+      <tr><td>训练集降、验证/测试集升（过拟合）</td><td>学过头了</td><td>提前停止；减少 epoch；加数据；增大 dropout</td></tr>
+      <tr><td>输出重复同一句话（复读机）</td><td>学习率过大 或 epoch 过多（背题）</td><td>降学习率、减 epoch；检查并去重训练数据</td></tr>
+      <tr><td>训完通用能力大损（遗忘）</td><td>领域数据占比过高、缺少通用样本</td><td>混入通用/复习数据，调低领域数据占比</td></tr>
+      <tr><td>训练直接 OOM（显存溢出）</td><td>batch 过大 / 序列过长 / 未开省显存手段</td><td>降 per_device_batch 并用梯度累积补；开 bf16 与梯度检查点；调小 cutoff_len</td></tr>
+    </table>
+
+    <div class="key">排障心法：一次只改一个旋钮，改完跑一小段看曲线再改下一个。同时动学习率、batch、数据三件事，出了问题你将无法归因。</div>
+
+    <div class="widget" id="diagWidget">
+      <div class="widget-title">训练诊断器：选症状，看处方</div>
+      <p style="font-size:14.5px;margin:4px 0">你的训练出现了哪种情况？</p>
+      <div class="sym-grid" id="symGrid">
+        <button class="btn" data-k="shock">loss 震荡 / 飙高</button>
+        <button class="btn" data-k="flat">loss 几乎不下降</button>
+        <button class="btn" data-k="overfit">训练降、验证升</button>
+        <button class="btn" data-k="repeat">输出重复一句话（复读机）</button>
+        <button class="btn" data-k="forget">通用能力大损（遗忘）</button>
+        <button class="btn" data-k="oom">OOM 显存溢出</button>
+      </div>
+      <div class="diag-out" id="diagOut" style="display:none"></div>
+    </div>
+
+    <div class="warn">「症状→旋钮」表给的是「最可能的第一嫌疑」，不是定罪书。比如「loss 不动」的元凶经常是数据或模板问题而不是学习率——按表行动时，永远先花十分钟人工看几条原始样本。</div>
+
+    <details class="reveal"><summary>进阶：几条不在表里的经验</summary>
+      ① 学习率调成原来的 1/10 或 10 倍都几乎无效时，问题多半不在学习率；② 「复读机」有时是因为数据里同一句话高频重复——先去重；③ 验证集 loss 开始回升的「拐点」就是最优点，之后的训练都是浪费甚至有害，做 checkpoint 选择时优先取拐点附近的存档；④ 复现别人的配置时，有效 batch 不同就要重新换算学习率。
+    </details>
+
+    <div class="tip">把速查表收藏起来。遇到问题时：看曲线 → 对症状 → 一次只调一个旋钮 → 短跑验证。这套流程能搞定绝大多数训练异常。</div>
+  </section>
+
+  <!-- ==================== 第 11 章（L4） ==================== -->
+  <section class="chapter" data-level="4" data-title="L4 综合测验">
+    <h2>L4 综合测验</h2>
+    <p class="tldr">五道综合题，把本课的知识串起来。全对说明「训练机制与超参」已经过关——可以去看第 5 课的评估与上线了。</p>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">综合①：单卡 batch=8、累积 4 步、2 张卡，有效 batch 是多少？</p>
+      <button class="opt" data-fb="漏乘了卡数。三者都要乘：8 × 4 × 2。">32</button>
+      <button class="opt" data-fb="对：有效 batch = 8 × 4 × 2 = 64。">64</button>
+      <button class="opt" data-fb="多乘了一次 2。公式是 8 × 4 × 2。">128</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="0">
+      <p class="q">综合②：loss 高位震荡 + 模型复读同一句话，第一嫌疑是？</p>
+      <button class="opt" data-fb="对：学习率过大同时解释这两个症状——参数被大幅拉扯导致输出崩坏重复。先降一个数量级并确认 warmup。">学习率过大</button>
+      <button class="opt" data-fb="学习率过小只会让训练慢，不会引起震荡和复读。">学习率过小</button>
+      <button class="opt" data-fb">梯度累积只影响「多久更新一次」，不影响每步更新的幅度，不会直接导致复读。">梯度累积步数太多</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">综合③：bf16 训练需要 loss scaling 吗？为什么？</p>
+      <button class="opt" data-fb="bf16 的指数范围与 fp32 相同，小梯度不会下溢，所以基本不需要 loss scaling——这是它相对 fp16 的核心优势。">需要，bf16 位宽太小必须缩放</button>
+      <button class="opt" data-fb="对：bf16 指数范围与 fp32 一致，梯度不易下溢成 0；loss scaling 主要是 fp16（指数范围窄）时代的工具。">基本不需要，因为 bf16 指数范围与 fp32 相同，梯度不易下溢</button>
+      <button class="opt" data-fb="两者位数相同（都是 16 位），只是位分配不同：bf16 保范围、fp16 保精度。">需要，因为 bf16 比 fp16 更省位</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="2">
+      <p class="q">综合④：开了 bf16 还是 OOM，接下来该开什么？代价是？</p>
+      <button class="opt" data-fb">bf16 已经开了；加大 batch 方向反了，会加剧 OOM。">开混合精度 + 加大 batch</button>
+      <button class="opt" data-fb">关 bf16 会让显存翻倍，方向反了。">关掉 bf16 节省精度换显存</button>
+      <button class="opt" data-fb="对：梯度检查点大幅压缩中间结果，代价是约 20%~30% 的重算开销（变慢）。">开梯度检查点，代价是训练变慢约 20%~30%</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="0">
+      <p class="q">综合⑤：训练到一半发现「验证集 loss 最低后持续回升」，最佳操作是？</p>
+      <button class="opt" data-fb="对：回升说明进入过拟合区，拐点附近就是最优点——用那附近的 checkpoint，而不是继续练。">取拐点附近的 checkpoint 并停止（早停）</button>
+      <button class="opt" data-fb">继续训练只会加重过拟合，验证集表现会更差。">继续训，模型总会自己好转</button>
+      <button class="opt" data-fb">遗忘靠混入通用数据缓解；而这里的问题是过拟合，需要早停。">把领域数据占比再提高</button>
+      <div class="feedback"></div>
+    </div>
+
+    <details class="reveal"><summary>学完本课，你可以……（点开自检）</summary>
+      ① 说清一个训练步的四环节（前向→loss→反向传播→更新）；② 读懂 loss 曲线的三种形态并对症下药；③ 独立估算有效 batch 并解释 warmup + cosine；④ 说清 bf16 与 fp16 的区别、loss scaling 的作用；⑤ 解释梯度检查点「用时间换显存」并算清显存四大件；⑥ 面对任何训练异常，按速查表一次一个旋钮地排障。全中？训练机制这一环你已经通了——第 5 课见（评估、对齐与上线）。
+    </details>
+
+    <p class="series-link">继续学习：<a href="llm-finetuning.html">返回系列目录 →</a></p>
+  </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示 ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 演示通用 ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 本课定制交互 ================= */
+
+/* ---- 曲线识别 ---- */
+(() => {
+  const LABELS = {
+    good: { name: '健康下降（正常）', ok: true,
+      text: '✅ 图 A 是健康形态：loss 稳定下降并趋于平缓。模型在正常学习，无需调整。' },
+    under: { name: '欠拟合（没学会）', ok: true,
+      text: '✅ 图 B 是欠拟合：loss 几乎不动。模型没学到东西——常见原因：学习率太小、对话模板错配、数据本身有问题。' },
+    over: { name: '过拟合（学过头）', ok: true,
+      text: '✅ 图 C 是过拟合：实线（训练集）一路降、虚线（测试集）反而升。模型背下了训练题却不会做新题——该早停、加数据或正则。' }
+  };
+  const btns = document.querySelectorAll('#curveWidget .curve-btn');
+  const fb = document.getElementById('curveFb');
+  btns.forEach(b => b.addEventListener('click', () => {
+    btns.forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    const info = LABELS[b.dataset.k];
+    fb.className = 'feedback show ok';
+    fb.textContent = info.text + ' 三张图的「身份」：A=正常，B=欠拟合，C=过拟合。';
+  }));
+})();
+
+/* ---- 学习率轨迹演示 ---- */
+demo('#lrDemo', ({ lr, steps }, ctx, cv, root) => {
+  const css = getComputedStyle(document.documentElement);
+  const W = cv.width, H = cv.height;
+  const start = { x: W * 0.82, y: H * 0.18 };
+  const goal  = { x: W * 0.20, y: H * 0.80 };
+  // 网格与坐标
+  ctx.strokeStyle = css.getPropertyValue('--border');
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 8; i++) { ctx.beginPath(); ctx.moveTo(i * W / 8, 0); ctx.lineTo(i * W / 8, H); ctx.stroke(); }
+  for (let i = 1; i < 6; i++) { ctx.beginPath(); ctx.moveTo(0, i * H / 6); ctx.lineTo(W, i * H / 6); ctx.stroke(); }
+  // 等高线（目标附近的「盆地」）
+  ctx.strokeStyle = css.getPropertyValue('--border');
+  for (let r = 40; r <= 220; r += 45) {
+    ctx.beginPath();
+    ctx.ellipse(goal.x, goal.y, r * 1.4, r, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  // 起点与目标
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillStyle = css.getPropertyValue('--text');
+  ctx.fillText('●', start.x - 7, start.y + 7);
+  ctx.fillText('★', goal.x - 9, goal.y + 7);
+  // 模拟梯度下降：loss 曲面近似为以 goal 为中心的二次型
+  const rate = Math.pow(10, lr);
+  let x = start.x, y = start.y;
+  ctx.strokeStyle = css.getPropertyValue('--warn');
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  let diverged = false;
+  for (let s = 0; s < steps; s++) {
+    // 梯度指向误差增大的方向，更新 = -lr * grad（数值上按曲面尺度缩放）
+    const k = rate * 3200;
+    x -= k * (x - goal.x) * 0.01 * 60;
+    y -= k * (y - goal.y) * 0.01 * 60;
+    ctx.lineTo(x, y);
+    if (x < -50 || x > W + 50 || y < -50 || y > H + 50) { diverged = true; break; }
+  }
+  ctx.stroke();
+  const effRate = rate * 32;
+  let verdict;
+  if (diverged) verdict = '❌ 发散：学习率太大，轨迹直接冲出了画面——训练中就是 loss 飙高。';
+  else if (effRate > 0.9) verdict = '⚠️ 震荡：步子太大，在目标附近来回冲过头。';
+  else if (effRate < 0.05) verdict = '🐢 太慢：方向对，但走完全程可能要等到天荒地老。';
+  else verdict = '✅ 不错的节奏：稳步逼近目标。';
+  root.querySelector('.readout').textContent =
+    `当前学习率 ≈ ${rate.toExponential(1)}（演示内部步长 = lr × 32 ≈ ${effRate.toFixed(2)}）。${verdict} 注：轨迹为教学示意，真实 loss 曲面复杂得多；滑块刻度为 log₁₀(lr)，读数请以下方学习率数值为准。`;
+});
+
+/* ---- 有效 batch 计算器 ---- */
+(() => {
+  const pd = document.getElementById('effPd'), acc = document.getElementById('effAcc'), gpu = document.getElementById('effGpu');
+  const out = document.getElementById('effOut');
+  if (!out) return;
+  const render = () => {
+    const a = Math.max(1, +pd.value || 1), b = Math.max(1, +acc.value || 1), c = Math.max(1, +gpu.value || 1);
+    const eff = a * b * c;
+    let tip;
+    if (eff < 8) tip = '有效 batch 偏小：梯度噪声大，学习率不宜设太高。';
+    else if (eff <= 64) tip = '处于常见区间（LoRA SFT 常用 16~64），比较稳妥。';
+    else if (eff <= 256) tip = '有效 batch 较大：梯度估计很稳，学习率可按经验适当上调。';
+    else tip = '有效 batch 很大：确认是有意为之，并记得联动调大学习率、检查显存是否够用。';
+    out.innerHTML = `有效 batch = <b>${a}</b> × <b>${b}</b> × <b>${c}</b> = <b>${eff}</b> 条样本 / 次更新。<br><span style="font-size:13.5px;color:var(--muted)">${tip}</span>`;
+  };
+  [pd, acc, gpu].forEach(i => i.addEventListener('input', render));
+  render();
+})();
+
+/* ---- 显存-速度权衡台 ---- */
+demo('#memDemo', ({ amp, ckpt }, ctx, cv, root) => {
+  const css = getComputedStyle(document.documentElement);
+  const W = cv.width, H = cv.height;
+  // 以「7B 模型、全参微调」为基准的示意估算（单位：GB）
+  const mem = {
+    weights:  amp ? 14 : 28,
+    optim:    amp ? 28 : 56,
+    grad:     amp ? 14 : 28,
+    acts:     ckpt ? 12 : 34
+  };
+  const total = mem.weights + mem.optim + mem.grad + mem.acts;
+  const speed = (amp ? 1.0 : 0.62) * (ckpt ? 0.76 : 1.0);
+  const parts = [
+    { label: '模型权重', v: mem.weights, color: css.getPropertyValue('--l3') },
+    { label: '优化器状态', v: mem.optim, color: css.getPropertyValue('--warn') },
+    { label: '梯度', v: mem.grad, color: css.getPropertyValue('--l1') },
+    { label: '中间结果', v: mem.acts, color: css.getPropertyValue('--l4') }
+  ];
+  const maxV = 170, barW = W - 240;
+  ctx.font = '14px sans-serif';
+  parts.forEach((p, i) => {
+    const y = 40 + i * 52;
+    ctx.fillStyle = css.getPropertyValue('--text');
+    ctx.fillText(p.label, 10, y - 6);
+    ctx.fillStyle = css.getPropertyValue('--border');
+    ctx.fillRect(10, y, barW, 24);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(10, y, barW * Math.min(p.v, maxV) / maxV, 24);
+    ctx.fillStyle = css.getPropertyValue('--text');
+    ctx.fillText('≈ ' + p.v + ' GB', barW + 22, y + 17);
+  });
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillStyle = total > 80 ? css.getPropertyValue('--bad') : css.getPropertyValue('--ok');
+  ctx.fillText(`总显存 ≈ ${total} GB（80GB 卡${total > 80 ? '：溢出！' : '：装得下'}）`, 10, H - 34);
+  ctx.font = '14px sans-serif';
+  ctx.fillStyle = css.getPropertyValue('--text');
+  ctx.fillText(`训练速度 ≈ 基准的 ${Math.round(speed * 100)}%（100% = bf16、不开检查点）`, 10, H - 10);
+  root.querySelector('.readout').textContent =
+    `当前组合：bf16=${amp ? '开' : '关'}，梯度检查点=${ckpt ? '开' : '关'}。` +
+    (total > 80 ? ' OOM 警告：试试打开混合精度或梯度检查点。' : ' 这个组合能装进 80GB 显卡。') +
+    ' 注：数值为教学示意（以 7B 全参微调为基准的粗略量级），真实占用依框架与实现浮动。';
+});
+
+/* ---- 训练诊断器 ---- */
+(() => {
+  const DIAG = {
+    shock: {
+      rec: '把学习率降一个数量级（如 2e-4 → 2e-5），确认 warmup 生效',
+      why: 'loss 高位震荡甚至飙高，最典型的原因是每次参数更新幅度太大，在目标点附近来回冲过头。学习率是「第一嫌疑」。',
+      alt: '排除项：先抽 10 条原始样本确认没有脏数据；再确认对话模板与模型匹配（模板错配也会让 loss 异常）。'
+    },
+    flat: {
+      rec: '先抽 10 条样本人工检查 + 核对对话模板；确认无误后把学习率调大 5~10 倍',
+      why: 'loss 几乎不动 = 欠拟合。最常见的原因其实不是学习率，而是数据或模板问题：模板错配时模型看到的格式是乱的，根本学不到东西。',
+      alt: '排除项：确认 label 只遮住了该学的部分；确认数据集本身没有大量重复/空样本。'
+    },
+    overfit: {
+      rec: '提前停止（早停）；减少 epoch；补充更多数据；或增大 dropout',
+      why: '训练集降、验证集升 = 过拟合：模型开始背题而不是学规律。继续训练只会加重，拐点附近就是最优点。',
+      alt: '经验：做 checkpoint 选择时取验证 loss 拐点附近的存档，而不是最后一个存档。'
+    },
+    repeat: {
+      rec: '降低学习率、减少 epoch；并对训练数据去重',
+      why: '复读机（重复同一句话）通常是两个原因之一：学习率过大把输出分布拉扯坏了，或训练数据里同一句话高频出现，模型把它背成了「万能回答」。',
+      alt: '检查方法：在训练集里搜索模型复读的那句话，看是否高频出现。'
+    },
+    forget: {
+      rec: '混入通用/复习数据，降低领域数据的占比',
+      why: '领域数据占比过高时，模型会「一边学一边忘」——通用能力被覆盖。这不是训练坏了，而是数据配比问题（灾难性遗忘）。',
+      alt: '参考第 3 课的数据配比章节：常见做法是用通用指令数据占 10%~40% 作为「复习材料」。'
+    },
+    oom: {
+      rec: '① 降 per_device_batch 并用梯度累积补有效 batch；② 开 bf16；③ 开梯度检查点；④ 调小 cutoff_len',
+      why: 'OOM 是显存不够。四大件（权重/优化器/梯度/中间结果）各有对应手段：bf16 砍前三者的体积，检查点砍中间结果，减 batch 和截断长度直接减量。',
+      alt: '顺序建议：先开 bf16（几乎无代价）→ 再降 batch + 累积（保持有效 batch 不变就不用重调学习率）→ 再开检查点（接受约 20%~30% 变慢）。'
+    }
+  };
+  const grid = document.getElementById('symGrid');
+  const out = document.getElementById('diagOut');
+  if (!grid) return;
+  grid.querySelectorAll('.btn').forEach(b => b.addEventListener('click', () => {
+    grid.querySelectorAll('.btn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    const d = DIAG[b.dataset.k];
+    out.style.display = 'block';
+    out.innerHTML = `<div class="rec">🩺 ${d.rec}</div><div class="why">${d.why}</div><div class="alt">${d.alt}</div>`;
+  }));
+})();
+</script>
+</body>
+</html>

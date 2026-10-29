@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网运行模式与控制 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.demo .readout{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.demo .readout .box{flex:1;min-width:150px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px}
+.demo .readout .box b{display:block;font-size:20px;margin-top:2px}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>微电网运行模式与控制策略</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章 ========== -->
+    <section class="chapter" data-level="2" data-title="控制的总体目标">
+      <h2>控制的总体目标</h2>
+      <p class="tldr">微电网有两种运行模式：并网时「稳功率」，孤岛时「稳压稳频」——控制策略必须随模式切换。</p>
+
+      <p>微电网（Microgrid）是一组分布式电源（光伏、风电、储能、柴油机等）、负荷和监控保护装置的集合，可以在两种模式下运行：</p>
+      <ul>
+        <li><b>并网模式（Grid-connected）</b>：通过公共连接点（PCC）接入大电网。大电网像一台「无穷大电源」，电压和频率由电网锚定，微电网只需按调度要求输出既定功率。</li>
+        <li><b>孤岛模式（Islanded）</b>：因故障或计划与大电网断开。此时微电网必须<b>自己</b>维持电压幅值和频率稳定，否则负荷无法正常工作。</li>
+      </ul>
+
+      <div class="analogy">并网是「跟着乐队演奏」——大电网是指挥，节奏（频率）和音高（电压）都有人定，你只需要把自己的声部（功率）演奏好；孤岛是「自己当指挥」——乐队散了，你得自己打拍子、定音高，还得让每件乐器（各台电源）配合好。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面：两种模式各稳什么？</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">并网模式<br>稳什么？</div><div class="back">电压、频率由大电网支撑，微电网重点是<b>稳功率</b>：按 EMS 调度输出指定的有功 P 和无功 Q。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">孤岛模式<br>稳什么？</div><div class="back">没有大电网撑腰，必须<b>稳电压、稳频率</b>：建立 V 和 f 的基准，并保证电源间功率均分。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">模式切换<br>靠什么？</div><div class="back">靠 <b>STS（静态切换开关）</b> 在 PCC 处合闸/分闸；并网前必须预同步，防止冲击电流。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">控制策略没有「万能的一种」，只有「适配当前模式的一种」。后面四章分别讲并网用的 PQ 控制、孤岛用的 V/f 控制、两者都能用的下垂控制，以及把它们串起来的主从/对等架构与无缝切换。</div>
+      <div class="tip">记住一句话：<mark>并网稳功率，孤岛稳压稳频</mark>。这是全部微电网控制逻辑的出发点。</div>
+    </section>
+
+    <!-- ========== 第 2 章 ========== -->
+    <section class="chapter" data-level="3" data-title="并网控制：恒功率 PQ 控制">
+      <h2>并网控制：恒功率 PQ 控制</h2>
+      <p class="tldr">并网时逆变器当「电流源」：按上层 EMS 下发的 $P_{ref}$、$Q_{ref}$ 输出固定有功和无功，电压频率交给大电网。</p>
+
+      <p>PQ 控制（恒功率控制）把逆变器等效为一个可编程的电流源。由于大电网刚性很强（电压幅值 $V$、频率 $f$ 基本不动），逆变器只需控制注入电流的相位和幅值，就能决定送出多少有功和无功：</p>
+      $$P = P_{ref}, \qquad Q = Q_{ref}$$
+      <p>其中：$P_{ref}$ 为上层能量管理系统（EMS）下发的有功指令（如光伏按最大功率点跟踪 MPPT 输出、储能按充放电计划执行）；$Q_{ref}$ 为无功指令（可用于功率因数校正或电压调节）。</p>
+
+      <h3>PQ 控制的工作原理</h3>
+      <div class="widget steps">
+        <div class="widget-title">分步揭示：从采样到输出</div>
+        <div class="step"><b>① 采样</b>：测量逆变器输出三相电压、电流，经坐标变换（dq 变换）得到 $v_d, v_q, i_d, i_q$。</div>
+        <div class="step"><b>② 计算实际功率</b>：由 dq 分量算出瞬时有功 $P = \frac{3}{2}(v_d i_d + v_q i_q)$、无功 $Q = \frac{3}{2}(v_q i_d - v_d i_q)$。</div>
+        <div class="step"><b>③ 功率外环</b>：$P$ 与 $P_{ref}$ 比较、$Q$ 与 $Q_{ref}$ 比较，各经一个 PI 控制器，生成电流内环的参考值 $i_d^{ref}, i_q^{ref}$。</div>
+        <div class="step"><b>④ 电流内环</b>：快速跟踪电流参考，产生 PWM 驱动信号，控制功率器件的通断。</div>
+        <div class="step"><b>⑤ 结果</b>：无论电网电压如何微小波动，逆变器输出的 $P, Q$ 始终锁定在指令值——这就是「恒功率」。</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+
+      <div class="warn">PQ 控制的前提是「有大电网兜底」。如果大电网断开（孤岛），而逆变器仍死磕 $P_{ref}$、$Q_{ref}$，电压和频率将失去支撑而崩溃——所以孤岛瞬间必须立即切换控制策略。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">PQ 控制中，$P_{ref}$ 和 $Q_{ref}$ 通常由谁给出？</p>
+        <button class="opt" data-fb="逆变器本地控制器负责「执行」指令，而不是「制定」指令；调度层面的决策在 EMS。">逆变器自身根据直流侧电压自动决定</button>
+        <button class="opt" data-fb="正确。上层能量管理系统（EMS）根据电价、预测、调度计划统一分配各电源出力，下发给 PQ 控制器执行。">上层能量管理系统 EMS 下发</button>
+        <button class="opt" data-fb="大电网只提供电压频率基准，不会替微电网决定它要输出多少功率。">大电网自动匹配微电网的需求</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">PQ 控制 = 功率外环 + 电流内环的双环结构；本质是「跟电网同步、按指令出力」。$P_{ref}$ 常来自 MPPT 或经济调度，$Q_{ref}$ 用于无功/电压支撑。</div>
+    </section>
+
+    <!-- ========== 第 3 章 ========== -->
+    <section class="chapter" data-level="3" data-title="孤岛控制：恒压恒频 V/f 控制">
+      <h2>孤岛控制：恒压恒频 V/f 控制</h2>
+      <p class="tldr">孤岛时必须有一台「主控电源」用 V/f 控制建立电压和频率基准：$V = V_{ref}$、$f = f_{ref}$，其他电源跟随它。</p>
+
+      <p>孤岛后，微电网内不再有无穷大电源。根据基尔霍夫定律，任一时刻电源发出的功率必须等于负荷消耗的功率——而功率平衡是靠「电压频率这个信号」间接实现的。V/f 控制把主控逆变器（通常接储能）等效为「电压源」：</p>
+      $$V = V_{ref}, \qquad f = f_{ref}$$
+      <p>其中：$V_{ref}$ 为额定电压幅值参考（如 380 V 线电压），$f_{ref}$ 为额定频率参考（如 50 Hz）。主控电源负责硬扛功率缺额：负荷增加导致电压/频率下跌 → 主控增大输出 → 把它们拉回额定值。</p>
+
+      <p>其他分布式电源（如光伏）在孤岛下一般不参与调压调频，而是按主控电源建立的电压频率信号，以 PQ 或限功率方式跟随出力。</p>
+
+      <div class="analogy">主控电源像乐队里的定音鼓手：它先给出节拍（频率）和基准音高（电压），其他乐手听着它演奏。定音鼓手要是走神（退出），整场演出就散了——所以主控电源必须时刻在线，且容量要足够大。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">孤岛模式下，由谁负责建立电压和频率的基准？</p>
+        <button class="opt" data-fb="主控电源必须是可控电源（典型为储能逆变器），能主动调节出力来维持功率平衡。">任何一台光伏逆变器</button>
+        <button class="opt" data-fb="大电网在孤岛时已经断开，无法再提供电压频率支撑。">大电网通过 PCC 间接支撑</button>
+        <button class="opt" data-fb="正确。主控电源（通常是储能变流器）采用 V/f 控制，建立 $V_{ref}$ 与 $f_{ref}$，其余电源跟随。">主控电源（如储能逆变器）通过 V/f 控制</button>
+        <button class="opt" data-fb="负荷是被动的耗电方，它消耗功率而不是产生基准信号。">负荷（用电设备）</button>
+        <button class="opt" data-fb="微电网中央控制器（MGCC）负责协调与下发指令，但电气上的 V/f 基准由主控电源实时建立。">微电网中央控制器直接产生电压</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">V/f 控制是「主从架构」：主控电源单点承担全部调节压力，容量不足或过载时系统仍会失稳。多台电源想用 V/f 直接并联会因「各自为政的电压源并联」产生环流——这正是下一章下垂控制要解决的问题。</div>
+      <div class="tip">V/f 控制的本质是「电压源外特性 + 恒压恒频闭环」；适用场景：孤岛运行、主控电源、容量较小的微电网。</div>
+    </section>
+
+    <!-- ========== 第 4 章 ========== -->
+    <section class="chapter" data-level="3" data-title="下垂控制 Droop">
+      <h2>下垂控制 Droop</h2>
+      <p class="tldr">下垂控制模仿同步发电机的「有功不可就频率、无功不可就电压」特性：$f = f_0 - k_p(P - P_0)$、$V = V_0 - k_q(Q - Q_0)$，让多台逆变器<b>无需通信</b>就能并联均分负荷。</p>
+
+      <p>传统同步发电机有一个天然的稳定机制：负荷增加 → 转子减速 → 频率下降 → 调速器加大油门 → 各机组按下垂系数自动多出力。逆变器没有转子，但可以<b>编程模拟</b>这条特性：</p>
+      $$f = f_0 - k_p\,(P - P_0)$$
+      $$V = V_0 - k_q\,(Q - Q_0)$$
+      <p>各符号含义：$f$ 为逆变器输出频率；$f_0$ 为空载频率（$P = P_0$ 时的频率，常取额定 50 Hz）；$k_p$ 为有功-频率下垂系数（Hz/kW），越大表示「同样的出力增加，频率让得越多」；$P$ 为实际输出有功；$P_0$ 为功率基点；$V, V_0, k_q, Q, Q_0$ 在无功-电压通道上含义对应。</p>
+
+      <p>并联运行时，所有逆变器共享同一个母线频率 $f$。由 $f = f_0 - k_{p1} P_1 = f_0 - k_{p2} P_2$ 可得：</p>
+      $$k_{p1} P_1 = k_{p2} P_2 \;\Rightarrow\; \frac{P_1}{P_2} = \frac{k_{p2}}{k_{p1}}$$
+      <p>即<b>出力与下垂系数成反比</b>：两台额定相同的逆变器取相同 $k_p$，负荷自然均分——全程不需要任何通信线。</p>
+
+      <!-- 核心定制交互演示 -->
+      <div class="widget demo" id="droopDemo">
+        <div class="widget-title">下垂特性演示：拖动滑块，看两台并联逆变器如何「自动分活」</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>逆变器 1 下垂系数 $k_{p1}$ <span class="val" data-for="kp"></span><input type="range" name="kp" min="0.5" max="5" step="0.1" value="1"></label>
+          <label>系统总负荷 $P_{load}$（0 ~ 额定 2.0 pu）<span class="val" data-for="load"></span><input type="range" name="load" min="0" max="2" step="0.05" value="1"></label>
+        </div>
+        <div class="readout">
+          <div class="box">系统频率 f<b id="rF">—</b></div>
+          <div class="box">逆变器 1 出力 P₁<b id="rP1">—</b></div>
+          <div class="box">逆变器 2 出力 P₂<b id="rP2">—</b></div>
+          <div class="box">出力比 P₁ : P₂<b id="rR">—</b></div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin:10px 0 0">设定：两台逆变器额定各 1 pu，空载频率 $f_0$ = 50 Hz，逆变器 2 固定 $k_{p2}$ = 2。蓝线为逆变器 1，橙线为逆变器 2；黑点为实际运行点。</p>
+      </div>
+
+      <div class="key">观察上面的演示：把 $k_{p1}$ 调大，逆变器 1 少出力、逆变器 2 多出力，且<b>系统频率随负荷增加而下跌</b>。$k_p$ 越大 → 频率跌得越多，但均分效果越好——这是下垂控制固有的「稳态频率偏差」代价。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">两台额定容量相同的逆变器并联，采用下垂控制，$k_{p1} = 2\,k_{p2}$。负荷均分时，二者出力之比 $P_1 : P_2$ 为？</p>
+        <button class="opt" data-fb="正确。并联时 $k_{p1}P_1 = k_{p2}P_2$，出力与下垂系数成反比，故 $P_1:P_2 = k_{p2}:k_{p1} = 1:2$。">1 : 2</button>
+        <button class="opt" data-fb="方向反了：下垂系数大的逆变器「更愿意让出频率」，出力反而少。">2 : 1</button>
+        <button class="opt" data-fb="1:1 只在两台 $k_p$ 相等时才成立；这里 $k_{p1} \neq k_{p2}$。">1 : 1</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">下垂控制的代价是<b>稳态频率偏差</b>：负荷越重，$f$ 离 $f_0$ 越远（频率跌落 $\Delta f = k_p \cdot P$）。工程上常用「下垂 + 二次调频」补偿偏差，或与传统同步机混合运行时借助其惯量。</div>
+      <div class="tip">下垂控制三要素：模仿同步机的 $P$-$f$、$Q$-$V$ 特性；按 $1/k_p$ 反比分配负荷；完全无通信、即插即用。它是微电网多机并联的基石。</div>
+    </section>
+
+    <!-- ========== 第 5 章 ========== -->
+    <section class="chapter" data-level="3" data-title="主从控制与对等控制">
+      <h2>主从控制与对等控制</h2>
+      <p class="tldr">多电源协同有两大家族：主从控制（一台主逆变器定基准、其余跟随）与对等控制（全部下垂、地位平等）。</p>
+
+      <h3>主从控制（Master-Slave）</h3>
+      <p>一台主逆变器（通常接储能）孤岛时切换为 V/f 控制建立电压频率基准；其余从逆变器维持 PQ 控制，按主逆变器给的参考出力。结构简单、电压频率质量高，但<b>主逆变器是单点瓶颈</b>，切换依赖通信。</p>
+      <h3>对等控制（Peer-to-Peer）</h3>
+      <p>所有逆变器都采用下垂控制，无主无从、地位完全对等，即插即用、冗余度高；代价是<b>存在稳态电压/频率偏差</b>，且线路阻抗不均时会破坏均流精度。</p>
+
+      <div class="widget">
+        <div class="widget-title">对比表</div>
+        <table>
+          <tr><th>维度</th><th>主从控制</th><th>对等控制（全下垂）</th></tr>
+          <tr><td>电压/频率基准</td><td>主逆变器建立，质量高、无静差</td><td>无明确基准，有稳态偏差</td></tr>
+          <tr><td>通信需求</td><td>主从间需要通信通道</td><td>完全无需通信</td></tr>
+          <tr><td>可靠性</td><td>主逆变器故障即系统崩溃（单点）</td><td>任一台退出，其余自动重分负荷</td></tr>
+          <tr><td>均分精度</td><td>由主控统一调度，较精确</td><td>受下垂系数与线路阻抗影响</td></tr>
+          <tr><td>典型场景</td><td>小型、对电能质量要求高的微电网</td><td>容量大、电源多、需灵活扩展的场景</td></tr>
+        </table>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">翻卡自测：盖住答案，说得出吗？</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">主从控制<br>最大软肋？</div><div class="back">主逆变器是<b>单点故障源</b>；且主从切换依赖通信，通信中断会导致失控。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">对等控制<br>最大软肋？</div><div class="back"><b>稳态频率/电压偏差</b>；线路阻抗不均时负荷分配不公，可能过载。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">工程上怎么<br>取长补短？</div><div class="back">常用「<b>分层混合</b>」：一次调频用下垂兜底，二次控制（MGCC）消差，必要时设主控。</div></div></div>
+        </div>
+      </div>
+
+      <div class="tip">选型口诀：要电能质量、系统小 → 主从；要扩展性、可靠性、免通信 → 对等（下垂）。实际工程多为混合架构。</div>
+    </section>
+
+    <!-- ========== 第 6 章 ========== -->
+    <section class="chapter" data-level="3" data-title="无缝切换">
+      <h2>无缝切换</h2>
+      <p class="tldr">微电网要在「并网 ↔ 孤岛」之间平稳过渡：计划孤岛可提前预同步，非计划孤岛则考验控制的快速性与鲁棒性。</p>
+
+      <h3>计划孤岛 vs 非计划孤岛</h3>
+      <table>
+        <tr><th></th><th>计划孤岛</th><th>非计划孤岛</th></tr>
+        <tr><td>成因</td><td>检修、电价高峰、调度指令</td><td>电网故障、开关误动</td></tr>
+        <tr><td>切换前</td><td>可预调节功率、预同步</td><td>毫无准备，瞬时失电</td></tr>
+        <tr><td>技术关键</td><td>STS 平滑分闸 / 并网预同步</td><td>检测要快（被动法/主动法），控制要立即重构</td></tr>
+        <tr><td>风险</td><td>较低</td><td>电压频率瞬变、冲击电流、设备损坏</td></tr>
+      </table>
+
+      <h3>STS 与预同步</h3>
+      <p>静态切换开关（STS）负责在公共连接点快速合闸/分闸。重新<b>并网</b>时，若微电网侧与大电网侧的电压幅值、频率、相位不一致就合闸，会产生巨大的冲击电流（类似把两台相位不同的发电机硬并联）。因此合闸前必须通过预同步控制，把两侧「对齐」。</p>
+
+      <div class="widget order" data-answer="dv,df,dph,close">
+        <div class="widget-title">排序题：并网前的预同步检查顺序（用 ↑ ↓ 调整）</div>
+        <div class="item" data-id="dv">① 检测电压幅值差 $\Delta V$（是否在允许范围内）</div>
+        <div class="item" data-id="df">② 检测频率差 $\Delta f$（是否满足滑差要求）</div>
+        <div class="item" data-id="dph">③ 检测相位差 $\Delta \varphi$（等待同期点，越接近 0° 越好）</div>
+        <div class="item" data-id="close">④ 条件满足，STS 合闸并网</div>
+        <button class="btn check" style="margin-top:8px">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <p style="font-size:14px;color:var(--muted)">提示：工程实践中三者会同时监视，但「先确认幅值差和频率差在窗口内 → 再捕捉相位过零点合闸」是标准的同期逻辑顺序。</p>
+
+      <div class="warn">非计划孤岛的最大危害是「<b>不可控</b>」：功率缺额瞬间由微电网内电源硬扛，频率电压可能瞬间越限；若检测延迟，还可能出现<b>非计划孤岛带故障运行</b>，危及检修人员与设备。反孤岛保护（如主动频率偏移法）正是为此而设。</div>
+      <div class="tip">无缝切换 = 快速可靠的孤岛检测 + 恰当的 STS + 并网前预同步（幅值→频率→相位对齐）。三者缺一，切换就会有冲击。</div>
+    </section>
+
+    <!-- ========== 第 7 章 ========== -->
+    <section class="chapter" data-level="4" data-title="本章综合测验">
+      <h2>本章综合测验</h2>
+      <p class="tldr">三道综合题，检验你对微电网控制策略的整体理解。</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">1. 下垂控制的本质是什么？</p>
+        <button class="opt" data-fb="下垂控制恰恰避免通信，靠本地 P/f 特性自主分配。">通过高速通信实时广播各逆变器出力</button>
+        <button class="opt" data-fb="恒功率是 PQ 控制的职责；下垂恰恰允许 P 随 f 变化。">强制每台逆变器输出恒定的有功和无功</button>
+        <button class="opt" data-fb="正确。下垂让逆变器呈现同步机式的 $P$-$f$、$Q$-$V$ 外特性，按下垂系数自动分配负荷。">让逆变器像同步发电机一样按下垂特性分配负荷</button>
+        <button class="opt" data-fb="储能是常见的主控电源，但下垂控制的本质与「是否储能」无关，它是控制律层面的设计。">仅储能逆变器才能实现下垂控制</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">2. 非计划孤岛（电网突然断电）主要有哪些危害？（多选思路，选最全面的选项）</p>
+        <button class="opt" data-fb="不只电压：功率缺额首先表现为频率下跌，电压和频率会同时越限。">仅导致电压降低，频率不受影响</button>
+        <button class="opt" data-fb="正确。非计划孤岛会造成电压频率瞬变、冲击电流，且若未被及时检测切除，还可能带故障运行，危及人员和设备。">电压频率瞬变冲击设备，且可能未被检测而带故障运行</button>
+        <button class="opt" data-fb="孤岛检测的目的是「快速识别并处理」，检测本身慢反而是危害的来源之一。">孤岛检测本身会提高供电可靠性</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">3. 关于 V/f 控制与 PQ 控制的适用场景，下列说法正确的是？</p>
+        <button class="opt" data-fb="刚好说反：并网有大电网兜底用 PQ，孤岛失去支撑才需要 V/f。">并网用 V/f 建立基准，孤岛用 PQ 恒功率输出</button>
+        <button class="opt" data-fb="两者互不排斥：孤岛下主控用 V/f、从控常仍用 PQ 跟随。">两种控制不能在同一微电网中共存</button>
+        <button class="opt" data-fb="正确。V/f 建压稳频、PQ 按令出力，分别对应孤岛主控与并网/从控场景。">V/f 用于孤岛主控电源，PQ 用于并网或从控电源</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">全课主线：<mark>并网 PQ 稳功率 → 孤岛 V/f 稳压频 → 下垂无通信并联 → 主从/对等选型 → STS 预同步无缝切换</mark>。能把这个链条讲给别人听，本章就过关了。</div>
+      <div class="tip">恭喜完成全部章节！建议回到第 4 章的下垂演示，把 $k_p$ 推到极限观察频率跌落——理论和手感要结合。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示：<div class="steps"><div class="step">..</div>...<button class="btn next-step">下一步</button></div> ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空：<input data-answer="答案1|答案2"> + <button class="btn check"> ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序：<div class="order" data-answer="a,b,c"><div class="item" data-id="a">..</div>.. <button class="btn check"> ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调。用法：demo('#id', (params, ctx, canvas) => {...}) ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：并联逆变器下垂特性 ================= */
+demo('#droopDemo', ({ kp, load }, ctx, cv, root) => {
+  if (!ctx) return;
+  const css = getComputedStyle(document.documentElement);
+  const W = cv.width, H = cv.height;
+  const Pmax = 2.0, f0 = 50, fmin = 48, fmax = 50.5;
+  const kp2 = 2; // 逆变器2固定下垂系数
+  const padL = 46, padR = 16, padT = 16, padB = 34;
+  const px = P => padL + (P / Pmax) * (W - padL - padR);
+  const py = f => padT + (1 - (f - fmin) / (fmax - fmin)) * (H - padT - padB);
+
+  // ---- 求解运行点：f = f0 - kp*P1 = f0 - kp2*P2, P1+P2 = load ----
+  const P1 = load * kp2 / (kp + kp2);
+  const P2 = load * kp / (kp + kp2);
+  const fsys = f0 - kp * P1; // = f0 - kp2*P2
+
+  // 网格
+  ctx.strokeStyle = css.getPropertyValue('--border'); ctx.lineWidth = 1;
+  ctx.font = '11px sans-serif'; ctx.fillStyle = css.getPropertyValue('--muted');
+  for (let f = 48.5; f <= 50.5; f += 0.5) {
+    ctx.beginPath(); ctx.moveTo(padL, py(f)); ctx.lineTo(W - padR, py(f)); ctx.stroke();
+    if (Math.abs(f - Math.round(f)) < 0.01) ctx.fillText(f.toFixed(0) + ' Hz', 4, py(f) + 4);
+  }
+  for (let P = 0; P <= Pmax + 0.01; P += 0.5) {
+    ctx.beginPath(); ctx.moveTo(px(P), padT); ctx.lineTo(px(P), H - padB); ctx.stroke();
+    ctx.fillText(P.toFixed(1), px(P) - 8, H - padB + 16);
+  }
+  ctx.fillText('P (pu)', W / 2 - 14, H - 6);
+
+  // 额定频率虚线
+  ctx.setLineDash([4, 4]); ctx.strokeStyle = css.getPropertyValue('--muted');
+  ctx.beginPath(); ctx.moveTo(padL, py(f0)); ctx.lineTo(W - padR, py(f0)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 逆变器1下垂曲线（蓝）f = f0 - kp*P，最多画到 fmin
+  const drawDroop = (k, color, label) => {
+    const Pend = Math.min(Pmax, (f0 - fmin) / k);
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(px(0), py(f0)); ctx.lineTo(px(Pend), py(f0 - k * Pend)); ctx.stroke();
+    ctx.fillStyle = color; ctx.fillText(label, px(Pend) - 70, py(f0 - k * Pend) + 16);
+  };
+  drawDroop(kp, '#3b82f6', `逆变器1  kp₁=${kp.toFixed(1)}`);
+  drawDroop(kp2, '#f97316', `逆变器2  kp₂=${kp2.toFixed(1)}`);
+
+  // 运行点
+  const dot = (P, f, color) => {
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(px(P), py(f), 5, 0, 7); ctx.fill();
+  };
+  dot(P1, fsys, '#3b82f6'); dot(P2, fsys, '#f97316');
+  // 水平运行频率线
+  ctx.setLineDash([3, 3]); ctx.strokeStyle = css.getPropertyValue('--text');
+  ctx.beginPath(); ctx.moveTo(padL, py(fsys)); ctx.lineTo(W - padR, py(fsys)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 数值读出
+  $('#rF', root).textContent = fsys.toFixed(3) + ' Hz';
+  $('#rP1', root).textContent = P1.toFixed(3) + ' pu';
+  $('#rP2', root).textContent = P2.toFixed(3) + ' pu';
+  const g = P2 === 0 ? 0 : P1 / P2;
+  $('#rR', root).textContent = g.toFixed(2) + ' : 1';
+});
+</script>
+</body>
+</html>

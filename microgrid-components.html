@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网组成与关键设备 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* 微电网部件图（第 1 章） */
+.mg-diagram{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:stretch;margin:14px 0}
+.mg-diagram .node{flex:1;min-width:150px;max-width:220px;padding:16px 14px;border:2px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;text-align:center;transition:all .2s}
+.mg-diagram .node:hover{border-color:var(--primary)}
+.mg-diagram .node.active{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+.mg-diagram .node .icon{font-size:28px;display:block;margin-bottom:6px}
+.mg-diagram .node b{display:block;font-size:15px}
+.mg-diagram .node small{color:var(--muted)}
+#nodeInfo{padding:12px 16px;border-radius:10px;background:var(--primary-soft);border:1px solid var(--primary);min-height:56px;margin-top:10px}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>微电网的组成与关键设备</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章 ========== -->
+    <section class="chapter" data-level="2" data-title="一张图看懂微电网">
+      <h2>一张图看懂微电网</h2>
+      <p class="tldr">微电网由四大部分组成：分布式电源、储能系统、负荷，以及能量转换与控制设备——前三个是"角色"，最后一个是"指挥和翻译"。</p>
+
+      <p>如果把微电网比作一个小家庭：分布式电源是<strong>挣钱的人</strong>（光伏、风电把自然资源变成电），储能是<strong>存折</strong>（有结余就存，不够用就取），负荷是<strong>花钱的人</strong>（各种用电设备），而能量转换与控制设备则是<strong>家里的账房先生</strong>——它负责把不同来源的电"翻译"成统一格式、决定钱往哪流、并在停电时立刻接管全家。</p>
+      <p>下面这张图就是一座典型微电网的内部结构。点击任意部件，看看它是干什么的：</p>
+
+      <div class="widget">
+        <div class="widget-title">点击部件，查看说明</div>
+        <div class="mg-diagram">
+          <div class="node" data-info="分布式电源（DG，Distributed Generation）：小型的发电单元，就地安装在用电点附近。常见有光伏、风电、微型燃气轮机、燃料电池等。特点是小规模、贴近负荷、常使用可再生能源。">
+            <span class="icon">☀️</span><b>分布式电源 DG</b><small>光伏 / 风电 / 燃机 / 燃料电池</small>
+          </div>
+          <div class="node" data-info="储能系统（ESS，Energy Storage System）：微电网的'缓冲池'。光伏中午发得多存起来，晚上或阴天再放出来；还能在电网故障时维持供电。核心部件是电池 + PCS 变流器 + 能量管理系统。">
+            <span class="icon">🔋</span><b>储能系统 ESS</b><small>锂电池 / 超级电容 / 飞轮</small>
+          </div>
+          <div class="node" data-info="负荷（Load）：微电网供电的对象。按重要程度分级：重要负荷（手术室）绝不能停电，可中断负荷（空调）停电影响小，可调负荷（充电桩）可以灵活安排。">
+            <span class="icon">🏠</span><b>负荷</b><small>重要 / 可中断 / 可调</small>
+          </div>
+          <div class="node" data-info="能量转换与控制设备：微电网的'大脑和翻译官'。包括逆变器（DC→AC）、PCS 储能变流器（双向）、静态开关 STS（并离网切换）和能量管理系统 EMS——它决定每一度电的去向。">
+            <span class="icon">🧠</span><b>能量转换与控制设备</b><small>逆变器 / PCS / STS / EMS</small>
+          </div>
+        </div>
+        <div id="nodeInfo">👆 点击上方任意部件查看说明</div>
+      </div>
+
+      <div class="analogy">微电网像一个"麻雀虽小五脏俱全"的小国家：有自己的发电厂（DG）、自己的仓库（ESS）、自己的居民（负荷），还有政府与海关（控制设备）——它既可以对外并网贸易，也可以在孤岛状态下自给自足。</div>
+      <div class="key">四大组成缺一不可：没有 DG 就是普通电网用户；没有 ESS 就难以平抑新能源的波动；没有负荷就没有存在的意义；没有控制设备，各部分只是各自为政的"散装"硬件。</div>
+      <div class="tip">本章记住四张面孔：DG（发电）、ESS（存电）、负荷（用电）、控制设备（调度）。后面五章，就是把这四张面孔逐一拆开细看。</div>
+    </section>
+
+    <!-- ========== 第 2 章 ========== -->
+    <section class="chapter" data-level="2" data-title="分布式电源 DG">
+      <h2>分布式电源 DG</h2>
+      <p class="tldr">DG（Distributed Generation，分布式发电）指布置在用户附近的小型发电单元；四类主力是光伏、风电、微型燃气轮机、燃料电池，它们的差别主要在"一次能源、输出稳定性、是否可控"。</p>
+
+      <h3>四种主力 DG 的特点对比</h3>
+      <table>
+        <tr><th>类型</th><th>一次能源</th><th>输出特性</th><th>可控性</th><th>适用场景</th></tr>
+        <tr><td>光伏 PV</td><td>太阳光</td><td>白天有、夜间无，受天气影响</td><td>不可控（随太阳走）</td><td>屋顶、园区、沙漠电站</td></tr>
+        <tr><td>风电</td><td>风</td><td>间歇性强，夜间也常发</td><td>基本不可控</td><td>沿海、高原、三北地区</td></tr>
+        <tr><td>微型燃气轮机</td><td>天然气</td><td>只要气不断就能稳定发</td><td><strong>完全可控</strong></td><td>医院、数据中心（备用/基荷）</td></tr>
+        <tr><td>燃料电池</td><td>氢气 / 天然气</td><td>安静、清洁、效率高</td><td>可控</td><td>对噪声/排放敏感的场所</td></tr>
+      </table>
+
+      <p>一个关键概念：<strong>可控性</strong>。光伏和风电是"老天爷赏饭吃"，发多少不由人；微型燃气轮机和燃料电池是"随叫随到"，喊开就开。微电网调度策略就是围绕这两类电源的搭配来设计的。</p>
+
+      <div class="widget">
+        <div class="widget-title">翻卡记忆：四种 DG 各是什么性格？</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">光伏 PV</div><div class="back">靠太阳发电 ☀️ 清洁但"看天吃饭"：正午最强、夜间为零，是微电网里最不可控的主力。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">风电</div><div class="back">靠风发电 🌬️ 间歇性强、昼夜都可能出力，常与光伏"互补"（白天光伏强、夜间风可能大）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">微型燃气轮机</div><div class="back">烧天然气的"小号燃气发电机" 🔥 只要供气不断就稳定发电，是微电网里可靠的<strong>可控</strong>电源。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">燃料电池</div><div class="back">让氢（或天然气）直接"安静"地变成电 ⚡ 无转动部件、低噪低排、启动快，但成本较高。</div></div></div>
+        </div>
+      </div>
+
+      <div class="warn">别混淆"分布式电源"和"可再生能源"：分布式电源强调的是"布置在用户侧、规模小"，微型燃气轮机烧天然气，既不清洁也不可再生，但它是标准意义上的 DG。两者是交叉关系，不是同义词。</div>
+      <div class="tip">记四种 DG 的口诀：<mark>光风看天，燃机听人</mark>——前两种不可控，后两种可控。可控性直接决定调度策略，是下一章储能存在的理由。</div>
+    </section>
+
+    <!-- ========== 第 3 章 ========== -->
+    <section class="chapter" data-level="2" data-title="储能系统 ESS">
+      <h2>储能系统 ESS</h2>
+      <p class="tldr">ESS（Energy Storage System，储能系统）是微电网的"缓冲池"：光伏夜间不发电、出力随天气波动，而负荷时刻要稳定供电——供需之间的缺口，就靠储能来填。</p>
+
+      <h3>为什么微电网离不开储能？</h3>
+      <p>光伏、风电都"看天吃饭"：正午光伏大发，晚高峰它又归零；一朵云飘过，出力瞬间跌掉两三成。但负荷不吃这一套——医院、数据中心、家里的冰箱都<strong>要求电压频率稳定、供电连续</strong>。储能的作用就是在"发得多"时存起来，"发得少/断供"时放出来，把忽大忽小的电源<strong>熨平</strong>成稳定输出。</p>
+
+      <h3>三种主流储能技术对比</h3>
+      <table>
+        <tr><th>技术</th><th>能量密度</th><th>功率特性</th><th>响应速度</th><th>典型用途</th></tr>
+        <tr><td>锂电池</td><td>高</td><td>中功率、长放电（分钟~小时）</td><td>毫秒级</td><td>削峰填谷、备用供电</td></tr>
+        <tr><td>超级电容</td><td>很低</td><td>超大功率、只能放几秒~几分钟</td><td>毫秒级，可频繁充放</td><td>平抑秒级功率波动</td></tr>
+        <tr><td>飞轮</td><td>低</td><td>大功率、中等时长（秒~分钟）</td><td>毫秒级，寿命长</td><td>电能质量治理、UPS 过渡</td></tr>
+      </table>
+      <p>工程上常常"混搭"：锂电池负责"撑时长"，超级电容负责"接瞬间冲击"——就像长途大巴（锂电池）配急救摩托（超级电容）。</p>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">储能在微电网中的<strong>首要</strong>作用是什么？</p>
+        <button class="opt" data-fb="平抑电源波动、平衡随时变化的供需，是储能最核心、最不可替代的职责。">平抑波动、平衡供需（削峰填谷）</button>
+        <button class="opt" data-fb="备用是重要的附加价值，但电网平稳运行时它处于待命状态，不是每天都要干的活。">作为备用电源（只有停电时才用）</button>
+        <button class="opt" data-fb="电压调节可以由无功补偿装置等更便宜地完成，不是储能的主要使命。">调节电压</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">判断储能优劣有两个独立的维度：<strong>能量</strong>（能撑多久，看容量 kWh）和<strong>功率</strong>（能出多大力，看 kW）。锂电池能量强、超级电容功率强，先分清要补"时长"还是"瞬时"，才能选对技术。</div>
+      <div class="tip">本章一句话：光伏风电是"看天吃饭的厨师"，负荷是"准点开饭的一家人"，储能就是冰箱兼备餐间——把多做出来的菜存起来，保证任何时刻都有饭吃。</div>
+    </section>
+
+    <!-- ========== 第 4 章 ========== -->
+    <section class="chapter" data-level="2" data-title="关键电力电子设备">
+      <h2>关键电力电子设备</h2>
+      <p class="tldr">电力电子设备是微电网的"翻译官"：逆变器负责 DC→AC，PCS 储能变流器负责电池双向充放，静态开关 STS 负责毫秒级的并离网切换。</p>
+
+      <h3>三大件各自干什么</h3>
+      <table>
+        <tr><th>设备</th><th>全称 / 含义</th><th>方向</th><th>关键能力</th></tr>
+        <tr><td>逆变器（Inverter）</td><td>把直流变交流</td><td>DC → AC（单向）</td><td>光伏、电池的直流电必须转成交流才能并入交流电网</td></tr>
+        <tr><td>PCS 储能变流器</td><td>PCS = Power Conversion System，储能变流器</td><td><strong>双向</strong>（整流 AC→DC 充电 / 逆变 DC→AC 放电）</td><td>决定储能何时充、何时放，是电池的"闸门"</td></tr>
+        <tr><td>STS 静态开关</td><td>STS = Static Transfer Switch，静态转换开关</td><td>电网 ↔ 微电网之间</td><td><strong>毫秒级</strong>完成并离网切换，负荷几乎无感</td></tr>
+      </table>
+      <p>注意 PCS 与普通逆变器的差别：普通逆变器只管"放"（如光伏逆变器只能发电），而 PCS 既能充电又能放电，两个方向都受控制系统的精确调度。</p>
+
+      <div class="widget">
+        <div class="widget-title">分步看：一次并离网切换的物理过程</div>
+        <div class="steps">
+          <div class="step"><strong>① 电网故障检测</strong>：STS 持续监测公共电网的电压、频率。某时刻检测到电压跌落/频率异常（如 10ms 内判断为停电）。</div>
+          <div class="step"><strong>② 切断连接</strong>：STS 的电力电子器件（晶闸管/IGBT）在<strong>几毫秒内</strong>关断，微电网与大电网解列，避免"带病"反送电。</div>
+          <div class="step"><strong>③ 切换控制模式</strong>：PCS 从"跟网模式"（跟随大电网的电压相位）切换为"构网模式"（自己建立电压和频率），瞬间成为微电网的"主心骨"。</div>
+          <div class="step"><strong>④ 储能接管供电</strong>：ESS 通过 PCS 放电，填补电源缺口，稳住电压频率；光伏逆变器继续出力（若白天）。</div>
+          <div class="step"><strong>⑤ 电网恢复，重新并网</strong>：大电网恢复后，先同步电压幅值、频率和相位，再合闸并网，微电网回到"从电网取电 + 余电上送"的常态。</div>
+          <button class="btn next-step">下一步</button>
+        </div>
+      </div>
+
+      <div class="warn">STS 切换快，但<strong>不等于"无感"</strong>：从检测到解列有几毫秒到几十毫秒的空窗，精密负荷（如医院手术室）仍需要 UPS 来兜住这一段。STS 管的是"系统级"切换，UPS 管的是"设备级"不间断。</div>
+      <div class="tip">一句话记三大件：逆变器单向翻译，PCS 双向沟通，STS 秒速换轨。后两者是微电网能实现"毫秒级自治"的硬件基础。</div>
+    </section>
+
+    <!-- ========== 第 5 章 ========== -->
+    <section class="chapter" data-level="2" data-title="负荷分级">
+      <h2>负荷分级</h2>
+      <p class="tldr">电不够用时先切谁？答案来自负荷分级：重要负荷永不切，可中断负荷最先切，可调负荷居中。这是微电网能量管理的第一原则。</p>
+
+      <h3>三级负荷划分</h3>
+      <table>
+        <tr><th>级别</th><th>例子</th><th>停电后果</th><th>处理原则</th></tr>
+        <tr><td>重要负荷（一级）</td><td>医院手术室、重症监护、数据中心服务器</td><td>危及生命或重大损失</td><td><strong>永不切除</strong>，由储能/备用电源保底</td></tr>
+        <tr><td>可调负荷（二级）</td><td>电动车充电桩、热水器、工业可转移工序</td><td>晚充一会儿没关系</td><td>灵活调度，电紧张时<strong>延后</strong>使用</td></tr>
+        <tr><td>可中断负荷（三级）</td><td>中央空调、普通照明、非必要电加热</td><td>短暂停电可忍受</td><td>电不够时<strong>最先被切掉</strong></td></tr>
+      </table>
+
+      <div class="analogy">停电时微电网像一艘进水的船：船长（EMS）第一件事是扔货物保船——先扔最不值钱的（可中断负荷），再调整压舱物（可调负荷延后），而救生艇和发动机（重要负荷）无论如何要保住。</div>
+
+      <div class="widget order" data-answer="interrupt,shift,keep">
+        <div class="widget-title">排序题：供电紧张时，负荷的处理顺序（最先处理的排最上）</div>
+        <div class="item" data-id="keep"><b>重要负荷</b>（手术室）：由储能兜底，绝不切除</div>
+        <div class="item" data-id="interrupt"><b>可中断负荷</b>（中央空调）：首先切除/降载</div>
+        <div class="item" data-id="shift"><b>可调负荷</b>（充电桩）：延后使用时间</div>
+        <button class="btn check" style="margin-top:8px">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">误区：以为"公平起见轮流停电"。恰恰相反——微电网在孤岛供电时，负荷分级就是为了<strong>不公平</strong>：把有限电力集中到最重要的负荷上，宁可让空调停、灯暗，也要保住手术室。</div>
+      <div class="tip">分级口诀：<mark>保命第一、可停先停、能拖就拖</mark>。重要负荷（一级）永不切，可中断（三级）最先切，可调（二级）居中调度。</div>
+    </section>
+
+    <!-- ========== 第 6 章 ========== -->
+    <section class="chapter" data-level="3" data-title="能量如何流动">
+      <h2>能量如何流动</h2>
+      <p class="tldr">微电网里的能量不是乱跑的：白天光伏优先供负荷、富余充进电池，傍晚电池放电顶负荷、必要时向电网买电。用"潮流方向"（功率从哪里流向哪里）来描述每一度电的路径。</p>
+
+      <h3>一个典型日的能量剧本</h3>
+      <p><strong>白天（9:00–15:00）</strong>：光伏出力爬坡至正午峰值，超过负荷的部分流向电池充电（电池"吃"）；若电池已满还有富余，则逆向上送电网。<br>
+      <strong>傍晚（18:00–21:00）</strong>：光伏归零，但正是居民用电晚高峰（做饭、开空调），电池放电补上缺口（电池"吐"）；电池不够时从大电网购电。<br>
+      <strong>夜间（23:00–6:00）</strong>：负荷低谷，若电价便宜可从电网充电，等待第二天使用——这就是"削峰填谷"（把高峰需求挪到低谷）。</p>
+      <p>描述能量流动方向的专业术语叫<strong>潮流</strong>（Power Flow）：在任意时刻，每条连接线上功率 $P$ 的正负号决定了方向。$P>0$ 表示流入负荷/电池，$P<0$ 表示流出（上送电网）。</p>
+
+      <div class="widget demo" id="flowSim">
+        <div class="widget-title">典型日能量流模拟：拖时间轴，看能量往哪流（箭头越粗功率越大）</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls">
+          <label>时刻（0–24 时） <span class="val" data-for="t"></span><input type="range" name="t" min="0" max="24" step="0.25" value="12"></label>
+          <label>储能容量（kWh） <span class="val" data-for="cap"></span><input type="range" name="cap" min="1" max="20" step="0.5" value="10"></label>
+        </div>
+        <div class="controls">
+          <label>PV 发电 <span id="flowPv" style="font-weight:700"></span></label>
+          <label>负荷用电 <span id="flowLoad" style="font-weight:700"></span></label>
+          <label>电池充/放 <span id="flowBat" style="font-weight:700"></span></label>
+          <label>电网交互 <span id="flowGrid" style="font-weight:700"></span></label>
+          <label>弃光 <span id="flowCurt" style="font-weight:700"></span></label>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin:8px 0 0">提示：把时间拖到正午，再把储能容量滑到最小，观察灰色虚线箭头——那就是装不下的富余光伏被"弃光"浪费掉的过程。</p>
+      </div>
+
+      <div class="key">潮流分析的核心是能量守恒：任一时刻 <em>PV + 电池放电 + 电网输入 = 负荷 + 电池充电 + 电网输出 + 弃光</em>。模拟器里所有箭头都满足这条等式——你可以挑任意时刻验证。</div>
+      <div class="tip">回看第 2、3 章：光伏的"看天吃饭"决定了白天的潮流，储能的"缓冲"决定了傍晚的潮流，而第 5 章的负荷分级决定了电紧张时潮流优先保谁。</div>
+    </section>
+
+    <!-- ========== 第 7 章 ========== -->
+    <section class="chapter" data-level="3" data-title="本章测验">
+      <h2>本章测验</h2>
+      <p class="tldr">三道题检验本章核心：PCS 的方向、STS 的职责、负荷分级的原则。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">1. PCS（Power Conversion System，储能变流器）与普通光伏逆变器最本质的区别是？</p>
+        <button class="opt" data-fb="PCS 转换效率未必更高，这不是本质区别。">转换效率更高</button>
+        <button class="opt" data-fb="PCS 是双向变流器：既能 AC→DC 给电池充电，也能 DC→AC 放电，这是它能调度储能的根本。">能量可以双向流动（既能充电又能放电）</button>
+        <button class="opt" data-fb="体积不是本质特征，且微型逆变器也可以很小。">体积更小</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">2. STS（Static Transfer Switch，静态开关）在微电网中的作用是？</p>
+        <button class="opt" data-fb="决定何时充放的是 EMS 与 PCS 的职责，STS 不管电池。">控制储能的充放电时机</button>
+        <button class="opt" data-fb="升压变压是变压器的工作，不是 STS 的功能。">升高电压以便远距离输电</button>
+        <button class="opt" data-fb="STS 在电网故障时以毫秒级速度断开/闭合连接，实现微电网的并网与孤岛（离网）状态切换。">毫秒级完成并离网切换</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">3. 微电网供电紧张（孤岛运行）时，负荷分级的处理原则是？</p>
+        <button class="opt" data-fb="重要负荷（如手术室）绝不切除，可中断负荷（如空调）最先切除，可调负荷（如充电桩）延后使用——把有限电力集中到最重要的负荷。">先切可中断负荷，可调负荷延后，重要负荷永不切</button>
+        <button class="opt" data-fb="按接入顺序切是"先来后到"式的平均主义，恰恰违背了分级保障原则。">按接入电网的先后顺序轮流切除</button>
+        <button class="opt" data-fb="重要负荷停电可能危及生命，是最不该切的。">先切重要负荷，减少总损耗</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">全部答对说明你已经掌握了微电网四大组成、三大电力电子设备和负荷分级原则——这足以看懂任何一张微电网单线图（one-line diagram）了。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示：<div class="steps"><div class="step">..</div>...<button class="btn next-step">下一步</button></div> ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空：<input data-answer="答案1|答案2"> + <button class="btn check"> ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序：<div class="order" data-answer="a,b,c"><div class="item" data-id="a">..</div>.. <button class="btn check"> ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调。用法：demo('#id', (params, ctx, canvas) => {...}) ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+
+// ---- 第 1 章：微电网部件图，点击节点高亮并显示说明 ----
+(() => {
+  const info = document.getElementById('nodeInfo');
+  document.querySelectorAll('.mg-diagram .node').forEach(n => {
+    n.addEventListener('click', () => {
+      document.querySelectorAll('.mg-diagram .node').forEach(x => x.classList.remove('active'));
+      n.classList.add('active');
+      info.textContent = n.dataset.info;
+    });
+  });
+})();
+
+// ---- 第 6 章：典型日能量流模拟 ----
+// 光伏曲线：正午峰值 8 kW 的高斯形；负荷曲线：早晚双峰（7 时与 19 时），峰值约 6 kW。
+// 规则：PV 优先供负荷；富余优先充电池，电池充满后剩余上送电网；PV 不足时电池放电，再不足从电网购电。
+demo('#flowSim', ({ t, cap }, ctx, cv, root) => {
+  const css = getComputedStyle(document.documentElement);
+  const W = cv.width, H = cv.height;
+  const pv = 8 * Math.exp(-((t - 13) ** 2) / 8);                       // kW
+  const load = 2 + 2.2 * Math.exp(-((t - 7.5) ** 2) / 3) + 2.6 * Math.exp(-((t - 19) ** 2) / 5); // kW
+  const soc = Math.min(cap, Math.max(0, cap * 0.5));                    // 简化：当前可用容量按一半展示
+  let toBat = 0, fromBat = 0, toGrid = 0, fromGrid = 0, curt = 0;
+
+  const surplus = pv - load;
+  if (surplus >= 0) {
+    toBat = Math.min(surplus, soc > 0 ? surplus : 0, Math.min(surplus, cap * 0.5)); // 最多用掉一半余量演示
+    curt = Math.max(0, surplus - toBat);   // 充不下的富余 -> 弃光
+    toGrid = 0;
+  } else {
+    fromBat = Math.min(-surplus, cap * 0.5);
+    fromGrid = -surplus - fromBat;
+  }
+
+  // ---- 曲线区（上半部）----
+  const plotH = H * 0.42, pad = 40;
+  const xOf = h => pad + (W - 2 * pad) * h / 24;
+  const yOf = p => plotH - p / 9 * (plotH - 20);
+  // 坐标轴
+  ctx.strokeStyle = css.getPropertyValue('--border'); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, yOf(0)); ctx.lineTo(W - pad, yOf(0)); ctx.stroke();
+  // 时间刻度
+  ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  for (let h = 0; h <= 24; h += 6) ctx.fillText(h + ':00', xOf(h), yOf(0) + 16);
+  ctx.fillText('功率 (kW)', pad - 5, 14);
+  // 当前时刻竖线
+  ctx.strokeStyle = css.getPropertyValue('--warn'); ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(xOf(t), 10); ctx.lineTo(xOf(t), yOf(0)); ctx.stroke(); ctx.setLineDash([]);
+  // PV 曲线
+  ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let x = 0; x <= W; x++) { const h = (x - pad) / (W - 2 * pad) * 24; const y = yOf(8 * Math.exp(-((h - 13) ** 2) / 8)); x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.stroke(); ctx.fillStyle = '#f59e0b'; ctx.textAlign = 'left'; ctx.fillText('PV', W - pad + 4, yOf(8 * Math.exp(-((24 - 13) ** 2) / 8)) + 4);
+  // 负荷曲线
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let x = 0; x <= W; x++) { const h = (x - pad) / (W - 2 * pad) * 24; const p = 2 + 2.2 * Math.exp(-((h - 7.5) ** 2) / 3) + 2.6 * Math.exp(-((h - 19) ** 2) / 5); const y = yOf(p); x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.stroke(); ctx.fillStyle = '#3b82f6'; ctx.fillText('负荷', W - pad + 4, yOf(2) - 6);
+
+  // ---- 潮流图（下半部）----
+  const cy = H * 0.72, nx = W * 0.5;
+  const N = { pv: [W * 0.14, cy - 60], bat: [W * 0.14, cy + 60], grid: [nx, H - 46], load: [nx, H * 0.5] };
+  const arrow = (a, b, kw, color, dashed) => {
+    if (kw <= 0.02) return;
+    const lw = 1.5 + kw * 1.6;
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    const ux = dx / L, uy = dy / L;
+    const g = 14 + lw, bx = b[0] - ux * g, by = b[1] - uy * g;
+    ctx.strokeStyle = color; ctx.lineWidth = lw;
+    ctx.setLineDash(dashed ? [8, 6] : []);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(b[0] - ux * 4, b[1] - uy * 4);
+    ctx.lineTo(bx - uy * 6, by + ux * 6);
+    ctx.lineTo(bx + uy * 6, by - ux * 6);
+    ctx.closePath(); ctx.fill();
+    ctx.setLineDash([]);
+    // 功率标签
+    ctx.fillStyle = color; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(kw.toFixed(1) + ' kW', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 6);
+  };
+  const node = (p, label, icon, sub) => {
+    ctx.fillStyle = css.getPropertyValue('--card'); ctx.strokeStyle = css.getPropertyValue('--border');
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(p[0] - 46, p[1] - 26, 92, 52, 10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = css.getPropertyValue('--text'); ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(icon + ' ' + label, p[0], p[1] - 2);
+    ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '11px sans-serif';
+    ctx.fillText(sub, p[0], p[1] + 15);
+  };
+
+  const amber = '#f59e0b', blue = '#3b82f6', green = '#16a34a', purple = '#8b5cf6', gray = '#9ca3af';
+  arrow(N.pv, N.load, Math.min(pv, load), amber, false);          // PV -> 负荷
+  arrow(N.bat, N.load, fromBat, green, false);                    // 电池放电 -> 负荷
+  arrow(N.grid, N.load, fromGrid, purple, false);                 // 电网 -> 负荷
+  arrow(N.pv, N.bat, toBat, amber, false);                        // PV -> 电池充电
+  arrow(N.pv, N.grid, toGrid, amber, false);                      // 富余上送电网
+  if (curt > 0.02) arrow(N.bat, N.grid, curt, gray, true);        // 弃光：画成电池侧指向电网的灰色虚线（能量被浪费）
+
+  node(N.pv, 'PV 光伏', '☀️', pv.toFixed(1) + ' kW');
+  node(N.bat, 'Battery 电池', '🔋', '容量 ' + cap + ' kWh');
+  node(N.grid, 'Grid 电网', '🏭', fromGrid > 0.02 ? '购电' : (toGrid > 0.02 ? '送电' : '—'));
+  node(N.load, 'Load 负荷', '🏠', load.toFixed(1) + ' kW');
+
+  // ---- 读数 ----
+  const set = (id, txt) => { const el = root.querySelector(id); if (el) el.textContent = txt; };
+  set('#flowPv', pv.toFixed(1) + ' kW');
+  set('#flowLoad', load.toFixed(1) + ' kW');
+  set('#flowBat', fromBat > 0.02 ? '放电 ' + fromBat.toFixed(1) + ' kW' : (toBat > 0.02 ? '充电 ' + toBat.toFixed(1) + ' kW' : '待机'));
+  set('#flowGrid', fromGrid > 0.02 ? '买入 ' + fromGrid.toFixed(1) + ' kW' : (toGrid > 0.02 ? '卖出 ' + toGrid.toFixed(1) + ' kW' : '无交互'));
+  set('#flowCurt', curt > 0.02 ? curt.toFixed(1) + ' kW（浪费）' : '0 kW');
+});
+</script>
+</body>
+</html>

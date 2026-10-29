@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生信文件格式完全指南：FASTA 到 VCF · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>生信文件格式完全指南：FASTA 到 VCF</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="文件格式：生信的通用语言">
+      <h2>文件格式：生信的通用语言</h2>
+      <p class="tldr">生信不是"看图片"，是"读文本"。六大格式（FASTA/FASTQ/SAM/BAM/VCF/GFF）就是这门领域的通用语言，全都能用记事本打开。</p>
+
+      <p>所有生信数据的本质都是<strong>纯文本</strong>。程序之间靠约定的"排版规则"互相理解：哪里是标题、哪里是数据、每列什么意思。掌握这些规则，你就能在没有专业软件的情况下，用 <code>grep</code>、<code>awk</code> 直接"透视"任何文件。</p>
+
+      <div class="analogy">文件格式像各国的公文格式：FASTA 是"名片"（只有姓名和一句话介绍），FASTQ 是"体检报告"（还带评分），SAM 是"考勤表"（谁在哪做了什么），VCF 是"差异清单"（和模板比哪里不一样），GFF 是"地图"（每条街有什么建筑）。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，快速认识六大格式</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">FASTA</div><div class="back">以 > 开头的标识行 + 序列行。存储 DNA/RNA/蛋白质序列，最基础、最通用。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">FASTQ</div><div class="back">4 行 = 1 条 read（序列 + 质量值）。高通量测序的原始输出格式。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">SAM/BAM</div><div class="back">存储 reads 比对到参考基因组的结果。SAM 是人类可读文本，BAM 是它的二进制压缩版。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">VCF</div><div class="back">Variant Call Format：记录样本与参考基因组差异（SNP/Indel）的清单。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">GFF/GTF</div><div class="back">基因组注释文件：标出每条染色体上基因、外显子、CDS 的位置坐标。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">下列哪种格式是<strong>二进制</strong>文件，不能直接拿记事本打开？</p>
+        <button class="opt" data-fb="FASTA 是纯文本，每行就是字母。">FASTA</button>
+        <button class="opt" data-fb="正确。BAM 是 SAM 的二进制压缩版，省空间、索引快，但肉眼不可读。">BAM</button>
+        <button class="opt" data-fb="VCF 是纯文本，开头 ## 是注释，#CHROM 是表头。">VCF</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住这个口诀："序列用 FA，测序用 FQ，比对看 SAM，变异写 VCF，注释查 GFF"。后面逐一深入。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="FASTA 与 FASTQ：序列的两种形态">
+      <h2>FASTA 与 FASTQ：序列的两种形态</h2>
+      <p class="tldr">FASTA 是"光秃秃的序列"（只有字母），FASTQ 是"带质量评分的序列"（字母 + 打分）——高通量测序离不开 FASTQ。</p>
+
+      <h3>FASTA：两行长这样</h3>
+      <pre>>sp|P69905|HBA_HUMAN Hemoglobin subunit alpha
+MVLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQVKGHG
+KKVADALTNAVAHVDDMPNALSALSDLHAHKLRVDPVNFKLLSHCLLVTLAAHLPAEFTP
+AVHASLDKFLASVSTVLTSKYR</pre>
+      <ul>
+        <li><code>&gt;</code> 开头是<strong>标识行</strong>：ID + 描述</li>
+        <li>接下来是<strong>序列行</strong>，通常每行 60/80 字符，可换行</li>
+      </ul>
+
+      <h3>FASTQ：四行长这样</h3>
+      <pre>@SEQ_ID_001
+GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
++
+!''*((((***+))%%%++)(%%%%).1***-+*''))**55CCF>>>>>>CCCCCCC65</pre>
+
+      <div class="analogy">FASTA 是"只写答案的考卷"，FASTQ 是"带老师评分的考卷"。每 4 行一组：名字、答案（序列）、加号、评分（质量值）。评分用 ASCII 字符表示，字符越靠后（如 I），质量越高。</div>
+
+      <!-- 互动演示：FASTQ 解码器 -->
+      <div class="widget demo" id="fastqDecodeDemo">
+        <div class="widget-title">FASTQ 解码器：点击一条 read，逐行拆解它的结构</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="align-items:center;justify-content:center">
+          <button class="btn" data-read="0">Read 1</button>
+          <button class="btn" data-read="1">Read 2</button>
+          <button class="btn" data-read="2">Read 3</button>
+          <button class="btn primary" data-read="3">Read 4（含低质量区）</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">质量字符 ASCII 码 - 33 = Phred 质量值。字符 <code>I</code>（ASCII 73）→ Q40（万分之一错误率），<code>!</code>（ASCII 33）→ Q0（100% 错误率）。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">FASTQ 文件第 4 行的字符 <code>I</code> 代表什么？</p>
+        <button class="opt" data-fb="正确。ASCII(I)=73，73-33=40，即 0.01% 错误率。">Q40，错误率约 0.01%</button>
+        <button class="opt" data-fb="那是字符 ! 的含义。">Q0，完全不可信</button>
+        <button class="opt" data-fb="Q30 对应字符 ? (ASCII 63)。">Q30，错误率约 0.1%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">会读 FASTQ = 会看测序数据的"出生证明"。下一章：比对结果怎么存。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="SAM/BAM：比对结果的账本">
+      <h2>SAM/BAM：比对结果的账本</h2>
+      <p class="tldr">SAM 把每条 read"落到"参考基因组的坐标上：哪个染色体、哪个位置、正链还是反链、比对质量如何——11 列一目了然。</p>
+
+      <p>比对工具（BWA、Bowtie2）输出 SAM 文件，记录每条 read 的"落点"。一个典型 SAM 行：</p>
+      <pre>read001  0  chr1  10001  60  75M  *  0  0  GATTTGGGGTTCAAAGC...  !''*((((***+))%%...  NM:i:2  AS:i:70</pre>
+
+      <table>
+        <tr><th>列</th><th>字段名</th><th>含义</th><th>例子</th></tr>
+        <tr><td>1</td><td>QNAME</td><td>read 名字</td><td>read001</td></tr>
+        <tr><td>2</td><td>FLAG</td><td>位标志（单端/双端/反向/重复…）</td><td>0=正向唯一比对</td></tr>
+        <tr><td>3</td><td>RNAME</td><td>比对到的染色体</td><td>chr1</td></tr>
+        <tr><td>4</td><td>POS</td><td>起始位置（1-based）</td><td>10001</td></tr>
+        <tr><td>5</td><td>MAPQ</td><td>比对质量（0-60，越高越可信）</td><td>60</td></tr>
+        <tr><td>6</td><td>CIGAR</td><td>比对操作串</td><td>75M=75 个匹配</td></tr>
+        <tr><td>7-9</td><td>RNEXT/PNEXT/TLEN</td><td>双端另一头信息</td><td>* 表示单端</td></tr>
+        <tr><td>10</td><td>SEQ</td><td>read 序列</td><td>GATTTG…</td></tr>
+        <tr><td>11</td><td>QUAL</td><td>质量值</td><td>!''*((…</td></tr>
+      </table>
+
+      <div class="analogy">SAM 像快递单：谁寄的（QNAME）、寄到哪（RNAME+POS）、包裹完不完整（CIGAR）、签收人可信度（MAPQ）。</div>
+
+      <!-- 互动演示：SAM 列查看器 -->
+      <div class="widget demo" id="samDemo">
+        <div class="widget-title">SAM 列查看器：鼠标悬停（或点击）高亮每一列的含义</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>选择列 <span class="val" data-for="col"></span><input type="range" name="col" min="1" max="11" step="1" value="1"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>CIGAR：比对的"操作符"</h3>
+      <table>
+        <tr><th>符号</th><th>含义</th><th>场景</th></tr>
+        <tr><td>M</td><td>Match/_MISMATCH（对齐上）</td><td>正常比对</td></tr>
+        <tr><td>I</td><td>Insertion（read 多了）</td><td>测序插入或真实 Indel</td></tr>
+        <tr><td>D</td><td>Deletion（read 少了）</td><td>真实缺失</td></tr>
+        <tr><td>S</td><td>Soft clip（两端没比对上）</td><td>接头残留</td></tr>
+        <tr><td>N</td><td>Skip（跳过一大段）</td><td>RNA-seq 跨内含子</td></tr>
+      </table>
+
+      <div class="warn">FLAG 是"位掩码"：99 = 双端正向 + 配对成功 + 第一条。别背，用 <code>samtools flagstat</code> 或在线解码器查。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">一条 RNA-seq read 的 CIGAR 是 <code>50M2000N25M</code>，说明什么？</p>
+        <button class="opt" data-fb="D 才是缺失，这里是 N（跳过）。">read 有 2000bp 缺失</button>
+        <button class="opt" data-fb="2000N 在基因组上是跳过的，不会出现在 read 里。">read 长度是 2075bp</button>
+        <button class="opt" data-fb="正确。50M + 25M = 75bp 的 read 跨过一个 2000bp 的内含子。">read 跨内含子，中间跳过 2000bp</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">SAM 是人类可读，BAM 是机器友好。两者信息等价，用 samtools 互转：<code>samtools view -bS in.sam &gt; out.bam</code>。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="VCF：变异清单的标准写法">
+      <h2>VCF：变异清单的标准写法</h2>
+      <p class="tldr">VCF 记录"样本和参考基因组哪里不一样"：前 5 列定位置（染色体/位置/ID/参考碱基/变异碱基），INFO 列塞满注释。</p>
+
+      <pre>##fileformat=VCFv4.2
+##source=GATK
+#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
+chr1    10001   rs123   A       G       99      PASS    DP=35;AF=0.5
+chr1    10520   .       C       T       50      q10     DP=12;AF=0.33
+chr2    20000   rs456   G       A       95      PASS    DP=48;AF=1.0</pre>
+
+      <ul>
+        <li><code>CHROM/POS</code>：变异位置</li>
+        <li><code>REF/ALT</code>：参考基因组碱基 / 样本中发现的碱基</li>
+        <li><code>QUAL/FILTER</code>：质量值 / 是否通过过滤（PASS 才是可信的）</li>
+        <li><code>INFO</code>：深度 DP、等位基因频率 AF、功能注释（SIFT/ClinVar）等</li>
+      </ul>
+
+      <!-- 互动演示：VCF 行解析器 -->
+      <div class="widget demo" id="vcfDemo">
+        <div class="widget-title">VCF 行解析器：拖动滑块，逐字段高亮解读</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>字段序号 <span class="val" data-for="field"></span><input type="range" name="field" min="1" max="8" step="1" value="1"></label>
+          <label>选择变异行 <span class="val" data-for="row"></span><input type="range" name="row" min="1" max="3" step="1" value="1"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">AF（Allele Frequency）= 变异等位基因比例：0.5 是杂合，1.0 是纯合。肿瘤样本里 AF 0.3 可能意味着只有部分细胞带这个突变（异质性）。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">VCF 中某变异 <code>REF=A, ALT=G, AF=1.0</code>，说明该样本在这个位点是？</p>
+        <button class="opt" data-fb="AF=1.0 意味着两条染色体都是 G。">A/G 杂合</button>
+        <button class="opt" data-fb="正确。纯合变异，两条染色体都携带 G。">G/G 纯合</button>
+        <button class="opt" data-fb">AF 不是 read 覆盖深度。">没有覆盖</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">看到 FILTER 不是 PASS 的行，默认先当噪音。这是变异分析的第一道闸。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="GFF/GTF：基因组的地图">
+      <h2>GFF/GTF：基因组的地图</h2>
+      <p class="tldr">GFF/GTF 是注释文件：用 9 列坐标标出"这条染色体上，从哪到哪是一个基因/外显子/CDS"，是定量分析和变异注释的基础。</p>
+
+      <pre>chr1  .  gene         11874  14409  .  +  .  ID=gene1;Name=DDX11L1
+chr1  .  mRNA         11874  14409  .  +  .  ID=tx1;Parent=gene1
+chr1  .  exon         11874  12227  .  +  .  Parent=tx1
+chr1  .  exon         12613  12721  .  +  .  Parent=tx1
+chr1  .  CDS          12020  12090  .  +  0  Parent=tx1</pre>
+
+      <table>
+        <tr><th>列</th><th>含义</th><th>生信关注点</th></tr>
+        <tr><td>1</td><td>染色体</td><td>chr1 / 1 / NC_000001.11（注意命名差异）</td></tr>
+        <tr><td>3</td><td>特征类型</td><td>gene / mRNA / exon / CDS / UTR</td></tr>
+        <tr><td>4-5</td><td>起止坐标</td><td><strong>1-based 闭区间</strong>（和 BED 的 0-based 半开不同！）</td></tr>
+        <tr><td>7</td><td>链方向</td><td>+ 正链 / - 反链</td></tr>
+        <tr><td>9</td><td>属性</td><td>ID、Parent、Name、biotype</td></tr>
+      </table>
+
+      <div class="warn">坐标系统最容易踩坑：GFF/VCF 是 1-based，BED 是 0-based 半开。同一个位点写进不同文件，数字可能差 1！</div>
+
+      <!-- 互动演示：GFF 坐标系统对比 -->
+      <div class="widget demo" id="gffDemo">
+        <div class="widget-title">坐标陷阱：同一段序列在 GFF 和 BED 里的数字差异</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>特征起始位（GFF 坐标）<span class="val" data-for="pos"></span><input type="range" name="pos" min="5" max="20" step="1" value="8"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="analogy">GFF 像门牌号从 1 开始数（1-based），BED 像数组下标从 0 开始数（0-based）。同一栋楼，两种叫法差 1 号。写脚本时如果没对齐，注释就全错位了。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">一个基因在 GFF 里是 <code>start=100, end=200</code>，转成 BED 格式应该是？</p>
+        <button class="opt" data-fb="正确。BED 是 0-based 半开：[start-1, end)。">start=99, end=200</button>
+        <button class="opt" data-fb="end 在 BED 中保持 200（半开区间右端点不变）。">start=99, end=199</button>
+        <button class="opt" data-fb">直接复制 GFF 坐标会差 1 位。</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住：GFF/VCF 从 1 数，BED 从 0 数且右端不包。liftOver 或格式转换时先想清楚坐标系。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="综合实战：不用软件，徒手解析所有格式">
+      <h2>综合实战：不用软件，徒手解析所有格式</h2>
+      <p class="tldr">给你任意生信文件，30 秒内判断格式、提取关键信息、发现异常——这是生信工程师的"肌肉记忆"。</p>
+
+      <h3>文件格式识别流程</h3>
+      <div class="widget steps">
+        <div class="widget-title">打开一个陌生文件，按这个顺序判断</div>
+        <div class="step"><strong>① 看首字符</strong>：<code>&gt;</code> 开头 → FASTA；<code>@</code> 开头且第 3 行是 <code>+</code> → FASTQ；数字/字母+tab → 可能是 SAM/GFF/BED。</div>
+        <div class="step"><strong>② 数列数</strong>：11 列且有 FLAG/MAPQ → SAM；9 列且有 gene/exon → GFF/GTF；5 列数字区间 → BED。</div>
+        <div class="step"><strong>③ 看表头注释</strong>：<code>##fileformat=VCF</code> → VCF；<code>@HD/@SQ/@PG</code> → SAM header。</div>
+        <div class="step"><strong>④ 查后缀</strong>：.gz 先 <code>zcat</code> 或 <code>gunzip -c</code>；.bam/.vcf.gz 用 samtools/bcftools，别直接 cat。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <!-- 互动：格式识别挑战 -->
+      <div class="widget demo" id="guessDemo">
+        <div class="widget-title">格式侦探：观察下面的文件片段，猜它是哪种格式</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn guess-btn" data-fmt="fasta">FASTA</button>
+          <button class="btn guess-btn" data-fmt="fastq">FASTQ</button>
+          <button class="btn guess-btn" data-fmt="sam">SAM</button>
+          <button class="btn guess-btn" data-fmt="vcf">VCF</button>
+          <button class="btn guess-btn" data-fmt="gff">GFF/GTF</button>
+          <button class="btn primary" id="nextGuess">下一条 →</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>高频一行命令</h3>
+      <pre><span class="c"># FASTA：数序列条数</span>
+grep -c "^&gt;" genome.fa
+
+<span class="c"># FASTQ：数 reads 数</span>
+wc -l reads.fq | awk '{print $1/4}'
+
+<span class="c"># SAM：统计比对率</span>
+samtools flagstat aln.bam
+
+<span class="c"># VCF：数变异位点（只数 PASS）</span>
+bcftools view -f PASS variants.vcf.gz | grep -vc "^#"
+
+<span class="c"># GFF：提取所有外显子坐标</span>
+awk '$3=="exon"' genes.gff</pre>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">你想统计 BAM 文件里"成功比对到参考基因组"的 reads 比例，最快的方式是？</p>
+        <button class="opt" data-fb">less 只能看内容，不能统计。</button>
+        <button class="opt" data-fb">grep 不能处理二进制 BAM。</button>
+        <button class="opt" data-fb="正确。samtools flagstat 直接输出 mapped %。">samtools flagstat aln.bam</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>FASTQ 每 <input data-answer="4"> 行代表一条 read；VCF 中 <input data-answer="PASS"> 表示变异通过质控；GFF 坐标从 <input data-answer="1|一"> 开始，BED 从 <input data-answer="0|零"> 开始。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">恭喜！你已经打通了生信数据格式的"任督二脉"。下一步建议学习序列比对原理，或直接进入 RNA-seq 实战。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示1：FASTQ 解码器
+(() => {
+  const root = document.getElementById('fastqDecodeDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+
+  const reads = [
+    { name:'@SEQ_001', seq:'GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT', qual:'IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII' },
+    { name:'@SEQ_002', seq:'CGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGAT', qual:'IIIIIIIIIIIIIIIIIIIIIIIIIIII9IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII' },
+    { name:'@SEQ_003', seq:'TTAGGCATGCTAGCTAGCATCGATCGATCGTAGCTAGCATCGATCGTAGCTAGCTAGCAT', qual:'IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII' },
+    { name:'@SEQ_004（低质量）', seq:'NNNNNGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTT', qual:'!!!!!!IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII' }
+  ];
+
+  function draw(idx) {
+    ctx.clearRect(0, 0, W, cv.height);
+    const r = reads[idx];
+    const lines = [
+      { tag:'① 标识行', text:r.name, color:'#58a6ff', y:60 },
+      { tag:'② 序列行', text:r.seq.slice(0, 58) + (r.seq.length > 58 ? '…' : ''), color:'#34d399', y:115 },
+      { tag:'③ 分隔行', text:'+', color:'#8b949e', y:170 },
+      { tag:'④ 质量行', text:r.qual.slice(0, 58) + (r.qual.length > 58 ? '…' : ''), color:'#f59e0b', y:225 }
+    ];
+    lines.forEach(l => {
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(l.tag, 30, l.y - 6);
+      ctx.fillStyle = l.color; ctx.font = '14px monospace';
+      ctx.fillText(l.text, 150, l.y - 6);
+    });
+
+    // 质量热力条
+    const qy = 270;
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+    ctx.fillText('质量分布', 30, qy + 4);
+    const barX = 150, barW = W - 200;
+    const n = r.qual.length;
+    for (let i = 0; i < n; i++) {
+      const q = r.qual.charCodeAt(i) - 33;
+      const frac = q / 42;
+      ctx.fillStyle = frac > 0.7 ? '#16a34a' : frac > 0.4 ? '#f59e0b' : '#dc2626';
+      ctx.fillRect(barX + i * (barW / n), qy - 8, Math.max(1, barW / n - 0.5), 16);
+    }
+
+    const avgQ = Math.round(r.qual.split('').reduce((a, c) => a + (c.charCodeAt(0) - 33), 0) / n);
+    readout.textContent = `${r.name}：${n} bp | 平均质量 Q${avgQ} | ${avgQ >= 30 ? '✅ 质量很好' : avgQ >= 20 ? '⚠️ 中等质量' : '❌ 质量差'}${idx === 3 ? ' | 前 6 个碱基是 N（无法识别）' : ''}`;
+  }
+
+  root.querySelectorAll('[data-read]').forEach(btn => {
+    btn.onclick = () => draw(+btn.dataset.read);
+  });
+  draw(0);
+})();
+
+// 演示2：SAM 列查看器
+demo('#samDemo', ({ col }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const fields = ['read001','0','chr1','10001','60','75M','*','0','0','GATTTGGGGTTCAAAGC...','!\'\'*((...'];
+  const names = ['QNAME\nread名','FLAG\n位标志','RNAME\n染色体','POS\n起始位置','MAPQ\n比对质量','CIGAR\n操作串','RNEXT\n双端名','PNEXT\n双端位置','TLEN\n模板长','SEQ\n序列','QUAL\n质量'];
+  const descs = [
+    'reads 的唯一标识，通常来自测序仪',
+    '0=正向唯一比对；16=反向；4=未比对。是位掩码组合',
+    '比对到的参考序列名（染色体）',
+    '1-based 起始坐标',
+    '比对置信度 0-60，60 表示唯一比对',
+    '75M=75个Match；可含 I/D/S/N',
+    '双端测序另一端的染色体，* 表示单端',
+    '双端另一端位置',
+    '插入片段长度',
+    'read 的碱基序列（可能反向互补）',
+    'Phred 质量值 ASCII 串'
+  ];
+  const row = ['read001','99','chr1','10001','60','75M','=','10150','220','GATTTGGGGTTCAAAGC','!\'\'*((('];
+
+  const startX = 40, boxW = (W - 80) / 11;
+  ctx.textAlign = 'center';
+  row.forEach((v, i) => {
+    const x = startX + i * boxW;
+    const isSel = (i + 1) === col;
+    ctx.fillStyle = isSel ? cssVar('--primary') : cssVar('--card');
+    ctx.fillRect(x + 2, 60, boxW - 4, 40);
+    ctx.strokeStyle = isSel ? cssVar('--primary') : cssVar('--border');
+    ctx.lineWidth = isSel ? 2 : 1;
+    ctx.strokeRect(x + 2, 60, boxW - 4, 40);
+    ctx.fillStyle = isSel ? '#fff' : cssVar('--text');
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(v.length > 8 ? v.slice(0, 7) + '…' : v, x + boxW/2, 85);
+    // 列号
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '11px sans-serif';
+    ctx.fillText(String(i + 1), x + boxW/2, 50);
+  });
+
+  // 说明
+  ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`第 ${col} 列：${names[col-1].replace('\n', '（')})`, 40, 140);
+  ctx.font = '15px sans-serif';
+  ctx.fillText(descs[col-1], 40, 170);
+  // 加亮当前列
+  const selX = startX + (col-1) * boxW;
+  ctx.strokeStyle = cssVar('--warn'); ctx.lineWidth = 3;
+  ctx.strokeRect(selX + 2, 60, boxW - 4, 40);
+
+  root.querySelector('.readout').textContent = `示例：FLAG=99 表示「双端 + 配对成功 + 第一条 + 正向」。samtools view 可提取任意列。`;
+});
+
+// 演示3：VCF 行解析器
+demo('#vcfDemo', ({ field, row }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const vcfRows = [
+    ['chr1','10001','rs123','A','G','99','PASS','DP=35;AF=0.5'],
+    ['chr1','10520','.','C','T','50','q10','DP=12;AF=0.33'],
+    ['chr2','20000','rs456','G','A','95','PASS','DP=48;AF=1.0']
+  ];
+  const fieldNames = ['CHROM 染色体','POS 位置','ID 标识','REF 参考碱基','ALT 变异碱基','QUAL 质量','FILTER 过滤','INFO 附加信息'];
+  const fieldDescs = [
+    '变异所在的染色体',
+    '1-based 基因组坐标',
+    'dbSNP 编号，. 表示无记录',
+    '参考基因组该位点的碱基',
+    '样本中发现的碱基（可有多个，逗号分隔）',
+    'Phred 质量值，越高越可信',
+    'PASS=通过过滤；q10=质量低于阈值',
+    '关键注释：DP=测序深度，AF=等位基因频率'
+  ];
+  const data = vcfRows[row - 1];
+  const isAlt = field === 5;
+
+  // 表头
+  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'left';
+  fieldNames.forEach((n, i) => {
+    const x = 30 + i * 92;
+    ctx.fillStyle = (i+1) === field ? cssVar('--primary') : cssVar('--muted');
+    ctx.fillText(n.split(' ')[0], x, 40);
+  });
+
+  // 数据行
+  ctx.font = '14px monospace';
+  data.forEach((v, i) => {
+    const x = 30 + i * 92;
+    const isSel = (i+1) === field;
+    ctx.fillStyle = isSel ? cssVar('--primary-soft') : cssVar('--card');
+    ctx.fillRect(x - 4, 55, 88, 28);
+    ctx.strokeStyle = isSel ? cssVar('--primary') : cssVar('--border');
+    ctx.strokeRect(x - 4, 55, 88, 28);
+    ctx.fillStyle = i === 4 && row !== 0 ? '#dc2626' : isSel ? cssVar('--primary') : cssVar('--text');
+    ctx.fillText(v.length > 12 ? v.slice(0,11)+'…' : v, x, 74);
+  });
+
+  // 解读
+  ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 16px sans-serif';
+  ctx.fillText(`${fieldNames[field-1]}：${data[field-1]}`, 30, 125);
+  ctx.font = '15px sans-serif';
+  ctx.fillText(fieldDescs[field-1], 30, 155);
+
+  // 基因型示意图
+  if (field === 5 || field === 8) {
+    const ref = data[3], alt = data[4];
+    const af = parseFloat(data[7].match(/AF=([\d.]+)/)?.[1] || '0');
+    const y = 220, bx = 200, bw = 400;
+    ctx.fillStyle = cssVar('--primary'); ctx.font = '14px sans-serif';
+    ctx.fillText('等位基因构成', 30, y);
+    // 染色体1
+    ctx.fillStyle = cssVar('--border'); ctx.fillRect(bx, y - 12, bw, 20);
+    ctx.fillStyle = af >= 1 ? '#dc2626' : '#3b82f6';
+    ctx.fillRect(bx, y - 12, bw * Math.min(1, af * 2), 20);
+    ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(af >= 1 ? `${alt}/${alt} 纯合` : af >= 0.4 ? `${ref}/${alt} 杂合` : `${ref}/${alt} 低频杂合`, bx, y + 25);
+    ctx.font = '13px sans-serif'; ctx.fillStyle = cssVar('--muted');
+    ctx.fillText(`AF = ${af}（${af*100}% 的 reads 携带 ${alt}）`, bx, y + 48);
+  }
+
+  root.querySelector('.readout').textContent = `第 ${row} 条变异：${data[0]}:${data[1]} ${data[3]}>${data[4]}，QUAL=${data[5]}，${data[6] === 'PASS' ? '✅ 可信' : '⚠️ 未通过过滤'}`;
+});
+
+// 演示4：GFF vs BED 坐标
+demo('#gffDemo', ({ pos }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const len = 8;
+  const y = 140;
+
+  // 画序列刻度
+  const x1 = 80, x2 = W - 80;
+  const nTicks = 25;
+  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1;
+  ctx.font = '12px monospace'; ctx.textAlign = 'center';
+  for (let i = 0; i <= nTicks; i++) {
+    const x = x1 + i * (x2 - x1) / nTicks;
+    ctx.beginPath(); ctx.moveTo(x, y - 10); ctx.lineTo(x, y + 10); ctx.stroke();
+    if (i % 5 === 0) {
+      ctx.fillStyle = cssVar('--muted');
+      ctx.fillText(String(i + 1), x, y - 18);
+    }
+  }
+
+  // GFF 特征块（1-based）
+  const gffStart = pos;
+  const gffEnd = pos + len - 1;
+  const pxPerBp = (x2 - x1) / nTicks;
+  const gx1 = x1 + (gffStart - 1) * pxPerBp;
+  const gx2 = x1 + gffEnd * pxPerBp;
+
+  // BED 特征块（0-based 半开）
+  const bedStart = gffStart - 1;
+  const bedEnd = gffEnd;
+  const bx1 = x1 + bedStart * pxPerBp;
+  const bx2 = x1 + bedEnd * pxPerBp;
+
+  // 画两个块
+  ctx.fillStyle = 'rgba(5,150,105,0.3)';
+  ctx.fillRect(gx1, y + 40, gx2 - gx1, 30);
+  ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2;
+  ctx.strokeRect(gx1, y + 40, gx2 - gx1, 30);
+  ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`GFF: start=${gffStart}, end=${gffEnd}`, 80, y + 90);
+
+  ctx.fillStyle = 'rgba(59,130,246,0.25)';
+  ctx.fillRect(bx1, y + 110, bx2 - bx1, 30);
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
+  ctx.strokeRect(bx1, y + 110, bx2 - bx1, 30);
+  ctx.fillStyle = cssVar('--text');
+  ctx.fillText(`BED: start=${bedStart}, end=${bedEnd}`, 80, y + 160);
+
+  // 标注同一区域
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+  ctx.fillText('两个格式描述的是同一段序列！', 80, y - 40);
+  ctx.fillText('GFF 从 1 数（闭区间），BED 从 0 数（半开区间）', 80, y - 20);
+
+  root.querySelector('.readout').textContent = `GFF [${gffStart}, ${gffEnd}] = BED [${bedStart}, ${bedEnd}) | 长度都是 ${len}bp，数字差了 1`;
+});
+
+// 演示5：格式侦探
+(() => {
+  const root = document.getElementById('guessDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+
+  const challenges = [
+    {
+      fmt: 'vcf',
+      lines: ['##fileformat=VCFv4.2','#CHROM POS   ID    REF ALT','chr1   10001 rs123 A   G','chr1   10520 .     C   T'],
+      hint: '以 ## 开头，有 #CHROM 表头'
+    },
+    {
+      fmt: 'fastq',
+      lines: ['@SEQ_001','GATTTGGGGTTCAAAGCAGT','+','!\'\'*((((***+))%%%++'],
+      hint: '@ 开头，第 3 行是 +'
+    },
+    {
+      fmt: 'gff',
+      lines: ['chr1 . gene 11874 14409 . + . ID=gene1','chr1 . exon 11874 12227 . + . Parent=tx1'],
+      hint: '9 列，第 3 列是特征类型'
+    },
+    {
+      fmt: 'sam',
+      lines: ['@HD VN:1.6 SO:coordinate','@SQ SN:chr1 LN:248956422','read001 0 chr1 10001 60 75M * 0 0 GATTT !\'\'*((('],
+      hint: '11 列，有 FLAG/MAPQ'
+    },
+    {
+      fmt: 'fasta',
+      lines: ['>sp|P69905|HBA_HUMAN','MVLSPADKTNVKAAWGKVGA','HAGEYGAEALERMFLSFPTT'],
+      hint: '> 开头是标识行'
+    }
+  ];
+  let idx = 0, answered = false, score = 0;
+
+  function draw() {
+    const c = challenges[idx];
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.font = '15px monospace'; ctx.textAlign = 'left';
+    c.lines.forEach((line, i) => {
+      ctx.fillStyle = i === 0 ? cssVar('--primary') : cssVar('--text');
+      if (c.fmt === 'vcf' && i >= 2) ctx.fillStyle = cssVar('--text');
+      if (c.fmt === 'fastq' && i === 3) ctx.fillStyle = '#f59e0b';
+      ctx.fillText(line, 40, 60 + i * 28);
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+    ctx.fillText(`线索：${c.hint}`, 40, 60 + c.lines.length * 28 + 10);
+  }
+
+  root.querySelectorAll('.guess-btn').forEach(btn => {
+    btn.onclick = () => {
+      if (answered) return;
+      answered = true;
+      const correct = btn.dataset.fmt === challenges[idx].fmt;
+      if (correct) score++;
+      readout.textContent = correct ? `✅ 正确！这是 ${challenges[idx].fmt.toUpperCase()} 格式。` : `❌ 不对，这是 ${challenges[idx].fmt.toUpperCase()}。线索：${challenges[idx].hint}`;
+      readout.style.color = correct ? cssVar('--ok') : cssVar('--bad');
+    };
+  });
+
+  document.getElementById('nextGuess').onclick = () => {
+    idx = (idx + 1) % challenges.length;
+    answered = false;
+    readout.textContent = `第 ${idx+1}/${challenges.length} 题：这是哪种格式？`;
+    readout.style.color = '';
+    draw();
+  };
+
+  readout.textContent = '第 1/5 题：这是哪种格式？';
+  draw();
+})();
+</script>
+</body>
+</html>

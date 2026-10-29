@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生物信息学学习路径 · PersonalCourses</title>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--warn:#f59e0b;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.7 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1}
+.topbar a{color:var(--primary);text-decoration:none;font-size:14px;font-weight:600}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.wrap{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+
+.hero{margin-bottom:36px}
+.hero .badge-line{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.hero .badge{font-size:12px;padding:3px 12px;border-radius:99px;color:#fff;font-weight:600}
+.hero h2{margin:0 0 10px;font-size:30px}
+.hero p{margin:0;color:var(--muted);max-width:65ch;font-size:16px}
+
+/* 路线图 */
+.map{display:flex;flex-direction:column;gap:0;margin:28px 0}
+.stage{display:flex;gap:16px;position:relative;padding-bottom:28px}
+.stage::before{content:'';position:absolute;left:23px;top:48px;bottom:0;width:2px;background:var(--border)}
+.stage:last-child::before{display:none}
+.stage-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0}
+.stage-icon.l1{background:var(--l1)}
+.stage-icon.l2{background:var(--l2)}
+.stage-icon.l3{background:var(--l3)}
+.stage-icon.l4{background:var(--l4)}
+.stage-body{flex:1;padding-top:4px}
+.stage-title{margin:0 0 4px;font-size:20px}
+.stage-desc{margin:0 0 14px;color:var(--muted);font-size:14.5px}
+
+/* 课程卡 */
+.courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.course{display:flex;flex-direction:column;gap:6px;padding:16px 18px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);transition:transform .15s,border-color .15s;box-shadow:var(--shadow)}
+.course:hover{transform:translateY(-2px);border-color:var(--primary)}
+.course .tag{align-self:flex-start;font-size:11px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.tag.ready{background:var(--ok)}
+.tag.soon{background:var(--muted)}
+.course h4{margin:0;font-size:16px}
+.course p{margin:0;font-size:13.5px;color:var(--muted);flex:1}
+.course .foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.dots{display:flex;gap:4px}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.f{background:currentColor}
+.dot.e{background:var(--border)}
+.course .arrow{color:var(--primary);font-weight:600;font-size:14px}
+
+/* 阶段颜色点 */
+.c1{color:var(--l1)}.c2{color:var(--l2)}.c3{color:var(--l3)}.c4{color:var(--l4)}
+
+.foot-note{margin-top:36px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
+.foot-note a{color:var(--primary)}
+
+.progress-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:28px}
+.progress-bar .label{font-size:14px;font-weight:600;margin-bottom:8px}
+.progress-bar .track{height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+.progress-bar .fill{height:100%;background:var(--primary);border-radius:99px;transition:width .4s}
+.progress-bar .meta{font-size:13px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>🧬 生物信息学学习路径</h1>
+  <a href="index.html">← 返回首页</a>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="badge-line">
+      <span class="badge" style="background:var(--l1)">L1 入门</span>
+      <span class="badge" style="background:var(--l2)">L2 基础</span>
+      <span class="badge" style="background:var(--l3)">L3 进阶</span>
+      <span class="badge" style="background:var(--l4)">L4 高级</span>
+    </div>
+    <h2>从零基础到能跑完整分析流程</h2>
+    <p>这是一张为"想学生物信息学"的人设计的路线图：先建立直觉，再补生物学和工具链，然后逐层深入实战。每门课都是单文件互动 HTML，点进去就能学。带 <span style="color:var(--ok);font-weight:600">● 已上线</span> 标记的课已可学习，其余陆续更新。</p>
+  </section>
+
+  <div class="progress-bar">
+    <div class="label">学习进度</div>
+    <div class="track"><div class="fill" id="progressFill" style="width:0%"></div></div>
+    <div class="meta" id="progressMeta">检测已完成课程…</div>
+  </div>
+
+  <div class="map">
+
+    <!-- L1 -->
+    <div class="stage">
+      <div class="stage-icon l1">1</div>
+      <div class="stage-body">
+        <h3 class="stage-title">建立直觉</h3>
+        <p class="stage-desc">不懂生物学也能懂：什么是生信、数据从哪来、中心法则和数据库。</p>
+        <div class="courses">
+          <a class="course" href="bioinfo-101-course.html">
+            <span class="tag ready">● 已上线</span>
+            <h4>生物信息学导论</h4>
+            <p>从中心法则到 NCBI/PDB/UniProt 四大库，再到 NGS 数据分析流程骨架。</p>
+            <div class="foot">
+              <div class="dots c1"><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span></div>
+              <span class="arrow">开始学习 →</span>
+            </div>
+          </a>
+          <a class="course" href="bioinfo-biology-crash-course.html">
+            <span class="tag ready">● 已上线</span>
+            <h4>生物学基础速成</h4>
+            <p>DNA/RNA/蛋白质的字母表、密码子翻译、GC 含量、突变类型——最小必要生物学。</p>
+            <div class="foot">
+              <div class="dots c1"><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span></div>
+              <span class="arrow">开始学习 →</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- L2 -->
+    <div class="stage">
+      <div class="stage-icon l2">2</div>
+      <div class="stage-body">
+        <h3 class="stage-title">工具链基础</h3>
+        <p class="stage-desc">工欲善其事：Linux 操作、文件格式、序列比对——生信的"手上功夫"。</p>
+        <div class="courses">
+          <a class="course" href="bioinfo-linux-course.html">
+            <span class="tag ready">● 已上线</span>
+            <h4>生信人的 Linux 命令行实战</h4>
+            <p>pwd/ls/grep/awk/sed、管道与重定向，含两个可交互模拟终端和 FASTQ 体检实战。</p>
+            <div class="foot">
+              <div class="dots c2"><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span></div>
+              <span class="arrow">开始学习 →</span>
+            </div>
+          </a>
+          <a class="course" href="bioinfo-file-formats-course.html">
+            <span class="tag ready">● 已上线</span>
+            <h4>生信文件格式完全指南</h4>
+            <p>FASTA/FASTQ/SAM/BAM/VCF/GFF 逐个拆解，学会用命令行快速解析。</p>
+            <div class="foot">
+              <div class="dots c2"><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span></div>
+              <span class="arrow">开始学习 →</span>
+            </div>
+          </a>
+          <a class="course" href="bioinfo-alignment-course.html">
+            <span class="tag ready">● 已上线</span>
+            <h4>序列比对：从打分矩阵到 BLAST</h4>
+            <p>PAM/BLOSUM 打分矩阵、动态规划、BLAST 的启发式加速原理。</p>
+            <div class="foot">
+              <div class="dots c2"><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span><span class="dot f"></span></div>
+              <span class="arrow">开始学习 →</span>
+            </div>
+          </a>
+          <div class="course" style="opacity:.6;cursor:default">
+            <span class="tag soon">即将上线</span>
+            <h4>Python/R 生信编程基础</h4>
+            <p>Biopython 与 Bioconductor 入门，处理序列和表格数据。</p>
+            <div class="foot">
+              <div class="dots c2"><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span></div>
+              <span class="arrow" style="color:var(--muted)">敬请期待</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L3 -->
+    <div class="stage">
+      <div class="stage-icon l3">3</div>
+      <div class="stage-body">
+        <h3 class="stage-title">进阶实战</h3>
+        <p class="stage-desc">跑通真实项目：RNA-seq 差异表达、变异检测、蛋白质结构预测。</p>
+        <div class="courses">
+          <div class="course" style="opacity:.6;cursor:default">
+            <span class="tag soon">即将上线</span>
+            <h4>RNA-seq 实战</h4>
+            <p>从原始 FASTQ 到差异表达基因列表：质控、比对、定量、DESeq2。</p>
+            <div class="foot">
+              <div class="dots c3"><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span></div>
+              <span class="arrow" style="color:var(--muted)">敬请期待</span>
+            </div>
+          </div>
+          <div class="course" style="opacity:.6;cursor:default">
+            <span class="tag soon">即将上线</span>
+            <h4>基因组变异检测实战</h4>
+            <p>SNP/Indel 检测流程、VCF 解读、变异注释与致病性评估。</p>
+            <div class="foot">
+              <div class="dots c3"><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span></div>
+              <span class="arrow" style="color:var(--muted)">敬请期待</span>
+            </div>
+          </div>
+          <div class="course" style="opacity:.6;cursor:default">
+            <span class="tag soon">即将上线</span>
+            <h4>蛋白质结构预测入门</h4>
+            <p>从同源建模到 AlphaFold：序列如何变成三维结构。</p>
+            <div class="foot">
+              <div class="dots c3"><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span></div>
+              <span class="arrow" style="color:var(--muted)">敬请期待</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L4 -->
+    <div class="stage">
+      <div class="stage-icon l4">4</div>
+      <div class="stage-body">
+        <h3 class="stage-title">高级专题</h3>
+        <p class="stage-desc">前沿领域：单细胞转录组与机器学习在生信中的应用。</p>
+        <div class="courses">
+          <div class="course" style="opacity:.6;cursor:default">
+            <span class="tag soon">即将上线</span>
+            <h4>单细胞转录组分析</h4>
+            <p>cellranger、Seurat、细胞聚类与注释，打开细胞异质性世界。</p>
+            <div class="foot">
+              <div class="dots c4"><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span></div>
+              <span class="arrow" style="color:var(--muted)">敬请期待</span>
+            </div>
+          </div>
+          <div class="course" style="opacity:.6;cursor:default">
+            <span class="tag soon">即将上线</span>
+            <h4>机器学习 × 生物信息学</h4>
+            <p>特征工程、分类/回归、深度学习在序列和结构中的应用。</p>
+            <div class="foot">
+              <div class="dots c4"><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span><span class="dot e"></span></div>
+              <span class="arrow" style="color:var(--muted)">敬请期待</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot-note">
+    <strong>学习建议：</strong>按 L1 → L2 → L3 → L4 顺序学习，每门课都有小测验和交互演示。完成课程后回到 <a href="index.html">首页</a> 查看其他主题课程。<br><br>
+    所有课程均为单文件 HTML，双击即可打开（数学公式依赖 KaTeX CDN，离线时公式降级为纯文本）。
+  </div>
+</main>
+
+<script>
+(() => {
+  // 主题切换
+  const KEY = 'courses:home-theme';
+  const body = document.body;
+  const saved = localStorage.getItem(KEY);
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.dataset.theme = 'dark';
+  }
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem(KEY, next);
+  });
+
+  // 学习进度：统计 3 门已上线课程的完成章节数
+  const courses = [
+    { id: 'bioinfo-101-course.html', title: '生信导论', total: 6 },
+    { id: 'bioinfo-biology-crash-course.html', title: '生物学速成', total: 5 },
+    { id: 'bioinfo-linux-course.html', title: 'Linux 实战', total: 5 },
+    { id: 'bioinfo-file-formats-course.html', title: '文件格式指南', total: 6 },
+    { id: 'bioinfo-alignment-course.html', title: '序列比对', total: 6 }
+  ];
+  let done = 0, total = 0;
+  courses.forEach(c => {
+    total += c.total;
+    try {
+      const raw = localStorage.getItem('course:' + c.title + ' · 互动课程');
+      if (raw) {
+        const state = JSON.parse(raw);
+        done += Math.min(state.done?.length || 0, c.total);
+      }
+    } catch(e) {}
+  });
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressMeta').textContent =
+    pct === 0 ? '还没有学习记录，从 L1 开始吧！' :
+    pct === 100 ? '🎉 恭喜！已完成全部已上线课程。' :
+    `已完成 ${done}/${total} 章（${pct}%），继续加油！`;
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型微调 · 系列入口</title>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;--warn:#f59e0b;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.7 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar a.back{font-size:14px;color:var(--primary);text-decoration:none;white-space:nowrap}
+.topbar a.back:hover{text-decoration:underline}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px 60px}
+.hero{margin-bottom:22px}
+.hero h2{margin:0 0 8px;font-size:26px}
+.hero p{margin:0;color:var(--muted);max-width:70ch}
+.hero .lead{margin-top:10px}
+.hero .lead b{color:var(--primary)}
+.hero mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+[data-theme="dark"] .hero mark{background:#6b5d1f}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:14px}
+.stat b{font-size:17px;color:var(--primary);margin-right:4px}
+/* path map */
+.path{margin-top:26px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px}
+.path h3{margin:0 0 4px;font-size:18px}
+.path>p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.map{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:4px}
+.mnode{flex:1;min-width:150px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;padding:14px 10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);text-decoration:none;color:var(--text)}
+.mnode:hover{border-color:var(--primary)}
+.mnode .lv{font-size:11px;font-weight:700;color:#fff;padding:2px 10px;border-radius:99px;margin-bottom:8px}
+.mnode .t{font-weight:700;font-size:14.5px;line-height:1.4}
+.mnode .d{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.marrow{align-self:center;color:var(--muted);font-size:18px;padding:0 8px;flex:none}
+.mnode .dots{display:flex;gap:4px;margin-top:8px}
+.mnode .dots i{width:7px;height:7px;border-radius:50%}
+.mnode .dots i.off{background:var(--border)}
+@media(max-width:760px){.map{flex-direction:column}.marrow{transform:rotate(90deg);padding:4px 0}}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+/* stages & cards */
+.stage{margin-top:30px}
+.stage>h3{display:flex;align-items:center;gap:8px;font-size:18px;margin:0 0 4px}
+.stage>h3 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.stage>p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{position:relative;display:flex;flex-direction:column;gap:8px;padding:20px 22px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);text-decoration:none;color:var(--text);transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--primary)}
+.card .tag{align-self:flex-start;font-size:12px;padding:2px 10px;border-radius:99px;font-weight:600;color:#fff}
+.tag.b{background:var(--l4)}
+.card h3{margin:0;font-size:18px}
+.card p{margin:0;color:var(--muted);font-size:14.5px;flex:1}
+.card .levels{display:flex;gap:6px;margin-top:2px}
+.card .lv-dot{width:8px;height:8px;border-radius:50%}
+.card .lv-dot.off{background:var(--border)}
+.card .more{font-size:14px;color:var(--primary);font-weight:600}
+/* quiz */
+.selftest{margin-top:34px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 28px}
+.selftest h3{margin:0 0 4px;font-size:18px}
+.selftest>p{margin:0 0 6px;color:var(--muted);font-size:14px}
+.selftest .guide{font-size:14px;padding:10px 14px;border-radius:10px;background:var(--primary-soft);border:1px solid var(--primary);display:none;margin:14px 0 4px}
+.selftest .guide.show{display:block}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:16px 18px;margin:16px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 "}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px;font-family:inherit}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none;font-size:14.5px;line-height:1.6}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="back" href="index.html">← 返回课程库</a>
+  <h1>大模型微调 · 学习路径</h1>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h2>大模型微调 · 学习路径</h2>
+    <p>通用大模型（Large Language Model，在海量文本上预训练、具备通用语言能力的模型）是"通才"，而你的业务需要"专才"。微调（Fine-tuning，在预训练模型的基础上，用领域数据继续训练，让它学会特定任务或风格）就是把通才变专才的核心手段。本系列 5 门课带你走完完整链路：先建立直觉、会做决策，再分别攻克参数高效方法、数据工程、训练机制，最后落到评估、对齐与上线。</p>
+    <p class="lead">开始前先明确两件事：<b>什么时候该微调</b>（什么时候提示词工程就够了），以及<b>微调到底改了什么</b>（梯度、参数与显存的关系）。这两点分别由第 1 课和第 4 课回答，下方的先修自测可以帮你判断从哪里起步。</p>
+    <div class="stats">
+      <span class="stat"><b>5</b>门课程</span>
+      <span class="stat"><b>L1</b>直觉起步</span>
+      <span class="stat"><b>L4</b>深入上线</span>
+      <span class="stat"><b>SFT</b>监督微调为主线</span>
+      <span class="stat"><b>LoRA</b>参数高效方法</span>
+    </div>
+  </section>
+
+  <section class="path">
+    <h3>学习路径图</h3>
+    <p>五步递进：决策 → 方法 → 数据 → 训练 → 上线。圆点表示课程覆盖的难度层级，实心为该课实际涉及的层级。</p>
+    <div class="map">
+      <a class="mnode" href="llm-finetuning-01-foundations.html">
+        <span class="lv" style="background:var(--l1)">L1–L2</span>
+        <span class="t">01 微调的直觉与决策</span>
+        <span class="dots"><i style="background:var(--l1)"></i><i style="background:var(--l2)"></i><i class="off"></i><i class="off"></i></span>
+        <span class="d">什么时候该微调、全量还是参数高效、和提示词/RAG 怎么分工</span>
+      </a>
+      <span class="marrow">→</span>
+      <a class="mnode" href="llm-finetuning-02-lora.html">
+        <span class="lv" style="background:var(--l2)">L2–L3</span>
+        <span class="t">02 LoRA 原理与调参</span>
+        <span class="dots"><i class="off"></i><i style="background:var(--l2)"></i><i style="background:var(--l3)"></i><i class="off"></i></span>
+        <span class="d">低秩分解为什么有效，秩 r、缩放 α、目标模块怎么选</span>
+      </a>
+      <span class="marrow">→</span>
+      <a class="mnode" href="llm-finetuning-03-data.html">
+        <span class="lv" style="background:var(--l2)">L2–L3</span>
+        <span class="t">03 数据工程与 SFT 实战</span>
+        <span class="dots"><i class="off"></i><i style="background:var(--l2)"></i><i style="background:var(--l3)"></i><i class="off"></i></span>
+        <span class="d">指令数据的构造、清洗与配比，一条 SFT 样本长什么样</span>
+      </a>
+      <span class="marrow">→</span>
+      <a class="mnode" href="llm-finetuning-04-training.html">
+        <span class="lv" style="background:var(--l3)">L3–L4</span>
+        <span class="t">04 训练机制与超参</span>
+        <span class="dots"><i class="off"></i><i class="off"></i><i style="background:var(--l3)"></i><i style="background:var(--l4)"></i></span>
+        <span class="d">前向/反向传播、梯度累积、学习率与显存账本的定量计算</span>
+      </a>
+      <span class="marrow">→</span>
+      <a class="mnode" href="llm-finetuning-05-alignment.html">
+        <span class="lv" style="background:var(--l3)">L3–L4</span>
+        <span class="t">05 评估、对齐与上线</span>
+        <span class="dots"><i class="off"></i><i class="off"></i><i style="background:var(--l3)"></i><i style="background:var(--l4)"></i></span>
+        <span class="d">评估集与指标、DPO 对齐、量化压缩与部署推理</span>
+      </a>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--l1)"></i>L1 直觉</span>
+      <span><i style="background:var(--l2)"></i>L2 概念</span>
+      <span><i style="background:var(--l3)"></i>L3 机制</span>
+      <span><i style="background:var(--l4)"></i>L4 深入</span>
+      <span><i style="background:var(--border)"></i>该课不覆盖</span>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--l1)"></span>第 1 课 · 建立直觉与决策框架</h3>
+    <p>先想清楚"要不要微调、怎么微调"，再动手。这课只要求你用过大模型 API，不需要任何训练经验。</p>
+    <div class="grid">
+      <a class="card" href="llm-finetuning-01-foundations.html">
+        <span class="tag b">大模型微调 · 入门</span>
+        <h3>01 微调的直觉与决策</h3>
+        <p>从"教新员工"和"补课"两个类比理解微调到底在干什么；学会判断提示词工程、RAG（检索增强生成，先查资料再回答）与微调的边界；看懂全量微调与参数高效微调（PEFT，只训练少量新增参数）的取舍。</p>
+        <div class="levels">
+          <span class="lv-dot" style="background:var(--l1)"></span>
+          <span class="lv-dot" style="background:var(--l2)"></span>
+          <span class="lv-dot off"></span>
+          <span class="lv-dot off"></span>
+        </div>
+        <span class="more">开始学习 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--l2)"></span>第 2–3 课 · 方法与数据</h3>
+    <p>方法解决"怎么省显存地调"，数据解决"用什么调"。这两课是微调实战的主体，建议按顺序学。</p>
+    <div class="grid">
+      <a class="card" href="llm-finetuning-02-lora.html">
+        <span class="tag b">大模型微调 · 方法</span>
+        <h3>02 LoRA 原理与调参</h3>
+        <p>LoRA（Low-Rank Adaptation，低秩适配：冻结原模型权重，只训练两个很小的矩阵）为什么能把可训练参数降到 1% 以下；动手调秩 r 和缩放系数 α，理解 QKV 投影、MLP 层上分别挂 LoRA 的效果差异。</p>
+        <div class="levels">
+          <span class="lv-dot off"></span>
+          <span class="lv-dot" style="background:var(--l2)"></span>
+          <span class="lv-dot" style="background:var(--l3)"></span>
+          <span class="lv-dot off"></span>
+        </div>
+        <span class="more">开始学习 →</span>
+      </a>
+      <a class="card" href="llm-finetuning-03-data.html">
+        <span class="tag b">大模型微调 · 数据</span>
+        <h3>03 数据工程与 SFT 实战</h3>
+        <p>SFT（Supervised Fine-Tuning，监督微调：用"指令 + 理想回答"的成对样本教模型）的数据从哪来、怎么洗；指令多样性、样本配比与质量过滤的实操清单；走完一条训练样本从原始对话到 token 序列的完整旅程。</p>
+        <div class="levels">
+          <span class="lv-dot off"></span>
+          <span class="lv-dot" style="background:var(--l2)"></span>
+          <span class="lv-dot" style="background:var(--l3)"></span>
+          <span class="lv-dot off"></span>
+        </div>
+        <span class="more">开始学习 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h3><span class="dot" style="background:var(--l3)"></span>第 4–5 课 · 机制与上线</h3>
+    <p>深入训练引擎的内部，最后把模型变成线上可用的服务。适合想把训练调明白、把模型交付出去的工程导向学习者。</p>
+    <div class="grid">
+      <a class="card" href="llm-finetuning-04-training.html">
+        <span class="tag b">大模型微调 · 机制</span>
+        <h3>04 训练机制与超参</h3>
+        <p>前向传播（模型算答案）、反向传播（用误差算每个参数的修正方向）与梯度下降到底怎么配合；学习率、batch size、epoch 的定量直觉；用显存账本公式估算你的显卡装不装得下。</p>
+        <div class="levels">
+          <span class="lv-dot off"></span>
+          <span class="lv-dot off"></span>
+          <span class="lv-dot" style="background:var(--l3)"></span>
+          <span class="lv-dot" style="background:var(--l4)"></span>
+        </div>
+        <span class="more">开始学习 →</span>
+      </a>
+      <a class="card" href="llm-finetuning-05-alignment.html">
+        <span class="tag b">大模型微调 · 上线</span>
+        <h3>05 评估、对齐与上线</h3>
+        <p>怎么证明微调真的变好了：评估集设计、自动指标与人工评测的配合；DPO（Direct Preference Optimization，直接用"好回答 vs 差回答"的偏好对优化模型）的对齐思路；量化（用更低精度压缩权重）与推理部署的入门。</p>
+        <div class="levels">
+          <span class="lv-dot off"></span>
+          <span class="lv-dot off"></span>
+          <span class="lv-dot" style="background:var(--l3)"></span>
+          <span class="lv-dot" style="background:var(--l4)"></span>
+        </div>
+        <span class="more">开始学习 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="selftest">
+    <h3>先修知识自测</h3>
+    <p>5 道题，检验 Transformer（大模型的基础架构：用注意力机制处理序列的神经网络）、梯度与显存的基本概念。全部答完后，根据得分判断建议从第几课开始。</p>
+    <div class="guide" id="guide"></div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">1. Transformer 里的"注意力机制"（Attention，让模型在处理一个词时决定去看句子里的哪些其他词）本质上在算什么？</p>
+      <button class="opt" data-fb="注意力确实涉及相似度，但只是把输入复制一份，没有选择性加权，不能体现『该看哪里』。">A. 把每个词复制一份，方便并行计算</button>
+      <button class="opt" data-fb="Query-Key-Value（查询-键-值）是注意力的三要素：用查询去和每个键算匹配度，再按匹配度对值加权求和，得到『该关注谁』的结果。">B. 用查询（Query）去匹配键（Key），按匹配度对值（Value）加权</button>
+      <button class="opt" data-fb="注意力作用在序列内部，是 token 与 token 之间的关系；层与层之间是另一种连接方式，不是注意力本身。">C. 逐层压缩隐藏层，减少参数量</button>
+      <button class="opt" data-fb="注意力是软性的加权机制，不是硬性的二选一开关，它给所有位置分配连续的关注权重。">D. 在每个词之间二选一地建立连接</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="2">
+      <p class="q">2. 训练神经网络时，"梯度"（Gradient， loss 对某个参数的变化率，告诉你怎么调参数能让误差变小）描述的是：</p>
+      <button class="opt" data-fb="参数量是模型规模，和梯度无关；梯度是误差对参数的导数，不是参数本身。">A. 模型里参数的总数量</button>
+      <button class="opt" data-fb="前向传播是模型根据输入算输出的过程，本身不求梯度；梯度来自反向传播。">B. 前向传播时每个参数的数值</button>
+      <button class="opt" data-fb="梯度是损失函数对参数的偏导数，反向传播把它逐层传回去，用来更新参数。">C. 损失函数对每个参数的变化率，反向传播算出来后用于更新参数</button>
+      <button class="opt" data-fb="学习率是人为设定的更新步长，是一个超参数；梯度是算出来的变化率，两者相乘才得到一次参数更新。">D. 人为设定的学习率大小</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">3. 全量微调（更新模型的全部参数）比 LoRA（只训练少量新增矩阵）更吃显存，主要原因是什么？</p>
+      <button class="opt" data-fb="无论是全量还是 LoRA，前向传播都要跑完整模型，这部分显存不是差异的主要来源。">A. 前向传播要算完整模型的输出</button>
+      <button class="opt" data-fb="全量微调要为每个参数保存梯度和优化器状态（如 Adam 的一阶/二阶动量），参数量大时这部分远超 LoRA 的少量新增参数。">B. 全量微调要为每个参数保存梯度和优化器状态（如 Adam 的一阶/二阶动量），参数量大时这部分远超 LoRA 的少量新增参数</button>
+      <button class="opt" data-fb="LoRA 并不会减少前向计算量，模型该算多少还是多少；它省的是反向传播和优化器状态。">C. LoRA 把前向传播的计算量也省掉了</button>
+      <button class="opt" data-fb="训练数据加载到内存是一回事，显存占用是另一回事；显存的大头在模型状态与激活，不在数据本身。">D. 训练数据本身要全部加载进显存</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">4. SFT（监督微调）训练样本的典型格式是什么？</p>
+      <button class="opt" data-fb="只有标签没有输入的是纯分类数据；SFT 的核心是指令与理想回答成对的结构。">A. 一段纯文本加上一个分类标签</button>
+      <button class="opt" data-fb="SFT 用（指令，理想回答）的成对样本，教模型在类似指令下给出期望输出。">B. （指令，理想回答）成对出现：输入一条指令，输出人类认可的高质量回答</button>
+      <button class="opt" data-fb="多轮对话是 SFT 数据的一种形态（多轮指令-回答交替），但不是唯一格式，单轮指令对同样典型。">C. 必须是对话形式，且至少三轮</button>
+      <button class="opt" data-fb="SFT 依赖人工写或筛选过的理想回答，而非让模型自己生成再自我评价；那是另一类方法。">D. 随机采样模型自己的输出作为正确答案</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="widget quiz" data-answer="1">
+      <p class="q">5. 一张 24GB 显存的消费级显卡，微调大模型时最常见的瓶颈是：</p>
+      <button class="opt" data-fb="推理时才只看权重；训练还需要梯度、优化器状态和激活值，显存需求往往是推理的好几倍。">A. 模型权重文件本身太大，装不下</button>
+      <button class="opt" data-fb="权重 + 梯度 + Adam 优化器状态约为 16 倍参数字节（半精度），再加激活值，总需求常是推理的数倍，24GB 对全量微调大模型很紧，这正是 LoRA 等方法流行的原因。">B. 权重 + 梯度 + 优化器状态 + 激活值的总和，训练所需显存通常是推理的数倍</button>
+      <button class="opt" data-fb="训练速度慢可以通过梯度累积等手段缓解，是时间成本；但装不下就是装不下，显存是硬约束，所以它是首要瓶颈。">C. 训练时间太长，而不是装不下</button>
+      <button class="opt" data-fb="CPU 内存不足是另一回事；微调的核心约束是 GPU 显存，因为张量运算要在显存里完成。">D. CPU 内存不足，导致数据加载失败</button>
+      <div class="feedback"></div>
+    </div>
+  </section>
+
+  <footer>
+    本系列各门课程均为独立单文件 HTML，含分层讲解、交互演示与小测验，进度保存在浏览器本地。建议按路径图顺序学习：第 1 课建立决策框架，2–3 课并行推进也不影响理解，第 4–5 课再深入机制与工程落地。
+  </footer>
+</main>
+
+<div class="score" id="score">自测 0 / 5</div>
+
+<script>
+(() => {
+  // ---- 主题切换 ----
+  const KEY = 'llm-finetuning-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem(KEY, next);
+  });
+
+  // ---- 测验逻辑（与课程模板一致）----
+  const quizzes = [...document.querySelectorAll('.quiz')];
+  let right = 0, answered = 0;
+  const scoreEl = document.getElementById('score');
+  const guideEl = document.getElementById('guide');
+  const updateScore = () => scoreEl.textContent = `自测 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = [...q.querySelectorAll('.opt')], fb = q.querySelector('.feedback');
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+      if (answered === quizzes.length) showGuide();
+    });
+  });
+  function showGuide() {
+    let html;
+    if (right === 5) html = '<b>得分 ' + right + '/5，基础扎实！</b>Transformer、梯度和显存概念都已具备，可以直接从 <b>第 2 课《LoRA 原理与调参》</b> 开始，第 1 课当作快速复习即可。';
+    else if (right >= 3) html = '<b>得分 ' + right + '/5，有基础但有空缺。</b>建议先学 <b>第 1 课《微调的直觉与决策》</b> 补齐决策框架，再视情况进入第 2 课。';
+    else html = '<b>得分 ' + right + '/5，建议从入门开始。</b>先学 <b>第 1 课《微调的直觉与决策》</b>，它专为零基础设计，不预设任何训练经验；学完再做一次自测，应该能明显提分。';
+    guideEl.innerHTML = html;
+    guideEl.classList.add('show');
+    guideEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  updateScore();
+})();
+</script>
+
+</body>
+</html>

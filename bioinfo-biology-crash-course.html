@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生物学基础速成：DNA、RNA 与蛋白质 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>生物学基础速成：DNA、RNA 与蛋白质</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="生命的字母表">
+      <h2>生命的字母表</h2>
+      <p class="tldr">所有生命都写在两套"字母表"里：DNA/RNA 用 4 个字母（A T/U C G），蛋白质用 20 个氨基酸字母。</p>
+
+      <p>你身体每个细胞都藏着约 2 米长的 DNA，但它只由 <strong>4 种碱基</strong>不断重复组成：腺嘌呤 A、胸腺嘧啶 T、胞嘧啶 C、鸟嘌呤 G。RNA 稍有不同：用 U（尿嘧啶）替代 T。</p>
+
+      <p>这串"天书"每 3 个字母组成一个<strong>密码子</strong>，对应一种氨基酸；氨基酸连起来就是蛋白质。自然界共用同一套密码表，从细菌到大象——这是所有生命同宗同源的铁证。</p>
+
+      <div class="analogy">DNA 是只写英文的电报机，只有 4 个键；蛋白质是用了 20 个字母的打字机。生信分析第一件事就是学会在这两种字母表之间"翻译"。</div>
+
+      <!-- 互动演示：密码子翻译器 -->
+      <div class="widget demo" id="codonDemo">
+        <div class="widget-title">动手玩：输入一段 DNA，实时翻译成蛋白质</div>
+        <canvas width="800" height="320"></canvas>
+        <div class="controls">
+          <label>DNA 长度 <span class="val" data-for="len"></span><input type="range" name="len" min="6" max="30" step="3" value="12"></label>
+          <button class="btn primary" id="randomSeq" style="align-self:flex-end">🎲 换一段随机序列</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">4 个字母 × 3 位密码子 = 64 种组合，但氨基酸只有 20 种——所以密码表有冗余。多余的三联码（如 UAA、UAG、UGA）用作"句号"（终止密码子）。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">DNA 序列与 RNA 序列的关键区别是什么？</p>
+        <button class="opt" data-fb="DNA 用 T，RNA 用 U，这是最主要的区别。">没有区别，只是叫法不同</button>
+        <button class="opt" data-fb="正确。RNA 的 U 与 DNA 的 A 配对。">RNA 用 U 替代了 T</button>
+        <button class="opt" data-fb="RNA 通常单链，但这不是序列字母层面的区别。">RNA 是双链</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">掌握 4→20 的映射关系，你就拿到了解读一切生命序列的罗塞塔石碑。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="DNA 到蛋白质的三级跳">
+      <h2>DNA 到蛋白质的三级跳</h2>
+      <p class="tldr">基因（DNA 片段）→ 转录 → mRNA → 翻译 → 蛋白质。每一步都有专门的分子机器把关。</p>
+
+      <p>"基因"不是一个抽象概念，而是 DNA 上的具体坐标区间。一个典型基因包含：</p>
+      <ul>
+        <li><strong>启动子（Promoter）</strong>：RNA 聚合酶的"落脚点"，决定基因何时被表达</li>
+        <li><strong>外显子（Exon）</strong>：真正编码蛋白质的段落</li>
+        <li><strong>内含子（Intron）</strong>：转录出来但会被剪掉的"广告插页"</li>
+        <li><strong>终止子（Terminator）</strong>：转录结束的信号</li>
+      </ul>
+
+      <div class="analogy">基因像一档电视节目：启动子是片头曲（聚合酶听到就开工），外显子是正片，内含子是广告（剪接体负责剪掉），终止子是片尾名单。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，记住四个结构名词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">启动子</div><div class="back">RNA 聚合酶结合的位置，控制基因什么时候开工，是表达调控的关键位点。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">外显子</div><div class="back">真核基因中最终被翻译的编码片段，一个基因可含多个外显子。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">内含子</div><div class="back">转录后被剪掉的非编码区。约占人类基因组的 24%。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">终止子</div><div class="back">给 RNA 聚合酶发出"停笔"信号的序列，避免读到下游基因。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">真核生物基因转录出的前体 mRNA 要先经过什么过程，才能送去翻译？</p>
+        <button class="opt" data-fb="正确。剪接体切除内含子，把外显子连成成熟 mRNA。">剪接（切除内含子）</button>
+        <button class="opt" data-fb="复制是 DNA 的事，mRNA 不需要复制。">复制</button>
+        <button class="opt" data-fb="逆转录是 RNA 病毒的事，正常细胞不需要。">逆转录</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">结构决定流程：内含子的存在解释了为什么"一个基因多个蛋白"——不同剪接方式产生不同转录本。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="碱基互补配对：一切的基石">
+      <h2>碱基互补配对：一切的基石</h2>
+      <p class="tldr">A 只和 T/U 配对，C 只和 G 配对——双链 DNA 的稳定性、复制、PCR、测序，全都建立在这条规则上。</p>
+
+      <p>沃森和克里克 1953 年发现：DNA 是双螺旋，两条链通过碱基间的氢键黏在一起。配对规则极其严格：</p>
+      <ul>
+        <li>A — T：形成 2 个氢键</li>
+        <li>C — G：形成 3 个氢键（更牢固）</li>
+      </ul>
+
+      <div class="analogy">像拉链：A-T 是细齿，C-G 是粗齿。齿必须完全对齐才能拉上，对不上就卡死——这就是"引物必须互补才能结合"的原因。</div>
+
+      <p>这条规则的直接推论：<strong>一条链的序列决定另一条链</strong>。知道了正链，反链自动知道——所以 FASTA 文件经常只存一条链。</p>
+
+      <!-- 互动演示：GC 含量与熔解温度 -->
+      <div class="widget demo" id="gcDemo">
+        <div class="widget-title">熔解温度 Tm 演示：拖动 GC 含量，看 DNA 双链"拉链"多稳</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>GC 含量（%）<span class="val" data-for="gc"></span><input type="range" name="gc" min="0" max="100" step="5" value="50"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>经验公式（Wallace 规则）：$T_m = 2°C \times (A+T) + 4°C \times (G+C)$。GC 越高，双链越牢，PCR 退火温度就要设得越高。</p>
+
+      <div class="key">在设计 qPCR 引物、杂交探针时，GC 含量通常控制在 40–60%，两条引物 Tm 相差不超过 2°C。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">一段 DNA 的 GC 含量越高，通常意味着什么？</p>
+        <button class="opt" data-fb="GC 含量与长度没有必然关系。">序列更长</button>
+        <button class="opt" data-fb="GC 含量高的双链更稳定，不是更易解开。">熔解温度更低</button>
+        <button class="opt" data-fb="正确。C-G 有 3 个氢键，比 A-T 的 2 个更牢。">熔解温度更高</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">氢键数量 = 稳定性的物理来源；GC 含量 = 稳定性在统计上的体现。记住这两层，后面的 PCR、测序、杂交全都一通百通。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="蛋白质：20 种氨基酸的功能图谱">
+      <h2>蛋白质：20 种氨基酸的功能图谱</h2>
+      <p class="tldr">氨基酸按侧链性质分为疏水、亲水带电、亲水不带电、特殊四类——这决定了蛋白质怎么折叠、在哪儿发挥作用。</p>
+
+      <h3>20 种氨基酸速查</h3>
+      <table>
+        <tr><th>分类</th><th>氨基酸</th><th>功能标签</th></tr>
+        <tr><td><strong>疏水</strong></td><td>A V I L M F W P G</td><td>埋在蛋白内部，构成疏水核心</td></tr>
+        <tr><td><strong>带电亲水</strong></td><td>R K H（正）/ D E（负）</td><td>表面、活性位点、盐桥</td></tr>
+        <tr><td><strong>极性不带电</strong></td><td>S T N Q Y C</td><td>氢键形成、信号传递</td></tr>
+        <tr><td><strong>特殊</strong></td><td>C（二硫键）G（灵活）P（扭结）</td><td>结构骨架的关键节点</td></tr>
+      </table>
+
+      <div class="key">只看名字记不住？按"化学脾气"分组记：怕水的（疏水）、带电的（正负极）、爱水的（极性）和有个性的（C/G/P）。</div>
+
+      <!-- 互动演示：氨基酸疏水性滑块 -->
+      <div class="widget demo" id="aaDemo">
+        <div class="widget-title">疏水性演示：拖动滑块，看一条多肽链在水中如何折叠</div>
+        <canvas width="800" height="320"></canvas>
+        <div class="controls">
+          <label>疏水氨基酸比例 <span class="val" data-for="hydro"></span><input type="range" name="hydro" min="0" max="100" step="5" value="50"></label>
+          <button class="btn primary" id="refold" style="align-self:flex-end">🔄 重新折叠</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="analogy">蛋白质折叠就像一帮人进舞池：怕水的（疏水）挤到舞池中央抱团，爱水的（亲水）留在边缘挥手。舞池形状 = 蛋白三维结构。</div>
+
+      <div class="warn">别以为蛋白质就是一根直棍——它必须折叠成特定形状才有功能。错误折叠与阿尔茨海默症、帕金森病直接相关。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">哪种氨基酸最容易出现在蛋白质的核心（内部）？</p>
+        <button class="opt" data-fb="正确。疏水氨基酸避开水，聚集在内部。">亮氨酸 Leu（L）</button>
+        <button class="opt" data-fb="精氨酸带电亲水，通常在表面。">精氨酸 Arg（R）</button>
+        <button class="opt" data-fb="天冬氨酸带负电，也喜欢表面。">天冬氨酸 Asp（D）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">从序列到结构再到功能，是生信的"圣杯"主线。AlphaFold 解决了"序列→结构"，下一步是"结构→功能"。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="突变：拼写错误如何改变含义">
+      <h2>突变：拼写错误如何改变含义</h2>
+      <p class="tldr">一个碱基的替换、插入或缺失，可能无感、可能改变一个氨基酸，也可能提前终止整条肽链——这就是变异致病性的三层机制。</p>
+
+      <h3>突变的三种类型</h3>
+      <ul>
+        <li><strong>替换（Substitution）</strong>：一个字母换成另一个，如 A→G</li>
+        <li><strong>插入（Insertion）</strong>：多出几个字母</li>
+        <li><strong>缺失（Deletion）</strong>：丢了几个字母</li>
+      </ul>
+
+      <h3>对蛋白质的影响分级</h3>
+      <table>
+        <tr><th>类型</th><th>后果</th><th>例子</th></tr>
+        <tr><td>同义突变</td><td>密码子变了，氨基酸没变</td><td>通常无害</td></tr>
+        <tr><td>错义突变</td><td>一个氨基酸被替换</td><td>镰刀型贫血（Glu→Val）</td></tr>
+        <tr><td>无义突变</td><td>提前出现终止密码子</td><td>截短蛋白，常致病</td></tr>
+        <tr><td>移码突变</td><td>插入/缺失 1-2 个碱基，后面全乱</td><td>通常最严重</td></tr>
+      </table>
+
+      <!-- 互动演示：突变模拟器 -->
+      <div class="widget demo" id="mutDemo">
+        <div class="widget-title">突变模拟器：点一点，看一个突变如何改变整条肽链</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="align-items:center">
+          <button class="btn" data-mut="syn">同义突变</button>
+          <button class="btn" data-mut="mis">错义突变</button>
+          <button class="btn" data-mut="non">无义突变</button>
+          <button class="btn" data-mut="fs">移码突变</button>
+          <button class="btn primary" id="resetMut">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">变异注释（Annotation）就是自动判断：这个突变落在哪个基因、是哪种类型、对蛋白影响多大——这是 VEP、ANNOVAR 等工具的核心任务。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">下列哪种突变通常后果最严重？</p>
+        <button class="opt" data-fb="同义突变不改变氨基酸序列。">同义突变</button>
+        <button class="opt" data-fb="正确。移码突变让后续所有密码子错位，通常产生完全异常的蛋白质。">移码突变</button>
+        <button class="opt" data-fb="单个错义突变影响通常局限于一个氨基酸。">错义突变</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>DNA 有 <input data-answer="4"> 种碱基；蛋白质有 <input data-answer="20"> 种氨基酸；C-G 之间有 <input data-answer="3"> 个氢键。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">现在你已经掌握了生信分析所需的最小生物学知识：字母表、转录翻译、配对规则、氨基酸脾气、突变类型。接下来去学怎么在 Linux 里处理这些数据。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+
+// 通用数据
+const CODON_TABLE = {
+  TTT:'Phe',TTC:'Phe',TTA:'Leu',TTG:'Leu',CTT:'Leu',CTC:'Leu',CTA:'Leu',CTG:'Leu',
+  ATT:'Ile',ATC:'Ile',ATA:'Ile',ATG:'Met',GTT:'Val',GTC:'Val',GTA:'Val',GTG:'Val',
+  TCT:'Ser',TCC:'Ser',TCA:'Ser',TCG:'Ser',CCT:'Pro',CCC:'Pro',CCA:'Pro',CCG:'Pro',
+  ACT:'Thr',ACC:'Thr',ACA:'Thr',ACG:'Thr',GCT:'Ala',GCC:'Ala',GCA:'Ala',GCG:'Ala',
+  TAT:'Tyr',TAC:'Tyr',TAA:'Stop',TAG:'Stop',CAT:'His',CAC:'His',CAA:'Gln',CAG:'Gln',
+  AAT:'Asn',AAC:'Asn',AAA:'Lys',AAG:'Lys',GAT:'Asp',GAC:'Asp',GAA:'Glu',GAG:'Glu',
+  TGT:'Cys',TGC:'Cys',TGA:'Stop',TGG:'Trp',CGT:'Arg',CGC:'Arg',CGA:'Arg',CGG:'Arg',
+  AGT:'Ser',AGC:'Ser',AGA:'Arg',AGG:'Arg',GGT:'Gly',GGC:'Gly',GGA:'Gly',GGG:'Gly'
+};
+const AA_COLORS = {
+  Phe:'#a78bfa',Leu:'#8b5cf6',Ile:'#7c3aed',Met:'#6d28d9',Val:'#5b21b6',
+  Ser:'#22c55e',Pro:'#10b981',Thr:'#059669',Ala:'#047857',Tyr:'#eab308',His:'#ca8a04',
+  Gln:'#a16207',Asn:'#84cc16',Lys:'#65a30d',Asp:'#f97316',Glu:'#ea580c',
+  Cys:'#94a3b8',Trp:'#475569',Arg:'#dc2626',Gly:'#64748b',Stop:'#1f2937'
+};
+const DNA_BASES = ['A','T','C','G'];
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function randomDNA(len) {
+  let s = 'ATG';  // 起始密码子
+  for (let i = 3; i < len; i++) s += DNA_BASES[Math.floor(Math.random() * 4)];
+  return s;
+}
+
+// 演示1：密码子翻译器
+demo('#codonDemo', ({ len }, ctx, cv, root) => {
+  const W = cv.width;
+  const seq = root.dataset.seq || (root.dataset.seq = randomDNA(len));
+  const readout = root.querySelector('.readout');
+
+  // 若滑块变了长度，重新生成
+  if (seq.length !== len) { root.dataset.seq = randomDNA(len); return render(); }
+
+  const y1 = 80, y2 = 170, y3 = 260;
+  const codonW = Math.min(70, (W - 80) / Math.ceil(seq.length / 3));
+
+  // DNA
+  ctx.font = 'bold 18px monospace'; ctx.textAlign = 'center';
+  for (let i = 0; i < seq.length; i++) {
+    const x = 60 + i * (codonW / 3);
+    const colors = {A:'#ef4444',T:'#3b82f6',C:'#22c55e',G:'#f59e0b'};
+    ctx.fillStyle = colors[seq[i]];
+    ctx.fillText(seq[i], x, y1);
+  }
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('DNA 序列（5\' → 3\'）', 20, y1 - 30);
+
+  // codon boxes
+  ctx.textAlign = 'center';
+  let stopReached = false;
+  const nCodons = Math.floor(seq.length / 3);
+  for (let c = 0; c < nCodons; c++) {
+    const codon = seq.slice(c*3, c*3+3);
+    const aa = CODON_TABLE[codon] || '?';
+    const cx = 60 + c*3 * (codonW/3) + codonW/3;
+    ctx.strokeStyle = aa === 'Stop' ? '#dc2626' : cssVar('--primary');
+    ctx.lineWidth = aa === 'Stop' ? 2 : 1;
+    ctx.strokeRect(cx - codonW/2 + 4, y2 - 22, codonW - 8, 30);
+    ctx.fillStyle = aa === 'Stop' ? '#dc2626' : cssVar('--text');
+    ctx.font = '12px monospace';
+    ctx.fillText(codon, cx, y2 - 2);
+
+    if (!stopReached) {
+      ctx.fillStyle = AA_COLORS[aa] || '#999';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(aa, cx, y3);
+      if (aa === 'Stop') stopReached = true;
+    }
+  }
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('密码子分组', 20, y2 - 2);
+  ctx.fillText('蛋白质（氨基酸）', 20, y3);
+
+  const peptide = [];
+  for (let c = 0; c < nCodons; c++) {
+    const aa = CODON_TABLE[seq.slice(c*3, c*3+3)];
+    if (aa === 'Stop') break;
+    peptide.push(aa);
+  }
+  readout.textContent = `${seq.length} bp → ${nCodons} 个密码子 → 蛋白质：${peptide.join(' - ') || '（空）'}`;
+});
+
+document.getElementById('randomSeq').onclick = () => {
+  const root = document.getElementById('codonDemo');
+  const len = +root.querySelector('input[name=len]').value;
+  root.dataset.seq = randomDNA(len);
+  root.dispatchEvent(new Event('rerender'));
+  // 触发 demo 重新绘制：通过 input 事件
+  const inp = root.querySelector('input');
+  inp.dispatchEvent(new Event('input'));
+};
+
+// 演示2：GC 含量与 Tm
+demo('#gcDemo', ({ gc }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const tm = 2 * (100 - gc) + 4 * gc;   // Wallace 规则，假设长度100
+  const y = 150, x1 = 80, x2 = W - 80;
+  const frac = Math.min(1, tm / 85);
+
+  // 两条链
+  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x1, y - 30); ctx.lineTo(x2, y - 30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x1, y + 30); ctx.lineTo(x2, y + 30); ctx.stroke();
+
+  // 碱基对
+  const n = 24;
+  const pairType = i => (i * 37 % 100) < gc ? 'CG' : 'AT';
+  for (let i = 0; i < n; i++) {
+    const px = x1 + (i + 0.5) * (x2 - x1) / n;
+    const type = pairType(i);
+    ctx.strokeStyle = type === 'CG' ? '#f59e0b' : '#3b82f6';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(px, y - 26); ctx.lineTo(px, y - 6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px, y + 26); ctx.lineTo(px, y + 6); ctx.stroke();
+    if (type === 'CG') {
+      ctx.beginPath(); ctx.moveTo(px, y - 3); ctx.lineTo(px, y + 3); ctx.stroke();
+    }
+  }
+
+  // Tm 仪表
+  const my = 250;
+  ctx.fillStyle = cssVar('--border');
+  ctx.fillRect(x1, my, x2 - x1, 10);
+  const grad = ctx.createLinearGradient(x1, 0, x2, 0);
+  grad.addColorStop(0, '#3b82f6'); grad.addColorStop(1, '#dc2626');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x1, my, (x2 - x1) * frac, 10);
+  ctx.fillStyle = cssVar('--text');
+  ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(`Tm ≈ ${tm}°C`, x1 + (x2 - x1) * frac, my - 12);
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+  ctx.fillText('50°C', x1, my + 28);
+  ctx.fillText('85°C', x2, my + 28);
+
+  root.querySelector('.readout').textContent =
+    `GC ${gc}% → Tm = 2×${100-gc} + 4×${gc} = ${tm}°C | ${gc > 60 ? '⚠️ 过高，PCR 可能非特异' : gc < 30 ? '⚠️ 过低，结合不稳' : '✅ 理想范围'}`;
+});
+
+// 演示3：疏水性折叠
+(() => {
+  const root = document.getElementById('aaDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  let residues = [];
+
+  function buildChain(hydroPct) {
+    residues = [];
+    for (let i = 0; i < 60; i++) {
+      residues.push({
+        isH: Math.random() * 100 < hydroPct,
+        angle: Math.random() * Math.PI * 2,
+        dist: 0,
+        x: 0, y: 0
+      });
+    }
+  }
+
+  function fold() {
+    // 简单模拟：疏水向内，亲水向外
+    residues.forEach((r, i) => {
+      const target = r.isH ? 40 + Math.random() * 60 : 130 + Math.random() * 80;
+      const steps = 40;
+      let d = r.dist;
+      const anim = () => {
+        d += (target - d) / 8;
+        r.dist = d;
+        r.x = 400 + Math.cos(r.angle) * d;
+        r.y = 160 + Math.sin(r.angle) * d * 0.7;
+        if (Math.abs(d - target) > 1) requestAnimationFrame(anim);
+      };
+      anim();
+    });
+  }
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    // 水环境
+    ctx.fillStyle = 'rgba(59,130,246,0.05)';
+    ctx.fillRect(0, 0, W, H);
+    residues.forEach(r => {
+      ctx.fillStyle = r.isH ? '#f59e0b' : '#3b82f6';
+      ctx.beginPath(); ctx.arc(r.x, r.y, 5, 0, Math.PI*2); ctx.fill();
+    });
+    // 图例
+    ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(30, 20, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = cssVar('--text'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('疏水（怕水，往里钻）', 45, 25);
+    ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(30, 45, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillText('亲水（爱水，呆表面）', 45, 50);
+    requestAnimationFrame(draw);
+  }
+
+  function init() {
+    const hydro = +root.querySelector('input[name=hydro]').value;
+    buildChain(hydro);
+    residues.forEach(r => { r.x = 400 + Math.cos(r.angle) * r.dist; r.y = 160 + Math.sin(r.angle) * r.dist * 0.7; });
+    fold();
+    const nH = residues.filter(r => r.isH).length;
+    readout.textContent = `60 个氨基酸中 ${nH} 个疏水：${hydro < 30 ? '蛋白松散，几乎不折叠' : hydro > 70 ? '核心太紧，可能聚集沉淀' : '形成典型"疏水核心 + 亲水表面"结构'}`;
+  }
+
+  root.querySelector('input[name=hydro]').addEventListener('input', init);
+  document.getElementById('refold').onclick = init;
+  init();
+  draw();
+})();
+
+// 演示4：突变模拟器
+(() => {
+  const root = document.getElementById('mutDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+  const WT_SEQ = 'ATG GCT TAC GAA CCG TTA GGC ACT TGA'.replace(/ /g, '');
+  let mutType = null;
+
+  function getDisplay() {
+    const codons = [];
+    const wtCodons = ['ATG','GCT','TAC','GAA','CCG','TTA','GGC','ACT','TGA'];
+    const aaList = wtCodons.map(c => CODON_TABLE[c]);
+    if (!mutType) return { codons: wtCodons, aas: aaList, note: '野生型：正常蛋白质' };
+
+    if (mutType === 'syn') {
+      // GCT(Ala) → GCC(Ala)
+      const c = [...wtCodons]; c[1] = 'GCC';
+      return { codons: c, aas: c.map(x => CODON_TABLE[x]), note: '同义突变：GCT→GCC，仍是 Ala，蛋白不变' };
+    }
+    if (mutType === 'mis') {
+      // TAC(Tyr) → TGC(Cys)
+      const c = [...wtCodons]; c[2] = 'TGC';
+      return { codons: c, aas: c.map(x => CODON_TABLE[x]), note: '错义突变：TAC→TGC，Tyr→Cys，蛋白功能可能改变' };
+    }
+    if (mutType === 'non') {
+      // GAA(Glu) → TAA(Stop)
+      const c = [...wtCodons]; c[3] = 'TAA';
+      const aas = c.map((x, i) => i <= 3 ? CODON_TABLE[x] : '—');
+      return { codons: c, aas, note: '无义突变：GAA→TAA，提前终止！蛋白被截短', truncated: true };
+    }
+    if (mutType === 'fs') {
+      // 在第二个密码子插入一个 G，导致全部错位
+      const seq = WT_SEQ.slice(0, 4) + 'G' + WT_SEQ.slice(4);
+      const c = [];
+      for (let i = 0; i + 3 <= seq.length; i += 3) c.push(seq.slice(i, i+3));
+      return { codons: c, aas: c.map(x => CODON_TABLE[x] || '?'), note: '移码突变：插入 1 个 G，之后密码子全部错位', shifted: 4 };
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, cv.height);
+    const d = getDisplay();
+    const codonW = Math.min(72, (W - 100) / d.codons.length);
+
+    ctx.textAlign = 'center';
+    d.codons.forEach((c, i) => {
+      const cx = 70 + i * codonW;
+      const changed = mutType && (
+        (mutType !== 'fs' && c !== WT_SEQ.slice(i*3, i*3+3)) ||
+        (mutType === 'fs' && i >= 1)
+      );
+      ctx.strokeStyle = changed ? '#dc2626' : cssVar('--primary');
+      ctx.lineWidth = changed ? 2 : 1;
+      ctx.strokeRect(cx - codonW/2 + 3, 60, codonW - 6, 30);
+      ctx.fillStyle = changed ? '#dc2626' : cssVar('--text');
+      ctx.font = 'bold 13px monospace';
+      ctx.fillText(c, cx, 80);
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('DNA 密码子', 20, 78);
+
+    d.aas.forEach((aa, i) => {
+      const cx = 70 + i * codonW;
+      if (aa === '—') return;
+      ctx.fillStyle = AA_COLORS[aa] || '#999';
+      if (mutType === 'fs' && i >= 2) ctx.globalAlpha = 0.45;
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(aa, cx, 135);
+      ctx.globalAlpha = 1;
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+    ctx.fillText('氨基酸', 20, 133);
+
+    // 突变说明
+    ctx.fillStyle = mutType ? '#dc2626' : cssVar('--ok');
+    ctx.font = '15px sans-serif';
+    ctx.fillText(d.note, 30, 200);
+
+    // 截短提示
+    if (d.truncated) {
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+      ctx.fillText('↓ 后续氨基酸全部丢失，蛋白严重截短', 30, 235);
+    }
+    if (d.shifted !== undefined) {
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+      ctx.fillText('↓ 从插入点开始，密码子全部错位，序列完全变样', 30, 235);
+    }
+
+    // 野生型对照
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+    ctx.fillText(`野生型蛋白质：${['ATG','GCT','TAC','GAA','CCG','TTA','GGC','ACT','TGA'].map(c => CODON_TABLE[c]).join(' - ')}`, 30, cv.height - 20);
+  }
+
+  root.querySelectorAll('[data-mut]').forEach(btn => {
+    btn.onclick = () => {
+      mutType = btn.dataset.mut;
+      root.querySelectorAll('[data-mut]').forEach(b => b.classList.remove('primary'));
+      btn.classList.add('primary');
+      draw();
+    };
+  });
+  document.getElementById('resetMut').onclick = () => {
+    mutType = null;
+    root.querySelectorAll('[data-mut]').forEach(b => b.classList.remove('primary'));
+    draw();
+  };
+  draw();
+})();
+</script>
+</body>
+</html>

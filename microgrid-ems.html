@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网能量管理与优化调度 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>微电网能量管理与优化调度（EMS）</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章 ========== -->
+    <section class="chapter" data-level="2" data-title="EMS 是什么">
+      <h2>EMS 是什么</h2>
+      <p class="tldr">EMS（Energy Management System，能量管理系统）是微电网的「大脑」：它看着明天的天气预报、今天的电价和此刻的电表读数，替你做「什么时候发电、什么时候储能、什么时候买电」的全部决定。</p>
+
+      <p>微电网把光伏、风机、储能电池、柴油发电机、可控负荷和外部电网捏在一起。设备很多，但谁来指挥？<mark>EMS</mark> 就是指挥官。一个完整的 EMS 通常分三层，像人做事一样——先有个计划，再随时修正，最后见招拆招：</p>
+      <table>
+        <tr><th>层级</th><th>名称</th><th>干什么</th><th>时间尺度</th></tr>
+        <tr><td>上层</td><td>预测与日前计划</td><td>根据天气预报、负荷预测、分时电价，排出未来 24 小时的功率计划</td><td>小时级（典型值）</td></tr>
+        <tr><td>中层</td><td>日内滚动调度</td><td>实际光伏/负荷偏离预测时，滚动修正接下来的计划</td><td>15 分钟~1 小时（典型值）</td></tr>
+        <tr><td>下层</td><td>实时控制</td><td>毫秒~秒级执行：一次调频、电压支撑、防逆流等</td><td>秒级及以下（典型值）</td></tr>
+      </table>
+
+      <div class="analogy">把微电网 EMS 想成一位操持全家的主妇：<br>① <b>日前计划</b>——看天气预报、想一周的菜单，今早去菜场把菜买好（对应日前 24h 计划）；<br>② <b>日内调整</b>——中午客人突然来了，赶紧看看冰箱里还有什么，改改下午的安排（对应滚动修正）；<br>③ <b>实时发挥</b>——炒菜时尝一口太咸立刻调整（对应秒级实时控制）。计划再好，也没有现场反应快重要。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，记住 EMS 三层</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">🧠 预测与日前</div><div class="back">基于气象预测、负荷预测与分时电价，用优化算法排出次日 24 小时的机组组合与储能充放计划。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">🔄 日内滚动</div><div class="back">每个调度周期（如 15 分钟）用最新实测数据重新优化剩余时段的计划，应对预测偏差。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">⚡ 实时控制</div><div class="back">秒级响应：一次调频、无功电压支撑、SOC 安全保护，由本地控制器直接执行，不依赖上层。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">EMS 的三层不是三选一，而是<b>同时运行、各管一段时间尺度</b>：日前给方向，日内纠偏差，实时保命。上层负责「省多少钱」，下层负责「别出事故」。</div>
+      <div class="tip">本章小结：EMS = 微电网的大脑 = 预测 + 计划 + 实时调度三层协同。理解「时间尺度分层」是理解后面所有优化问题的钥匙。</div>
+    </section>
+
+    <!-- ========== 第 2 章 ========== -->
+    <section class="chapter" data-level="3" data-title="三层调度框架">
+      <h2>三层调度框架：各管多快、各管多远</h2>
+      <p class="tldr">日前层管 24 小时、日内层管接下来几个小时且不断滚动、实时层管当下这一秒——三层按「时间尺度从长到短」接力，上一层的计划是下一层的参考值。</p>
+
+      <h3>① 日前调度（Day-ahead）</h3>
+      <p>在前一天根据<b>预测</b>做出未来 24 小时的计划，粒度通常为 15 分钟或 1 小时（典型值）。决定：每时段买多少电、柴油机开不开、储能充放多少。优化目标是全天成本最低。</p>
+      <h3>② 日内滚动调度（Intra-day rolling）</h3>
+      <p>预测总会错。日内层每隔 15~60 分钟（典型值）重新优化一次，但只执行<b>最近一个时段</b>的计划，然后窗口向前滚动一格——这就是「滚动时域」（rolling horizon）。</p>
+      <h3>③ 实时调度与控制（Real-time）</h3>
+      <p>频率跌了就立刻加功率（一次调频）、电压越限就立刻发无功——这些发生在毫秒到秒级（典型值），慢一拍的优化算法根本来不及，只能由本地控制器按预设策略执行。</p>
+
+      <div class="steps">
+        <div class="step">📅 晚 8 点：日前层运行优化 → 得到次日 0~24 点的计划曲线</div>
+        <div class="step">🕙 次日 10:00：日内层发现光伏比预测少 20% → 重新优化 10:15~24:00，只执行 10:15~10:30</div>
+        <div class="step">🕙 次日 10:20：电网频率突然下跌 → 实时层立刻让储能加大放电，不等上层算完</div>
+        <div class="step">✅ 三层输出按「日前定框架、日内纠偏差、实时保安全」汇总执行</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+
+      <div class="widget order" data-answer="a,b,c">
+        <div class="widget-title">排序题：按决策时间尺度从长到短排列</div>
+        <div class="item" data-id="b">日内滚动调度（15 分钟~1 小时滚动修正）</div>
+        <div class="item" data-id="c">实时控制（秒级，一次调频）</div>
+        <div class="item" data-id="a">日前调度（未来 24 小时计划）</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">不要混淆「粒度」和「提前量」：日前计划虽然每 15 分钟一个点，但它提前一天就做完了；实时控制虽然连续平滑，却只针对「现在」这一瞬间。判断层级要看<b>决策提前多远</b>，而不是曲线画得多细。</div>
+      <div class="tip">本章小结：日前（24h 计划）→ 日内（滚动静修正）→ 实时（秒级一次调频）。时间尺度从长到短，上一层的输出是下一层的边界条件。</div>
+    </section>
+
+    <!-- ========== 第 3 章 ========== -->
+    <section class="chapter" data-level="3" data-title="目标函数与约束">
+      <h2>目标函数与约束：一个最小的 EMS 优化模型</h2>
+      <p class="tldr">EMS 的优化问题 = 一个目标函数（花多少钱）+ 一组约束条件（物理规律和安全边界）。储能 EMS 最常见的目标是：在满足所有约束的前提下，让一天的购电成本 + 发电成本最小。</p>
+
+      <h3>目标函数（示例/典型形式）</h3>
+      $$\min_{P_{\text{grid}},\,P_{\text{dg}},\,P_{\text{ch}},\,P_{\text{dis}}} \quad \sum_{t=1}^{T} \Big[ c_{\text{grid}}(t)\,P_{\text{grid}}(t) + c_{\text{dg}}\,P_{\text{dg}}(t) \Big] \cdot \Delta t$$
+      <table>
+        <tr><th>符号</th><th>含义</th></tr>
+        <tr><td>$t$ / $T$ / $\Delta t$</td><td>时段编号 / 总时段数（如 24）/ 每个时段的时长（如 1 h）</td></tr>
+        <tr><td>$P_{\text{grid}}(t)$</td><td>第 $t$ 时段从外部电网购入的功率（kW，决策变量）</td></tr>
+        <tr><td>$c_{\text{grid}}(t)$</td><td>该时段的购电电价（元/kWh，分时电价）</td></tr>
+        <tr><td>$P_{\text{dg}}(t)$</td><td>柴油机等分布式电源出力（kW，决策变量）</td></tr>
+        <tr><td>$c_{\text{dg}}$</td><td>柴油发电的度电成本（元/kWh，典型值约 1.0~1.5 元/kWh，视油价而定）</td></tr>
+      </table>
+
+      <h3>核心约束（示例/典型形式）</h3>
+      <p><b>① 功率平衡</b>——任一时刻发多少用多少：</p>
+      $$P_{\text{pv}}(t) + P_{\text{grid}}(t) + P_{\text{dg}}(t) + P_{\text{dis}}(t) = P_{\text{load}}(t) + P_{\text{ch}}(t)$$
+      <p><b>② SOC（荷电状态）递推</b>——储能的能量账本，$\eta_c$ 为充电效率、$\eta_d$ 为放电效率（典型值均约 0.9~0.95）：</p>
+      $$SOC(t+1) = SOC(t) + \frac{\eta_c\, P_{\text{ch}}(t)\,\Delta t}{E_{\text{cap}}} - \frac{P_{\text{dis}}(t)\,\Delta t}{\eta_d\, E_{\text{cap}}}$$
+      <p><b>③ SOC 上下限</b>——电池不能放空也不能充满（$SOC_{\min}, SOC_{\max}$ 典型值 0.1~0.2 / 0.8~0.9）：</p>
+      $$SOC_{\min} \le SOC(t) \le SOC_{\max}$$
+      <p><b>④ 充放电功率限制</b>——充放不能同时进行，且各有限幅：</p>
+      $$0 \le P_{\text{ch}}(t) \le P_{\text{ch}}^{\max}, \qquad 0 \le P_{\text{dis}}(t) \le P_{\text{dis}}^{\max}$$
+
+      <div class="warn">SOC 不能到 0 也不能到满，否则「充放两难」：到 0% 时电池失去放电能力、还可能损伤电芯；到 100% 时光伏多余电量无处可去只能弃光，电池也无法响应需要充电的调度指令。上下限既是<b>寿命保护</b>，也是<b>调度灵活性保留</b>。</div>
+
+      <div class="widget fill">
+        <div class="widget-title">填空：这些约束分别属于哪一类？</div>
+        <p>① 功率平衡约束：它描述的是 <input data-answer="物理规律|能量守恒|物理" style="width:130px"> ；② SOC 上下限：它描述的是 <input data-answer="安全边界|安全|寿命" style="width:130px"> 。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">写优化模型的口诀：<b>「目标一个，约束一堆」</b>。目标只回答「最小化什么」，约束回答「什么不许做」。SOC 约束（上下限 + 递推）是储能模型区别于普通电源的全部灵魂。</div>
+      <div class="tip">本章小结：$\min$ 总成本，s.t. 功率平衡、SOC 递推、SOC 上下限、功率限幅。以上均为示例/典型形式，实际工程还会加入需量电费、寿命折损、启停成本等项。</div>
+    </section>
+
+    <!-- ========== 第 4 章 ========== -->
+    <section class="chapter" data-level="3" data-title="峰谷电价与套利">
+      <h2>峰谷电价与储能套利</h2>
+      <p class="tldr">套利口诀：谷电充电、峰电放电。但电池有充放损耗——电价差必须大于「损耗成本」才有钱赚，峰谷差越大，储能越值钱。</p>
+
+      <p>分时电价把一天切成谷、平、峰等时段（下例为示例电价：谷 0.3 元/kWh、平 0.7 元/kWh、峰 1.2 元/kWh）。储能只要在低价时段买入、高价时段卖出，就能赚取差价。但充入 1 kWh 只能放出约 $\eta_c\eta_d$（往返效率典型值 80%~90%），所以每度「搬运电」的净收益是：</p>
+      $$\text{每度套利收益} = \frac{c_{\text{peak}}}{\eta_c\eta_d} - c_{\text{valley}} \quad\approx\quad c_{\text{peak}} - \frac{c_{\text{valley}}}{\eta_c\eta_d} \text{（按放电侧计价）}$$
+      <p>只有这个值大于 0（再扣除电池寿命折损），套利才成立。<mark>峰谷差就是储能的「利润空间」</mark>。</p>
+
+      <div class="widget demo" id="emsDemo">
+        <div class="widget-title">互动演示：调储能参数，看一天的账怎么算（示例/典型数据）</div>
+        <canvas width="880" height="340"></canvas>
+        <div class="controls">
+          <label>储能容量 <span class="val" data-for="cap"></span> kWh<input type="range" name="cap" min="0" max="400" step="10" value="100"></label>
+          <label>充/放电功率 <span class="val" data-for="pw"></span> kW<input type="range" name="pw" min="0" max="100" step="5" value="50"></label>
+          <label>电价峰谷差 <span class="val" data-for="spread"></span> 元/kWh<input type="range" name="spread" min="0.3" max="1.6" step="0.05" value="0.9"></label>
+        </div>
+        <table style="margin-top:14px">
+          <tr><th>指标（一天，示例/典型值）</th><th>数值</th></tr>
+          <tr><td>无储能 · 全天购电成本</td><td id="rNo">—</td></tr>
+          <tr><td>有储能 · 全天购电成本</td><td id="rWith">—</td></tr>
+          <tr><td>储能带来的节省（套利收益）</td><td id="rSave" style="color:var(--ok);font-weight:700">—</td></tr>
+          <tr><td>光伏弃电量</td><td id="rCurt">—</td></tr>
+          <tr><td>电池充放电量（放电量）</td><td id="rCyc">—</td></tr>
+        </table>
+        <p style="font-size:13px;color:var(--muted)">假设：电池充放电各按 90% 效率（典型值），SOC 运行区间 10%~90%；「峰谷差」滑块等比缩放谷/平/峰三段电价（基准：谷 0.3 / 平 0.7 / 峰 1.2 元/kWh）；光伏先供负荷，富余部分给电池充电，再富余才弃光。</p>
+      </div>
+
+      <div class="key">把「电价峰谷差」滑块拖到最右，再拖到最左，对比「套利收益」一行：峰谷差从 0.3 拉到 1.6 元/kWh 时，同样一块电池的日收益成倍增长——这就是为什么峰谷价差大的省份，工商业储能装得越多。</div>
+      <div class="tip">本章小结：谷充峰放是直觉，「价差 > 充放损耗 + 寿命折损」才是生意。储能收益的三个放大器：更大的峰谷差、更高的功率（充得快）、更长的低价窗口（充得满）。</div>
+    </section>
+
+    <!-- ========== 第 5 章 ========== -->
+    <section class="chapter" data-level="3" data-title="需求响应">
+      <h2>需求响应：让负荷也参与调度</h2>
+      <p class="tldr">需求响应（DR）= 把一部分负荷从「必须几点用」变成「可以商量着用」。能中断的负荷是调度员的新朋友，它让 EMS 手里多了一张比储能更便宜的牌。</p>
+
+      <p>前两章里，EMS 只调「源」和「储」。其实<b>负荷侧</b>也有灵活性：</p>
+      <table>
+        <tr><th>负荷类型</th><th>特征</th><th>例子（典型值场景）</th></tr>
+        <tr><td>可中断负荷</td><td>接到通知可短时停机或降载，事后恢复</td><td>工业电炉、可暂停产线、泳池/冷库制冷</td></tr>
+        <tr><td>可转移负荷</td><td>用电量不变，使用时间可平移</td><td>电动汽车充电、洗衣机、储能式电热水器</td></tr>
+        <tr><td>可削减负荷</td><td>可接受一定程度的服务降级</td><td>空调调高 1~2℃、商场照明减半</td></tr>
+      </table>
+      <p>参与方式分两大类：</p>
+      <table>
+        <tr><th>类别</th><th>机制</th><th>例子</th></tr>
+        <tr><td>价格型</td><td>电价信号引导用户自愿改变用电</td><td>分时电价、实时电价、尖峰电价</td></tr>
+        <tr><td>激励型</td><td>签合同按指令响应，获得补偿</td><td>可中断负荷合同、直接负荷控制、需求竞价</td></tr>
+      </table>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">以下哪种负荷<b>最适合</b>作为可中断负荷参与需求响应？</p>
+        <button class="opt" data-fb="手术室供电中断会直接危及生命，属于必须保障的关键负荷，绝不能参与可中断响应。">医院手术室供电</button>
+        <button class="opt" data-fb="数据机房需要恒温恒湿，短时断电风险极高，通常用储能/柴发做后备，而非自己当可中断负荷。">数据中心机房制冷</button>
+        <button class="opt" data-fb="冷库有一定热惯性，提前预冷后短时停机不影响库温安全，是最典型的可中断/可转移负荷。">冷库制冷机组</button>
+        <button class="opt" data-fb="灯具功率小、数量分散，单灯可调但整体响应容量有限，且频繁开关影响体验，一般不是首选。">办公楼走廊照明</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="analogy">储能是「花钱买灵活性」，需求响应是「请客吃饭换灵活性」。同样是把晚高峰的用电挪走，让用户把电热水器提前两小时烧好，往往比装一块新电池便宜得多。</div>
+      <div class="tip">本章小结：负荷分可中断/可转移/可削减三类；价格型靠电价引导、激励型靠合同补偿。判断标准就一条：这份灵活性中断一下，代价大不大。</div>
+    </section>
+
+    <!-- ========== 第 6 章 ========== -->
+    <section class="chapter" data-level="4" data-title="优化方法一览">
+      <h2>优化方法一览：LP、MIP 与启发式</h2>
+      <p class="tldr">问题长得「圆滑」用线性规划（最快）；含「开/关」决策上混合整数规划（慢但精确）；问题非凸、维数灾难时，用动态规划或启发式算法（粒子群、遗传算法）找够好的解。</p>
+
+      <table>
+        <tr><th>方法</th><th>变量类型</th><th>求解速度</th><th>最优性保证</th><th>典型适用场景</th></tr>
+        <tr><td><b>线性规划 LP</b></td><td>连续变量</td><td>极快（秒级，典型值）</td><td>全局最优（问题凸）</td><td>储能充放调度、购电计划、需求响应分配</td></tr>
+        <tr><td><b>混合整数规划 MIP</b></td><td>连续 + 0-1 变量</td><td>慢（分钟~小时级，典型值）</td><td>给定时间内求最优或定界</td><td>柴油机/机组<b>启停</b>、并网/离网切换、设备整数台数</td></tr>
+        <tr><td><b>动态规划 DP</b></td><td>分阶段决策</td><td>随状态数指数增长</td><td>全局最优（可解时）</td><td>储能 SOC 单状态量的最优轨迹</td></tr>
+        <tr><td><b>启发式</b>（粒子群、遗传算法）</td><td>任意编码</td><td>中等，易并行</td><td>不保证最优</td><td>多目标、强非凸、含离散逻辑的大规模问题</td></tr>
+      </table>
+
+      <div class="widget">
+        <div class="widget-title">翻卡记忆：三种方法的适用场景</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">LP</div><div class="back">全是连续变量、模型线性时用它：储能调度、经济调度。快，且解就是全局最优。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">MIP</div><div class="back">出现「开不开机」这类 0-1 决策时用它：机组启停、并离网切换。慢，但能给出最优性差距界限。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">DP / 启发式</div><div class="back">非凸、多目标或状态太多时用它：粒子群、遗传算法。不求最优，求「够好且能算完」。</div></div></div>
+        </div>
+      </div>
+
+      <div class="warn">MIP 里的 0-1 变量是「精确」的代价来源：一个 24 时段的机组启停问题，每台机就多了 24 个 0-1 变量，求解时间可能从秒级暴涨到分钟级。工程上常用「日前 MIP 定启停 + 日内 LP 调出力」的混合策略。</div>
+      <div class="tip">本章小结：选方法的判断顺序——先看有没有 0-1 变量（有→MIP），再看凸不凸（凸且连续→LP），都不好解就退到 DP/启发式。</div>
+    </section>
+
+    <!-- ========== 第 7 章 ========== -->
+    <section class="chapter" data-level="4" data-title="本章综合测验">
+      <h2>综合测验</h2>
+      <p class="tldr">三题自测：时间尺度、SOC 约束、LP vs MIP。全对说明你已掌握 EMS 的核心框架。</p>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">EMS 三层调度的时间尺度，<b>从长到短</b>正确的是？</p>
+        <button class="opt" data-fb="日前管未来 24 小时，日内以 15 分钟~1 小时为周期滚动修正，实时层在秒级执行一次调频等动作。">日前（24h）→ 日内（15min~1h 滚动）→ 实时（秒级）</button>
+        <button class="opt" data-fb="顺序颠倒了：实时层是秒级，日内层是滚动修正，日前层才是提前一天排的 24 小时计划。">实时（秒级）→ 日内（15min~1h）→ 日前（24h）</button>
+        <button class="opt" data-fb="日前层做的是未来 24 小时的计划，不是当下；当下由实时层负责。">日内 → 日前（当下）→ 实时（明天）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">SOC 约束 $SOC_{\min} \le SOC(t) \le SOC_{\max}$ 的主要意义是？</p>
+        <button class="opt" data-fb="功率平衡由功率平衡方程保证，不是 SOC 上下限的职责。">保证任意时刻功率恰好平衡</button>
+        <button class="opt" data-fb="SOC 到 0 会失去放电能力并损伤电芯，到满则无处吸收多余光伏只能弃光；上下限同时保护电池寿命和调度灵活性。">保护电池寿命，并为充放电双向调节保留余量</button>
+        <button class="opt" data-fb="这是功率限制约束（如 $P_{ch}\le P_{ch}^{max}$）的职责，与 SOC 上下限无关。">限制储能的充放电功率不超过额定值</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">相比 LP，MIP 额外能处理什么？</p>
+        <button class="opt" data-fb="连续变量的线性目标 LP 就能处理，不需要引入整数变量。">连续变化的光伏出力</button>
+        <button class="opt" data-fb="SOC 递推是连续变量的动态约束，LP 完全可以描述。">SOC 递推是连续变量的动态约束，LP 完全可以描述。</button>
+        <button class="opt" data-fb="启停是「开或关」的离散 0-1 决策，LP 只支持连续变量，必须引入整数变量转成 MIP 才能求解。">柴油机等设备的启停（0-1 决策）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">三题速记：① 时间尺度：日前 → 日内 → 实时，从长到短；② SOC 上下限 = 寿命 + 灵活性；③ MIP 比 LP 多的是「启停 0-1 变量」。</div>
+      <div class="tip">恭喜完成全部章节！建议回到第 4 章的演示，把三个滑块组合出「收益最大化」参数，再想想实际工程里还有哪些成本没算进去（电池寿命折损、需量电费、变压器容量）。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示：<div class="steps"><div class="step">..</div>...<button class="btn next-step">下一步</button></div> ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空：<input data-answer="答案1|答案2"> + <button class="btn check"> ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序：<div class="order" data-answer="a,b,c"><div class="item" data-id="a">..</div>.. <button class="btn check"> ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调。用法：demo('#id', (params, ctx, canvas) => {...}) ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：微电网储能套利仿真 ================= */
+demo('#emsDemo', ({ cap, pw, spread }, ctx, cv, root) => {
+  // ---- 示例/典型日曲线 ----
+  const priceOf = h => {           // 谷 0.3 / 平 0.7 / 峰 1.2（基准），按峰谷差等比缩放
+    const r = spread / 0.9, base = (h >= 23 || h < 7) ? 0.3 : ((h >= 8 && h < 11) || (h >= 18 && h < 21) ? 1.2 : 0.7);
+    return base * r;
+  };
+  const loadOf = h => 40 + 30 * Math.exp(-((h - 19) ** 2) / 8) + 15 * Math.exp(-((h - 9) ** 2) / 6);
+  const pvOf   = h => { if (h < 6 || h > 19) return 0; const x = (h - 12.5) / 4; return 90 * Math.exp(-x * x); };
+  const ETA = 0.9, SOC_MIN = 0.1, SOC_MAX = 0.9;   // 典型值
+
+  // ---- 仿真：光伏→负荷→充电，谷电充电，峰时放电 ----
+  let soc = 0.5 * cap, costWith = 0, costNo = 0, curt = 0, disTot = 0, chgTot = 0;
+  const bat = new Array(24).fill(0);               // 每时段净放电功率(kW)，正放负充
+  const buy = new Array(24).fill(0), sell = new Array(24).fill(0);
+  for (let h = 0; h < 24; h++) {
+    const L = loadOf(h), PV = pvOf(h);
+    let net = PV - L;                              // 光伏先供负荷
+    let b = 0, buyP = 0, sellP = 0;
+    if (net >= 0) {                                // 光伏富余
+      const roomCh = Math.min(pw, (cap * SOC_MAX - soc) * ETA);          // 可充电功率
+      const ch = Math.min(net, roomCh); b = -ch; soc += ch / ETA; net -= ch;
+      curt += net;                                 // 再富余 = 弃光
+      if (priceOf(h) >= 1.1 * (spread / 0.9)) {    // 峰段：储能放电
+        const dis = Math.min(pw, cap * (soc - SOC_MIN) * ETA, L);
+        if (dis > 0) { b = dis; soc -= dis / ETA; net -= dis; }
+      }
+      sellP = Math.max(0, net);                    // 富余上网
+    } else {                                       // 光伏不够
+      let need = -net;
+      if (priceOf(h) <= 0.35 * (spread / 0.9)) {   // 谷段：电网充电
+        const ch = Math.min(pw, need, (cap * SOC_MAX - soc) * ETA);
+        if (ch > 0) { b = -ch; soc += ch / ETA; need -= ch; }
+      } else if (priceOf(h) >= 1.1 * (spread / 0.9)) { // 峰段：放电
+        const dis = Math.min(pw, cap * (soc - SOC_MIN) * ETA, need);
+        if (dis > 0) { b = dis; soc -= dis / ETA; need -= dis; }
+      }
+      buyP = need;
+    }
+    bat[h] = b; buy[h] = buyP; sell[h] = sellP;
+    disTot += Math.max(0, b); chgTot += Math.max(0, -b);
+    costWith += (buyP * priceOf(h) - sellP * priceOf(h));
+    costNo += Math.max(0, L - PV) * priceOf(h) - Math.max(0, PV - L) * priceOf(h);
+  }
+
+  // ---- 读数 ----
+  const fmt = n => n.toFixed(0);
+  $('#rNo', root).textContent = costNo.toFixed(1) + ' 元';
+  $('#rWith', root).textContent = costWith.toFixed(1) + ' 元';
+  $('#rSave', root).textContent = (costNo - costWith).toFixed(1) + ' 元/天';
+  $('#rCurt', root).textContent = curt.toFixed(1) + ' kWh';
+  $('#rCyc', root).textContent = '放 ' + fmt(disTot) + ' / 充 ' + fmt(chgTot) + ' kWh';
+
+  // ---- 画图 ----
+  const css = getComputedStyle(document.documentElement), dark = document.documentElement.dataset.theme === 'dark';
+  const col = k => css.getPropertyValue(k).trim();
+  const W = cv.width, H = cv.height, pad = { l: 46, r: 14, t: 30, b: 30 };
+  const xw = (W - pad.l - pad.r) / 24, ph = H - pad.t - pad.b;
+  const priceY = p => pad.t + ph * (1 - p / 2.2);
+  const kwhY   = e => pad.t + ph * (1 - e / 120);
+  ctx.font = '12px sans-serif'; ctx.lineWidth = 1.5;
+  ctx.strokeStyle = dark ? '#3a4050' : '#e0e0e8'; ctx.fillStyle = col('--muted');
+  for (let h = 0; h <= 24; h += 4) { const x = pad.l + h * xw; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke(); ctx.fillText(h + '时', x - 10, H - 10); }
+  for (let v = 0; v <= 2; v += 0.5) { const y = priceY(v); ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke(); ctx.fillText(v.toFixed(1) + '元', 6, y + 4); }
+  // 电价阶梯曲线
+  ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let h = 0; h < 24; h++) { const x1 = pad.l + h * xw, y = priceY(priceOf(h)); ctx.moveTo(x1, y); ctx.lineTo(x1 + xw, y); }
+  ctx.stroke();
+  // 负荷与光伏
+  const curve = (f, color, dash) => { ctx.strokeStyle = color; ctx.setLineDash(dash || []); ctx.lineWidth = 2; ctx.beginPath();
+    for (let h = 0; h <= 24; h += 0.25) { const x = pad.l + h * xw, y = kwhY(f(h)); h ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); ctx.setLineDash([]); };
+  curve(loadOf, '#3b82f6'); curve(pvOf, '#22c55e', [5, 4]);
+  // 电池充放柱状（零线 = 60 kW 处）
+  const zero = kwhY(60);
+  for (let h = 0; h < 24; h++) {
+    const b = bat[h]; if (!b) continue;
+    const y = kwhY(60 + b);
+    ctx.fillStyle = b > 0 ? 'rgba(168,85,247,.75)' : 'rgba(20,184,166,.75)';
+    ctx.fillRect(pad.l + h * xw + 2, Math.min(y, zero), xw - 4, Math.abs(y - zero));
+  }
+  // 图例
+  ctx.fillStyle = col('--text'); ctx.textBaseline = 'middle';
+  const leg = [['#f59e0b','电价(元/kWh)'],['#3b82f6','负荷(kW)'],['#22c55e','光伏(kW)'],['#a855f7','储能放电(↑)/充电(↓)']];
+  let lx = pad.l + 4;
+  leg.forEach(([c, t]) => { ctx.fillStyle = c; ctx.fillRect(lx, 8, 12, 12); ctx.fillStyle = col('--text'); ctx.fillText(t, lx + 16, 14); lx += ctx.measureText(t).width + 42; });
+});
+</script>
+</body>
+</html>

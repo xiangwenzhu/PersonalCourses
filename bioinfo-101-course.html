@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生物信息学导论：从中心法则到数据库 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+.track-link{display:inline-block;margin-top:10px;font-size:14px;color:var(--primary);font-weight:600;text-decoration:none}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>生物信息学导论：从中心法则到数据库</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="什么是生物信息学">
+      <h2>什么是生物信息学</h2>
+      <p class="tldr">生物信息学 = 生物学 + 信息科学：用计算机处理海量的生命数据，回答"这段序列是什么、有什么功能"。</p>
+
+      <p>21 世纪初，人类基因组计划完成后，生命科学的数据量爆炸式增长：一次实验就能测出几十亿个 DNA 字母。这些字母里藏着疾病的原因、药物的靶点、进化的秘密——但人眼根本读不过来，必须借助计算机。</p>
+
+      <div class="analogy">图书馆有上亿本书，但没人读过。生物信息学就是那个"编目员 + 检索系统 + 阅读理解机器人"：先把书按字母分类入库（数据库），再让你输入几个词就能找到相关章节（检索比对），最后帮你总结这本书讲了什么（功能注释）。</div>
+
+      <p>它研究的对象可以归为三大类：</p>
+      <ul>
+        <li><strong>序列（Sequence）</strong>：DNA/RNA/蛋白质的线性字母串，比如 <code>ATCGATCG...</code></li>
+        <li><strong>结构（Structure）</strong>：蛋白质折叠后的三维形状，决定它能"抓住"谁</li>
+        <li><strong>功能（Function）</strong>：这个基因/蛋白质在细胞里干什么，和哪些疾病相关</li>
+      </ul>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片翻面，认识三个核心对象</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">序列</div><div class="back">由 A/T/C/G（DNA）或 A/U/C/G（RNA）或 20 种氨基酸（蛋白质）组成的线性字符串，是一切分析的起点。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">结构</div><div class="back">蛋白质的三维折叠形态，由氨基酸序列决定（类似一根绳子自己缠成的结），决定它的功能。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">功能</div><div class="back">基因在细胞中的角色：催化反应？运输物质？调控其他基因？通常通过实验或计算预测得出。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">下列哪一项<strong>不是</strong>生物信息学的三大研究对象？</p>
+        <button class="opt" data-fb="序列正是核心对象之一，DNA/RNA/蛋白质序列是分析的起点。">DNA 序列</button>
+        <button class="opt" data-fb="蛋白质三维结构确实是三大对象之一。">蛋白质结构</button>
+        <button class="opt" data-fb="显微镜成像是实验技术，不属于生信的三大数据对象。">显微镜成像</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住：生物信息学的本质是把生命问题转化为数据问题——序列进、结论出。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="中心法则：生命的信息流">
+      <h2>中心法则：生命的信息流</h2>
+      <p class="tldr">DNA 像图纸存档（转录）成 RNA 模板，RNA 再被翻译（Translation）成蛋白质机器——信息只朝一个方向流动。</p>
+
+      <p>1958 年克里克提出<strong>中心法则</strong>（Central Dogma）：遗传信息从 DNA → RNA → 蛋白质单向传递。这三步都有专门的名字：</p>
+
+      <div class="widget steps">
+        <div class="widget-title">一步步拆解中心法则</div>
+        <div class="step"><strong>① 复制（Replication）</strong>：细胞分裂时，DNA 双链解开，各自作为模板合成新链。一个变两个，信息完整拷贝。</div>
+        <div class="step"><strong>② 转录（Transcription）</strong>：以 DNA 一条链为模板，合成信使 RNA（mRNA）。相当于把档案室里的一张图纸复印一份拿到车间。</div>
+        <div class="step"><strong>③ 翻译（Translation）</strong>：核糖体读取 mRNA，每三个碱基（一个密码子）对应一种氨基酸，串成蛋白质。</div>
+        <div class="step"><strong>④ 逆转录（Reverse Transcription）</strong>：某些病毒（如 HIV）能把 RNA 反转录回 DNA——这是对原始法则的重要补充。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="analogy">把细胞想成一家餐厅：DNA 是总部保存的配方总册（从不外借）；转录是抄写下一张"今日特餐单"（mRNA）；翻译是厨师照单子做菜（蛋白质）。逆转录病毒就像间谍，能把菜反推出配方再偷偷送回总部。</div>
+
+      <div class="key">生物信息学分析大多围绕"法则的哪一环出了问题"：基因突变（复制出错）、表达量变化（转录多少）、蛋白质结构异常（翻译产物）……</div>
+
+      <!-- 互动演示：中心法则动画 -->
+      <div class="widget demo" id="dogmaDemo">
+        <div class="widget-title">中心法则演示：点击播放，看信息流 DNA → RNA → 蛋白质</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls" style="align-items:center">
+          <button class="btn primary" id="playDogma">▶ 播放</button>
+          <p class="readout" style="margin:0;font-size:14px;color:var(--muted)">当前：等待播放</p>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">"以 mRNA 为模板合成蛋白质"这一步叫什么？</p>
+        <button class="opt" data-fb="转录是 DNA → RNA 的过程，方向反了。">转录</button>
+        <button class="opt" data-fb="正确。翻译发生在核糖体，把密码子逐个转成氨基酸。">翻译</button>
+        <button class="opt" data-fb="复制是 DNA → DNA 的过程。">复制</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">中心法则是生信的"语法规则"：一切数据分析都在解读这条信息链的某个环节。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="核心数据库：生信的图书馆">
+      <h2>核心数据库：生信的图书馆</h2>
+      <p class="tldr">全世界的序列、结构、基因组注释都存在公开数据库里；学会查库，等于拿到了生信的通行证。</p>
+
+      <p>没有人重新测序——绝大多数分析都是从"去数据库查"开始的。四大必知数据库：</p>
+
+      <table>
+        <tr><th>数据库</th><th>维护方</th><th>存什么</th><th>什么时候用</th></tr>
+        <tr><td><strong>GenBank / NCBI</strong></td><td>美国 NIH</td><td>所有公开的 DNA/RNA 序列</td><td>查一个基因长什么样、比对未知序列</td></tr>
+        <tr><td><strong>UniProt</strong></td><td>国际联盟</td><td>蛋白质序列与功能注释</td><td>查某蛋白的功能、结构域、疾病关联</td></tr>
+        <tr><td><strong>PDB</strong></td><td>wwPDB 联盟</td><td>实验测定的 3D 结构</td><td>看蛋白质长什么样、找药物结合口袋</td></tr>
+        <tr><td><strong>Ensembl</strong></td><td>EBI / WTSI</td><td>参考基因组与注释</td><td>查基因在染色体上的位置、转录本</td></tr>
+      </table>
+
+      <div class="analogy">四个库像四种工具书：GenBank 是"词典"（所有词），UniProt 是"百科"（词条详解），PDB 是"图鉴"（照片），Ensembl 是"地图册"（基因坐落哪条街）。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">你想知道某个蛋白质的三维结构（X 射线晶体数据），应该去哪个数据库？</p>
+        <button class="opt" data-fb="GenBank 主要存核酸序列，不是结构。">GenBank</button>
+        <button class="opt" data-fb="UniProt 有结构预测链接，但实验结构原件在 PDB。">UniProt</button>
+        <button class="opt" data-fb="正确。PDB 专门存实验测定的三维结构坐标。">PDB</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">查库能力 = 生信童子功。遇到任何基因/蛋白，先去 NCBI Gene 和 UniProt 搜一圈，80% 的问题已经有答案。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="测序技术：从读一句到读全书">
+      <h2>测序技术：从读一句到读全书</h2>
+      <p class="tldr">一代测序读得准但慢，二代测序（NGS）便宜快但片段短，三代测序读得长但错误率高——各有适用场景。</p>
+
+      <h3>三代测序对比</h3>
+      <table>
+        <tr><th>代际</th><th>代表技术</th><th>读长</th><th>特点</th></tr>
+        <tr><td>一代</td><td>Sanger 双脱氧法</td><td>~1000 bp</td><td>准确（>99.9%），慢且贵，适合验证</td></tr>
+        <tr><td>二代</td><td>Illumina 边合成边测序</td><td>100–300 bp</td><td>便宜、通量巨大，需拼接，主流技术</td></tr>
+        <tr><td>三代</td><td>PacBio / Oxford Nanopore</td><td>10kb–1Mb</td><td>超长读长，错误率偏高，适合组装</td></tr>
+      </table>
+
+      <div class="analogy">读长像读文章：一代是逐字精读校对，二代是把书撕成几百字的碎片再拼回去（碎片太多容易拼错），三代是每次抓一大页——可能看错几个字，但章节顺序一目了然。</div>
+
+      <!-- 互动演示：测序读长模拟 -->
+      <div class="widget demo" id="seqDemo">
+        <div class="widget-title">读长模拟：拖动滑块切换测序平台，看一条基因被"读"成什么样</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>测序平台 <span class="val" data-for="tech"></span><input type="range" name="tech" min="1" max="3" step="1" value="2"></label>
+          <label>覆盖深度 <span class="val" data-for="cov"></span><input type="range" name="cov" min="1" max="30" step="1" value="10"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">测序数据的一切下游分析（比对、组装、变异检测）都由"读长 + 错误率"这两个参数决定。先想清楚数据怎么来的，再选分析工具。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你想组装一个全新的细菌基因组（没有参考序列），读长越长越好，你会优先选？</p>
+        <button class="opt" data-fb="Illumina 读长短，没参考序列时拼接困难。">Illumina 二代测序</button>
+        <button class="opt" data-fb="正确。三代超长读长最适合无参考的 de novo 组装。">PacBio / Nanopore 三代测序</button>
+        <button class="opt" data-fb="Sanger 太慢太贵，只能测小段验证。">Sanger 一代测序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">没有最好的测序仪，只有最合适的测序策略。问题决定技术，而不是反过来。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="生信分析的基本流程">
+      <h2>生信分析的基本流程</h2>
+      <p class="tldr">99% 的生信项目都遵循同一骨架：拿到原始数据 → 质控 → 比对/组装 → 定量/检测 → 注释 → 可视化。</p>
+
+      <p>不管是 RNA-seq、全基因组测序还是宏基因组，流程几乎一样：</p>
+
+      <div class="widget order" data-answer="a,b,c,d,e">
+        <div class="widget-title">动手排一排：NGS 数据分析的标准流程顺序</div>
+        <div class="item" data-id="c">比对到参考基因组（Alignment）</div>
+        <div class="item" data-id="a">原始数据质量控制（QC）</div>
+        <div class="item" data-id="e">结果注释与可视化</div>
+        <div class="item" data-id="d">定量或变异检测（Calling）</div>
+        <div class="item" data-id="b">去除接头与低质量 reads（Trimming）</div>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <div class="key">记住这个六步骨架：<mark>QC → Trim → Align → Call → Annotate → Visualize</mark>。后面每门进阶课都是在其中某一步上深挖。</div>
+
+      <h3>为什么 QC 永远排第一？</h3>
+      <p>"垃圾进，垃圾出"（Garbage in, garbage out）。原始 FASTQ 文件里可能混着测序接头、低质量碱基、rRNA 污染——不清理就分析，后面全是假阳性。常用工具：FastQC 看质量分布，Fastp / Trimmomatic 执行清理。</p>
+
+      <div class="warn">新手最常见错误：拿到数据直接跑比对，跳过质控。结果差异表达基因列表里全是技术噪音。</div>
+
+      <!-- 互动演示：质控阈值演示 -->
+      <div class="widget demo" id="qcDemo">
+        <div class="widget-title">质量阈值演示：拖动 Q 值下限，看多少碱基会被保留</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>质量阈值 Q <span class="val" data-for="q"></span><input type="range" name="q" min="0" max="40" step="1" value="20"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>质量值 $Q = -10\log_{10} P(\text{错误})$：Q20 表示 1% 错误率，Q30 表示 0.1%。常用过滤线是 Q30。</p>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">Q30 对应的碱基错误率是多少？</p>
+        <button class="opt" data-fb="正确。Q = -10·log10(p)，p = 10⁻³ = 0.1%。">0.1%</button>
+        <button class="opt" data-fb="1% 是 Q20。">1%</button>
+        <button class="opt" data-fb="0.01% 对应 Q40。">0.01%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">流程思维是生信工程师和"跑命令的人"的分水岭：先理解数据生命周期，再谈具体工具。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="常见误区与进阶地图">
+      <h2>常见误区与进阶地图</h2>
+      <p class="tldr">生信不是跑软件，是"用统计思维回答生物问题"；工具会过时，统计和生物学直觉不会。</p>
+
+      <h3>四大常见误区</h3>
+      <div class="warn">误区一：黑箱依赖。把参数默认值当真理。每个工具的参数都对应一个统计假设，默认值是为"典型数据"设计的，不一定适合你的。</div>
+      <div class="warn">误区二：P 值崇拜。测了 2 万个基因，光凭 P&lt;0.05 会筛出约 1000 个假阳性。必须做多重检验校正（FDR / Benjamini-Hochberg）。</div>
+      <div class="warn">误区三：相关当因果。基因 A 和疾病相关，不代表 A 导致疾病——可能是反向因果，也可能有共同原因。</div>
+      <div class="warn">误区四：只看 p 不看效应量。差异表达倍数 0.0001 也可能显著，但生物学上毫无意义。</div>
+
+      <h3>进阶地图</h3>
+      <p>学完本课后，推荐按这条路径继续：</p>
+      <ol>
+        <li><a class="track-link" href="bioinfo-biology-crash-course.html">→ 生物学基础速成（DNA/RNA/蛋白质细节）</a></li>
+        <li><a class="track-link" href="bioinfo-linux-course.html">→ Linux 命令行实战（所有生信工具的运行环境）</a></li>
+        <li>编程基础：Python (Biopython) / R (Bioconductor)</li>
+        <li>文件格式：FASTQ/SAM/BAM/VCF</li>
+        <li>专项：RNA-seq → 变异检测 → 单细胞 → 机器学习</li>
+      </ol>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">对 2 万个基因同时做差异表达检验，最关键的统计处理是？</p>
+        <button class="opt" data-fb="只用 P<0.05 会产生大量假阳性。">用 P<0.05 当阈值</button>
+        <button class="opt" data-fb="t 检验只是第一步，问题在于多重比较。">改用 t 检验</button>
+        <button class="opt" data-fb="正确。BH/FDR 校正控制假发现率。">多重检验校正（FDR）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测：你还记住多少？</div>
+        <div class="widget fill">
+          <p>Q 值与错误率的关系：Q30 = <input data-answer="0.1%"> 错误率；中心法则中 DNA → RNA 叫 <input data-answer="转录">；RNA → 蛋白质叫 <input data-answer="翻译">。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">你已经建立了生信的"世界观"：数据从哪来、放哪存、怎么处理。接下来每一门课都会让你更"能打"。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+
+// 演示1：中心法则动画
+(() => {
+  const root = document.getElementById('dogmaDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const playBtn = document.getElementById('playDogma');
+  const readout = root.querySelector('.readout');
+  let t = 0, playing = false, raf = null;
+  const W = cv.width, H = cv.height;
+
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function drawBase(x, y, letter, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 15px monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(letter, x, y);
+  }
+
+  function drawDNA(prog) {
+    const letters = ['A','T','C','G','A','T','C'];
+    const pairs = {'A':'T','T':'A','C':'G','G':'C'};
+    const colors = {A:'#ef4444',T:'#3b82f6',C:'#22c55e',G:'#f59e0b'};
+    const startX = 80, gap = 60;
+    letters.forEach((l, i) => {
+      const x = startX + i * gap, y = 70;
+      drawBase(x, y, l, colors[l]);
+      drawBase(x, y + 44, pairs[l], colors[pairs[l]]);
+      if (prog > 0.15) {
+        ctx.strokeStyle = colors[l]; ctx.globalAlpha = 0.4; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(x, y+16); ctx.lineTo(x, y+28); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y+72); ctx.lineTo(x, y+60); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('① DNA 双链（档案）', startX, 20);
+  }
+
+  function drawRNA(prog) {
+    if (prog < 0.2) return;
+    const rna = ['A','U','C','G','A','U','C'];
+    const colors = {A:'#ef4444',U:'#3b82f6',C:'#22c55e',G:'#f59e0b'};
+    const startX = 80, gap = 60;
+    const n = Math.min(rna.length, Math.floor((prog - 0.2) / 0.25 * rna.length) + 1);
+    rna.slice(0, n).forEach((l, i) => {
+      const x = startX + i * gap, y = 150;
+      drawBase(x, y, l, colors[l]);
+      if (i > 0) {
+        ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x - gap + 16, y); ctx.lineTo(x - 16, y); ctx.stroke();
+      }
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('② mRNA 转录本（抄送的图纸）', startX, 122);
+  }
+
+  function drawProtein(prog) {
+    if (prog < 0.5) return;
+    const aas = 7;
+    const n = Math.min(aas, Math.floor((prog - 0.5) / 0.45 * aas) + 1);
+    const startX = 80, gap = 60;
+    const palette = ['#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
+    for (let i = 0; i < n; i++) {
+      const x = startX + i * gap, y = 235;
+      ctx.fillStyle = palette[i];
+      ctx.beginPath();
+      ctx.rect(x - 20, y - 14, 40, 28);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('Aa' + (i+1), x, y);
+      if (i > 0) {
+        ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x - gap + 20, y); ctx.lineTo(x - 20, y); ctx.stroke();
+      }
+    }
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('③ 蛋白质（造出的零件）', startX, 205);
+  }
+
+  function drawArrow(prog) {
+    if (prog >= 0.95) return;
+    const x = 430;
+    ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2.5;
+    ctx.setLineDash([6,6]); ctx.lineDashOffset = -t * 0.05;
+    ctx.beginPath(); ctx.moveTo(x, 105); ctx.lineTo(x, 210); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cssVar('--primary');
+    ctx.beginPath();
+    const ay = 210 + Math.sin(t * 0.08) * 4;
+    ctx.moveTo(x, ay + 10); ctx.lineTo(x - 6, ay); ctx.lineTo(x + 6, ay);
+    ctx.closePath(); ctx.fill();
+  }
+
+  function frame() {
+    t++;
+    ctx.clearRect(0,0,W,H);
+    const prog = Math.min(1, t / 300);
+    drawDNA(prog);
+    drawRNA(prog);
+    drawProtein(prog);
+    drawArrow(prog);
+    if (prog < 0.2) readout.textContent = '当前：DNA 双链静置在细胞核';
+    else if (prog < 0.5) readout.textContent = '当前：转录中……DNA → mRNA（U 替换 T）';
+    else if (prog < 0.95) readout.textContent = '当前：翻译中……每 3 个碱基 → 1 个氨基酸';
+    else readout.textContent = '当前：完成！信息完成 DNA → RNA → 蛋白质 的流动';
+    if (playing && prog < 1) raf = requestAnimationFrame(frame);
+    else playing = false;
+  }
+
+  playBtn.onclick = () => {
+    if (playing) { playing = false; cancelAnimationFrame(raf); playBtn.textContent = '▶ 继续'; return; }
+    if (t / 300 >= 1) t = 0;
+    playing = true; playBtn.textContent = '⏸ 暂停';
+    raf = requestAnimationFrame(frame);
+  };
+  frame();
+})();
+
+// 演示2：测序读长模拟
+demo('#seqDemo', ({ tech, cov }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const techNames = {1:'Sanger 一代（读长 1000bp，准）', 2:'Illumina 二代（读长 250bp，便宜）', 3:'PacBio/Nanopore 三代（读长 10kb+，长）'};
+  const readLen = {1: 900, 2: 220, 3: 780}[tech];   // 画布上的像素长度
+  const geneLen = W - 60;
+  const y = 90;
+
+  // 参考基因
+  ctx.strokeStyle = css('--primary'); ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(30 + geneLen, y); ctx.stroke();
+  ctx.fillStyle = css('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('参考基因组区域（10000 bp）', 30, y - 14);
+
+  // 画 reads
+  const nReads = Math.min(60, cov * 2);
+  for (let i = 0; i < nReads; i++) {
+    const start = 30 + Math.random() * (geneLen - readLen);
+    const ry = y + 30 + (i % 10) * 14;
+    const isErr = tech === '3' && Math.random() < 0.06;
+    ctx.fillStyle = isErr ? '#dc2626' : (tech === '1' ? '#16a34a' : '#3b82f6');
+    ctx.globalAlpha = 0.75;
+    ctx.fillRect(start, ry, readLen, 6);
+    ctx.globalAlpha = 1;
+  }
+
+  // 标注
+  ctx.fillStyle = css('--muted'); ctx.font = '13px sans-serif';
+  ctx.fillText(techNames[tech], 30, 30);
+  const label = tech === '1' ? '读数少但每段都准' : tech === '2' ? '大量短片段，需拼回参考' : '少量超长片段，基本不用拼';
+  ctx.fillText(label, 30, 52);
+
+  root.querySelector('.readout').textContent =
+    `模拟 ${nReads} 条 reads：每条约 ${tech === 1 ? 1000 : tech === 2 ? 250 : 10000} bp | 覆盖深度 ≈ ${cov}x`;
+});
+
+// 演示3：质控 Q 值阈值
+demo('#qcDemo', ({ q }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const n = 200;
+  const qualities = [];
+  for (let i = 0; i < n; i++) {
+    qualities.push(Math.max(2, Math.min(40, Math.round(28 + 8 * Math.sin(i * 0.07) + (Math.random() - 0.5) * 14))));
+  }
+  const kept = qualities.filter(x => x >= q).length;
+  const barW = (W - 80) / n;
+
+  // 坐标轴
+  ctx.strokeStyle = css('--border');
+  ctx.beginPath(); ctx.moveTo(50, 30); ctx.lineTo(50, H - 40); ctx.lineTo(W - 20, H - 40); ctx.stroke();
+
+  qualities.forEach((qual, i) => {
+    const x = 55 + i * barW;
+    const h = (qual / 40) * (H - 90);
+    ctx.fillStyle = qual >= q ? '#16a34a' : '#dc2626';
+    ctx.globalAlpha = qual >= q ? 0.9 : 0.35;
+    ctx.fillRect(x, H - 40 - h, Math.max(1, barW - 1), h);
+    ctx.globalAlpha = 1;
+  });
+
+  // 阈值线
+  const ty = H - 40 - (q / 40) * (H - 90);
+  ctx.strokeStyle = css('--primary'); ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(50, ty); ctx.lineTo(W - 20, ty); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = css('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`每个碱基的质量值分布（模拟 200 个碱基）`, 55, 20);
+  ctx.fillStyle = css('--primary');
+  ctx.fillText(`Q${q} 阈值线：保留 ${kept}/200 碱基（${(kept/n*100).toFixed(1)}%）`, 55, H - 12);
+
+  root.querySelector('.readout').textContent =
+    `Q${q} = 错误率 ${(Math.pow(10, -q/10) * 100).toFixed(q >= 20 ? 2 : 1)}% | ${kept < n * 0.5 ? '⚠️ 过滤太狠，可能丢失真实信息' : kept === n ? '✅ 全部保留' : '✅ 正常过滤范围'}`;
+});
+</script>
+</body>
+</html>

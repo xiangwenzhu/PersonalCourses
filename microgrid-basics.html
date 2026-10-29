@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微电网入门 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>微电网入门</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== 第 1 章：什么是微电网 ========== -->
+    <section class="chapter" data-level="1" data-title="什么是微电网">
+      <h2>什么是微电网</h2>
+      <p class="tldr">微电网就是一个「可自治的小电网」：自己发电、自己存电、自己用电，还能决定什么时候接入大电网、什么时候独立运行。</p>
+
+      <p>我们平时用的电，大多来自远方的大型发电厂，经过高压输电线路一路送到家里。这是一张覆盖全城、全国的大电网。而<mark>微电网（Microgrid）</mark>是其中的一个「小岛屿」：它由<strong>分布式电源</strong>（如屋顶光伏、小型风机，指分散在用户附近、规模较小的发电设备）、<strong>储能电池</strong>、<strong>用电负荷</strong>（指消耗电能的设备，如灯、空调）和一套<strong>控制装置</strong>组成，构成一个完整的小型电力系统。</p>
+      <p>它有两大本领：</p>
+      <ul>
+        <li><strong>并网运行</strong>：通过一个叫 <mark>PCC</mark>（公共连接点，即微电网与主电网之间的"关口"开关所在的位置）的接口与大电网相连，互相买卖电。</li>
+        <li><strong>孤岛运行</strong>：当主电网出故障时，微电网可以快速断开连接，依靠自己的电源和储能继续给内部负荷供电——就像一艘船自带救生艇。</li>
+      </ul>
+
+      <div class="analogy">大学宿舍里你自己的插线板：上面插着台灯（负荷）、充电宝（储能）、或许还有个 USB 小风扇自发电（电源）。整栋楼的配电系统（主电网）停电时，只要你的充电宝还有电，你的台灯依然能亮——这就是一个小微电网的雏形。</div>
+
+      <!-- 互动：分步理解 -->
+      <div class="widget steps">
+        <div class="widget-title">一步步拼出微电网</div>
+        <div class="step"><strong>① 负荷</strong>：先有用电需求——几栋楼、一个园区、一座海岛。</div>
+        <div class="step"><strong>② 分布式电源</strong>：在负荷旁边装电源（光伏、风机），就地发电。</div>
+        <div class="step"><strong>③ 储能</strong>：加上电池，把白天用不完的电存起来，供夜晚或阴天使用。</div>
+        <div class="step"><strong>④ 控制装置</strong>：加上"大脑"，实时决定电从哪来、到哪去，以及何时与主电网连接或断开。</div>
+        <div class="step"><strong>⑤ 完成</strong>：四要素齐备，一个能自治的小电网——微电网——就成立了。</div>
+        <button class="btn next-step">下一步</button>
+      </div>
+
+      <div class="tip">微电网 = 分布式电源 + 储能 + 负荷 + 控制装置；判据只有一条——<strong>既能并网、又能孤岛独立运行</strong>。缺了"自治能力"，就只是普通的分布式发电而已。</div>
+    </section>
+
+    <!-- ========== 第 2 章：为什么需要它 ========== -->
+    <section class="chapter" data-level="1" data-title="为什么需要它">
+      <h2>为什么需要它</h2>
+      <p class="tldr">微电网的三大价值：让供电更可靠、让新能源就地消纳、让偏远地区用得上电。</p>
+
+      <h3>价值一：提高供电可靠性</h3>
+      <p>台风、暴雪、设备故障都可能让大电网停电。医院、数据中心一旦断电，后果严重。微电网能在主网故障的几十毫秒内切换到孤岛模式，继续供电——用户甚至察觉不到停电。</p>
+      <h3>价值二：就地消纳新能源</h3>
+      <p>太阳能、风能是"看天吃饭"的：中午光伏大发、夜里没了。如果直接把大量波动的新能源接入大电网，会给电网调度带来压力。微电网配上储能后，可以在本地把「发的不稳定的电」先存起来、再用掉，减轻对大电网的冲击——这就叫<mark>就地消纳</mark>。</p>
+      <h3>价值三：为偏远地区供电</h3>
+      <p>海岛、山区、牧区离大电网太远，拉一根高压线过去成本高得离谱。一个以"光伏 + 电池 + 柴油机备用"组成的微电网，就是更经济的选择。</p>
+
+      <div class="analogy">整栋宿舍楼的配电系统是「大电网」：便宜、稳定，但一旦跳闸全楼都黑。你自己桌上的插线板 + 充电宝 + 小台灯是「微电网」：平时插上墙插（并网）跟着大楼用电，大楼停电时（孤岛）靠充电宝照样照亮你的桌面。你付出一点成本（买充电宝），换来的是「永不黑灯」的安心。</div>
+
+      <!-- 互动：测验 -->
+      <div class="widget quiz" data-answer="1">
+        <p class="q">下面哪个场景最能体现微电网「提高供电可靠性」的价值？</p>
+        <button class="opt" data-fb="光伏卖电主要体现经济性收益，与"停电也不受影响"的可靠性关系不大。">屋顶光伏在晴天多发电卖给电网</button>
+        <button class="opt" data-fb="医院最怕断电，微电网孤岛运行能在主网故障时无缝续电，正是可靠性价值的典型体现。">医院在主电网故障时仍能持续供电</button>
+        <button class="opt" data-fb="为山区供电主要体现的是「为偏远地区供电」价值，而非可靠性。">为偏远山区村庄提供电力</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="warn">「装了光伏板」不等于「有了微电网」。如果只并网发电、主网一停自己也跟着停，那只是一个分布式电源；只有具备独立运行（孤岛）能力，才算微电网。</div>
+      <div class="tip">记住三大价值的关键词：<strong>可靠</strong>（不停电）、<strong>消纳</strong>（新能源本地用）、<strong>偏远</strong>（没网也能用）。</div>
+    </section>
+
+    <!-- ========== 第 3 章：两种运行状态 ========== -->
+    <section class="chapter" data-level="1" data-title="两种运行状态">
+      <h2>两种运行状态</h2>
+      <p class="tldr">并网模式像小池塘连着大江，互通有无；孤岛模式像自带救生艇，主网故障时自己撑住一片天地。</p>
+
+      <h3>并网模式（Grid-connected）</h3>
+      <p>微电网通过 PCC 与主电网相连。电可以双向流动：自家光伏发电用不完时，余电卖给主网；阴天发电不足时，从主网购电。电压和频率由大电网"托底"，微电网里的电源只需跟随。</p>
+      <h3>孤岛模式（Islanded）</h3>
+      <p>当主电网故障（或计划检修）时，PCC 处的开关迅速断开，微电网进入孤岛模式。此时它必须<strong>独立维持电压和频率</strong>——这是最难的部分，通常由储能变流器或主电源来充当"顶梁柱"。</p>
+
+      <div class="key">微电网的核心特征就是「无缝切换」：并网 ↔ 孤岛的转换要快、要稳，内部负荷几乎无感。行业里把这个切换开关叫 <mark>PCC</mark>（公共连接点），把负责指挥全过程的控制中心叫 <mark>MGCC</mark>（微电网中央控制器）。</div>
+
+      <!-- 核心交互演示 -->
+      <div class="widget demo" id="mgSim">
+        <div class="widget-title">动手试试：切换并网 / 孤岛，制造一次主电网故障</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls">
+          <label><span style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="checkbox" name="island"> 孤岛运行（断开与主电网的连接）</span></label>
+          <label><span style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="checkbox" name="fault"> 制造主电网故障</span></label>
+        </div>
+      </div>
+
+      <div class="analogy">并网模式 = 小池塘通过水闸（PCC）连着大江：水多了放出去，水少了引进来。孤岛模式 = 关掉水闸自成一体：靠池塘里存的水（储能电池）和雨水（光伏）维持生态。主电网故障 = 大江突然干涸，有水闸都没用——所以真正救命的，是你自己存的「水」。</div>
+
+      <div class="quiz widget" data-answer="0">
+        <p class="q">主电网发生故障时，微电网要保住自己的负荷，应该怎么做？</p>
+        <button class="opt" data-fb="正确！断开 PCC、转入孤岛模式，靠自身电源和储能继续供电，正是微电网存在的意义。">断开 PCC，切换到孤岛模式独立运行</button>
+        <button class="opt" data-fb="孤岛运行时主电网已经故障，无法再从主网取电——等于把自己的救生艇绑在大船上。">保持并网，继续从主电网取电</button>
+        <button class="opt" data-fb="全部停机恰恰放弃了微电网的核心价值：它本可以在毫秒级切换到孤岛继续供电。">立即切断所有电源，等待主网恢复</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">一句话总结：<strong>平时并网过日子（互通有无），出事孤岛靠自己（自治求生）</strong>。判断一个系统是不是真微电网，就看它孤岛时能不能撑住。</div>
+    </section>
+
+    <!-- ========== 第 4 章：基本构成速览 ========== -->
+    <section class="chapter" data-level="2" data-title="基本构成速览">
+      <h2>基本构成速览</h2>
+      <p class="tldr">微电网由四大件组成：分布式电源（发电）、储能（存电）、负荷（用电）、控制中枢 MGCC（指挥）。</p>
+
+      <p>第 1 章我们提到了四个要素，现在逐一认识它们的专业叫法。点击下面四张卡片翻面查看解释：</p>
+
+      <!-- 互动：翻卡 -->
+      <div class="widget">
+        <div class="widget-title">四大件 · 点击翻面</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">分布式电源<br>DG</div><div class="back">Distributed Generation：安装在负荷附近的小型发电设备，如光伏板、小型风机、燃气轮机、柴油机。特点是就地发电、规模小、靠近用户。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">储能<br>ESS</div><div class="back">Energy Storage System：以电池为主（也有超级电容、飞轮），负责"削峰填谷"——电多时存、电少时放，也是孤岛运行时稳住电压频率的顶梁柱。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">负荷<br>Load</div><div class="back">微电网内部用电设备的总称：照明、空调、电机、充电桩等。设计微电网时，要先摸清负荷的用电量曲线和"哪些负荷绝不能断电"。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">控制中枢<br>MGCC</div><div class="back">Microgrid Central Controller：微电网的"大脑"。实时采集各设备的电压、电流、功率，决定何时并网/孤岛、电源发多少、储能充放多少。</div></div></div>
+        </div>
+      </div>
+
+      <p>这四大件里，<strong>MGCC</strong> 往往最容易被忽视。打个比方：电源和储能是"手脚"，负荷是"要干的活"，而 MGCC 是"大脑"——没有大脑，手脚再强壮也只是一盘散沙，无法在毫秒之间完成并网与孤岛的协调切换。</p>
+
+      <!-- 互动：排序 -->
+      <div class="widget order" data-answer="dg,ess,mgcc,load">
+        <div class="widget-title">排序题：设计一座海岛微电网，合理的建设思考顺序是？</div>
+        <div class="item" data-id="load"><strong>摸清负荷</strong>：先统计岛上每天要用多少电、哪些负荷最重要</div>
+        <div class="item" data-id="dg"><strong>配置电源</strong>：按负荷需求选光伏 / 风机 / 柴油机的容量</div>
+        <div class="item" data-id="mgcc"><strong>搭建控制</strong>：部署 MGCC，协调各设备运行与并网/孤岛切换</div>
+        <div class="item" data-id="ess"><strong>配置储能</strong>：按"无光无风时还能撑多久"来定电池容量</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+      <p style="font-size:14px;color:var(--muted)">提示：先用 ↑ ↓ 调整顺序，再点「检查顺序」。</p>
+
+      <div class="tip">四大件口诀：<strong>发（DG）、存（ESS）、用（Load）、管（MGCC）</strong>。任何微电网项目，本质上都是围绕这四者做容量配置与控制策略设计。</div>
+    </section>
+
+    <!-- ========== 第 5 章：典型应用场景 ========== -->
+    <section class="chapter" data-level="2" data-title="典型应用场景">
+      <h2>典型应用场景</h2>
+      <p class="tldr">园区、海岛、数据中心、应急电源车——不同场景对微电网的诉求各不相同，但都离不开「自治」二字。</p>
+
+      <table>
+        <tr><th>场景</th><th>核心诉求</th><th>典型配置</th><th>对孤岛能力的依赖</th></tr>
+        <tr><td>产业园区</td><td>降低用能成本、提升绿电比例</td><td>屋顶光伏 + 储能 + 能量管理系统</td><td>中：平时并网套利，停电时保底</td></tr>
+        <tr><td>海岛 / 偏远地区</td><td>没有大电网可接，必须自给自足</td><td>光伏 / 风机 + 大容量储能 + 柴油机备用</td><td><strong>极高：孤岛是常态而非应急</strong></td></tr>
+        <tr><td>数据中心</td><td>供电可靠性近乎 100%，断电即事故</td><td>市电 + UPS + 柴油发电机 + 光伏储能</td><td>高：切换速度要求毫秒级</td></tr>
+        <tr><td>应急电源车</td><td>灾害现场快速恢复供电</td><td>车载电池 / 柴油机，即停即用</td><td>高：开到哪都是孤岛</td></tr>
+      </table>
+
+      <p>可以看到，同样是微电网，「为什么要建」决定了「怎么建」：海岛的微电网以孤岛为常态，追求的是长期经济可靠；数据中心的微电网以孤岛为兜底，追求的是切换速度；园区的微电网更多在并网状态下做经济优化。</p>
+
+      <!-- 互动：场景匹配测验 -->
+      <div class="widget quiz" data-answer="1">
+        <p class="q">哪个场景对微电网的「孤岛能力」依赖最强、最需要长期稳定独立运行？</p>
+        <button class="opt" data-fb="园区微电网大多时间并网运行，靠峰谷电价套利，孤岛只是偶发的保底手段。">产业园区</button>
+        <button class="opt" data-fb="正确！海岛上没有大电网，孤岛不是"应急模式"而是"日常模式"，储能容量和电源可靠性直接决定岛上能不能持续用电。">远离大陆的海岛</button>
+        <button class="opt" data-fb="数据中心确实需要高可靠性，但平时仍依赖市电供电，孤岛只是故障时的兜底；且往往由 UPS+柴发承担，不完全依赖微电网。">城市数据中心</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="key">选场景看两件事：<strong>平时谁在供电</strong>（并网 or 自发自用）、<strong>断电代价有多大</strong>。代价越大、主网越弱，微电网的价值越突出。</div>
+      <div class="tip">四大场景的画像：园区要「省」，海岛要「自给」，数据中心要「稳」，应急车要「快」。判断场景需求，先问"断电一小时损失多少、主网可不可靠"。</div>
+    </section>
+
+    <!-- ========== 第 6 章：本章总复习 ========== -->
+    <section class="chapter" data-level="2" data-title="本章总复习">
+      <h2>本章总复习</h2>
+      <p class="tldr">用三道题检验一下自己：PCC 是什么、孤岛何时发生、微电网最核心的特征是什么。</p>
+
+      <p>至此，我们已经走完微电网的入门旅程：从「可自治的小电网」这一定义出发，理解了它的三大价值、两种运行状态、四大构成和典型场景。下面三道题，全对才算过关：</p>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">1️⃣ 微电网与主电网之间的连接点（那个可通断的"关口"）叫什么？</p>
+        <button class="opt" data-fb="MGCC 是微电网中央控制器（"大脑"），管决策，不是物理连接点。">MGCC（微电网中央控制器）</button>
+        <button class="opt" data-fb="UPS 是不间断电源，属于设备；PCC 才是微电网与主电网之间的标准术语。">UPS（不间断电源）</button>
+        <button class="opt" data-fb="正确！PCC（Point of Common Coupling，公共连接点）是微电网与主电网之间的接口，并网/孤岛的切换开关就在这里。">PCC（公共连接点）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">2️⃣ 微电网进入孤岛模式，通常发生在什么时候？</p>
+        <button class="opt" data-fb="孤岛恰恰是因为无法依赖主网才独立运行；并网稳定时微电网保持并网状态即可。">主电网供电特别稳定的时候</button>
+        <button class="opt" data-fb="正确！主网故障（或计划检修）时，PCC 断开，微电网转入孤岛模式，靠自身电源和储能继续供电。">主电网故障、需要独立自保的时候</button>
+        <button class="opt" data-fb="电价高低影响的是经济调度（何时充放电、买卖多少电），与是否孤岛无关。">电价特别便宜的时候</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">3️⃣ 微电网区别于"普通分布式发电"的最核心特征是什么？</p>
+        <button class="opt" data-fb="能卖电只是并网运行的经济功能，普通光伏电站也能做到，不构成微电网的定义特征。">能把多余的光伏电卖给电网</button>
+        <button class="opt" data-fb="储能有助自治但非充分条件——装了电池却不能在主网故障时独立稳定运行，仍不算微电网。">一定配有储能电池</button>
+        <button class="opt" data-fb="正确！既能并网互通有无、又能在主网故障时独立运行并稳住电压频率——这一"双重身份"才是微电网的灵魂。">既能并网运行，又能孤岛自治运行</button>
+        <div class="feedback"></div>
+      </div>
+
+      <details class="reveal">
+        <summary>📖 一图回顾全章（点开查看）</summary>
+        <p><strong>定义</strong>：微电网 = 分布式电源 + 储能 + 负荷 + 控制装置（MGCC）的可自治小型电力系统。<br>
+        <strong>价值</strong>：可靠（不停电）、消纳（新能源本地用）、偏远（没网也能用）。<br>
+        <strong>状态</strong>：并网（经 PCC 与大电网互通）↔ 孤岛（PCC 断开、自给自足）。<br>
+        <strong>场景</strong>：园区省、海岛自给、数据中心稳、应急车快。</p>
+      </details>
+
+      <div class="tip">恭喜完成微电网入门课程！下一步可以去了解：孤岛运行时如何稳住电压与频率（下垂控制）、MGCC 的调度算法、以及容量配置的经济性测算。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示：<div class="steps"><div class="step">..</div>...<button class="btn next-step">下一步</button></div> ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空：<input data-answer="答案1|答案2"> + <button class="btn check"> ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序：<div class="order" data-answer="a,b,c"><div class="item" data-id="a">..</div>.. <button class="btn check"> ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调。用法：demo('#id', (params, ctx, canvas) => {...}) ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示：微电网并网/孤岛模拟 ================= */
+demo('#mgSim', ({ island, fault }, ctx, cv) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const C = k => css.getPropertyValue(k).trim();
+  const text = (s, x, y, { size = 14, color = C('--text'), align = 'center', bold = false } = {}) => {
+    ctx.fillStyle = color; ctx.font = (bold ? '700 ' : '') + size + 'px "Segoe UI","PingFang SC",sans-serif';
+    ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
+  };
+  const arrow = (x1, y1, x2, y2, color) => {
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 12 * Math.cos(a - .4), y2 - 12 * Math.sin(a - .4));
+    ctx.lineTo(x2 - 12 * Math.cos(a + .4), y2 - 12 * Math.sin(a + .4));
+    ctx.closePath(); ctx.fill();
+  };
+
+  const gridDown = !!fault;          // 主电网故障
+  const isolated = !!island || gridDown; // 实际是否孤岛（故障强制脱网）
+  const gridOK = !gridDown;
+  const PCCx = 330, midY = 150;      // PCC 位置
+
+  // ---- 左侧：主电网（大圆） ----
+  const gx = 110, gy = midY, gr = 62;
+  ctx.beginPath(); ctx.arc(gx, gy, gr, 0, 7);
+  ctx.fillStyle = gridOK ? C('--primary-soft') : C('--bad-soft');
+  ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = gridOK ? C('--primary') : C('--bad'); ctx.stroke();
+  // 闪电符号
+  ctx.strokeStyle = gridOK ? C('--primary') : C('--bad'); ctx.lineWidth = 3; ctx.beginPath();
+  ctx.moveTo(gx + 6, gy - 26); ctx.lineTo(gx - 10, gy + 2); ctx.lineTo(gx + 2, gy + 2); ctx.lineTo(gx - 6, gy + 26); ctx.stroke();
+  text('主电网', gx, gy + gr + 20, { size: 16, bold: true });
+  if (gridDown) {
+    text('⚠ 故障', gx, gy - gr - 16, { size: 15, color: C('--bad'), bold: true });
+  } else {
+    text('电压 / 频率托底', gx, gy - gr - 16, { size: 12, color: C('--muted') });
+  }
+
+  // ---- PCC 开关 ----
+  // 导线：主网 -> PCC
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = gridOK && !isolated ? C('--ok') : C('--border');
+  ctx.beginPath(); ctx.moveTo(gx + gr, midY); ctx.lineTo(PCCx - 26, midY); ctx.stroke();
+  // 开关（断开的斜线 or 连通的横线）
+  const swColor = isolated ? C('--bad') : C('--ok');
+  ctx.strokeStyle = swColor; ctx.lineWidth = 5; ctx.beginPath();
+  if (isolated) { ctx.moveTo(PCCx - 22, midY - 22); ctx.lineTo(PCCx + 6, midY - 34); }  // 断开：斜起
+  else { ctx.moveTo(PCCx - 22, midY); ctx.lineTo(PCCx + 22, midY); }
+  ctx.stroke();
+  // 开关触点
+  ctx.fillStyle = swColor;
+  [[PCCx - 24, midY], [PCCx + 24, midY]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); });
+  text('PCC 开关', PCCx, midY - 52, { size: 14, bold: true, color: swColor });
+  text(isolated ? '断开 · 孤岛' : '闭合 · 并网', PCCx, midY + 36, { size: 13, color: swColor, bold: true });
+
+  // ---- 右侧：微电网边界 ----
+  const mgX = 380, mgW = 380, mgY = 30, mgH = 250;
+  ctx.setLineDash([8, 6]); ctx.strokeStyle = C('--primary'); ctx.lineWidth = 2;
+  ctx.strokeRect(mgX, mgY, mgW, mgH); ctx.setLineDash([]);
+  text('微电网', mgX + mgW / 2, mgY - 14, { size: 15, color: C('--primary'), bold: true });
+
+  // 微电网内部器件
+  const pvX = 460, pvY = 80,   // 光伏
+        btX = 460, btY = 205,  // 电池
+        ldX = 660, ldY = 145;  // 负荷
+  const busX = 560;            // 内部母线 x
+
+  // 光伏板
+  ctx.fillStyle = '#3b5bdb'; ctx.fillRect(pvX - 34, pvY - 22, 68, 44);
+  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5;
+  for (let i = 1; i < 3; i++) { ctx.beginPath(); ctx.moveTo(pvX - 34, pvY - 22 + i * 44 / 3); ctx.lineTo(pvX + 34, pvY - 22 + i * 44 / 3); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(pvX, pvY - 22); ctx.lineTo(pvX, pvY + 22); ctx.stroke();
+  text('光伏', pvX, pvY + 40, { size: 13, color: C('--muted') });
+
+  // 电池（孤岛时放电高亮）
+  const btActive = isolated; // 孤岛时电池放电
+  ctx.fillStyle = btActive ? C('--ok-soft') : C('--card');
+  ctx.strokeStyle = btActive ? C('--ok') : C('--muted'); ctx.lineWidth = btActive ? 4 : 2;
+  ctx.fillRect(btX - 30, btY - 20, 60, 40); ctx.strokeRect(btX - 30, btY - 20, 60, 40);
+  ctx.fillStyle = btActive ? C('--ok') : C('--muted');
+  ctx.fillRect(btX + 30, btY - 8, 7, 16); // 电极
+  text('⚡', btX, btY, { size: btActive ? 22 : 16, color: btActive ? C('--ok') : C('--muted') });
+  text(btActive ? '储能（放电中）' : '储能', btX, btY + 40, { size: 13, color: btActive ? C('--ok') : C('--muted'), bold: btActive });
+
+  // 负荷（灯泡方块）
+  ctx.fillStyle = C('--card'); ctx.strokeStyle = C('--text'); ctx.lineWidth = 2;
+  ctx.fillRect(ldX - 24, ldY - 24, 48, 48); ctx.strokeRect(ldX - 24, ldY - 24, 48, 48);
+  text('💡', ldX, ldY, { size: 22 });
+  text('负荷', ldX, ldY + 44, { size: 13, color: C('--muted') });
+
+  // 内部母线
+  ctx.strokeStyle = C('--text'); ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(busX, pvY); ctx.lineTo(busX, btY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pvX + 34, pvY); ctx.lineTo(busX, pvY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(btX + 30, btY); ctx.lineTo(busX, btY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(busX, ldY); ctx.lineTo(ldX - 24, ldY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(busX, pvY); ctx.lineTo(busX, ldY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(busX, btY); ctx.lineTo(busX, ldY); ctx.stroke();
+
+  // ---- 潮流箭头 ----
+  const flow = isolated ? C('--ok') : C('--primary');
+  if (!isolated && gridOK) {
+    // 并网：主网 -> 微电网（经 PCC），光伏也出力
+    arrow(PCCx + 26, midY, mgX + 30, midY, C('--ok'));
+    arrow(busX, pvY, busX + 40, pvY, flow); // 光伏 -> 母线
+    arrow(busX + 20, ldY, ldX - 26, ldY, flow); // 母线 -> 负荷
+    text('电从主网流向微电网', (PCCx + mgX) / 2 + 30, midY + 66, { size: 12, color: C('--ok') });
+    text('✓ 并网：余电可卖、缺电可买', W / 2, H - 18, { size: 14, color: C('--ok'), bold: true });
+  } else if (isolated) {
+    // 孤岛：电池 + 光伏供电给负荷
+    arrow(busX, btY, busX, ldY + 40, C('--ok'));
+    arrow(busX + 10, pvY, busX + 10, ldY - 40, flow);
+    arrow(busX + 20, ldY, ldX - 26, ldY, C('--ok'));
+    if (gridDown && !island) text('主网故障，自动脱网！', PCCx, midY - 80, { size: 13, color: C('--bad'), bold: true });
+    else if (gridDown) text('主网故障，但微电网独立支撑 ✓', PCCx, midY - 80, { size: 13, color: C('--ok'), bold: true });
+    else text('已主动断开 PCC，独立运行', PCCx, midY - 80, { size: 13, color: C('--ok'), bold: true });
+    text('🏝 孤岛：靠光伏 + 储能自给自足', W / 2, H - 18, { size: 14, color: C('--ok'), bold: true });
+  }
+});
+</script>
+</body>
+</html>
