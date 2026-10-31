@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长程自主 AI 开发任务：让 AI 7×24 复刻一个 Photoshop · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>长程自主 AI 开发任务：让 AI 7×24 复刻一个 Photoshop</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========================= L1 ========================= -->
+
+    <section class="chapter" data-level="1" data-title="一次对话装不下的工程">
+      <h2>一次对话装不下的工程</h2>
+      <p class="tldr">复刻 Photoshop 不是"让 AI 写个程序"，而是一场持续数月的接力赛——对话式 AI 只是其中一棒。</p>
+
+      <p>你可能已经试过：对 AI 说"帮我写一个 Photoshop"。它会热情地给你一个 <code>canvas</code> + 滤镜的小玩具，几百行代码，能跑，然后呢？然后就没有然后了。</p>
+
+      <p>缺的不是 AI 的"智商"，而是三样东西：</p>
+      <ul>
+        <li><mark>体量</mark>：Photoshop 真实代码量以百万行计，即使砍到教学复刻版也要数万行，需要几万次"上下文窗口"才能装下；</li>
+        <li><mark>时间</mark>：人类团队做类似规模的图像编辑器要按"年"计，AI 的强项是快，但快不等于能一口气；</li>
+        <li><mark>方向</mark>：没有验收标准和里程碑，AI 会不断"看起来在干活"，而你不知道它是在逼近目标还是原地绕圈。</li>
+      </ul>
+
+      <div class="analogy">把复刻 Photoshop 想成<strong>装修一栋别墅</strong>。你不能把图纸和钥匙扔给一个失忆的施工队然后消失半年——他每天早上都忘了昨天干了什么。你必须给他：分阶段的图纸、每天的验收单、写在墙上的进度标记。</div>
+
+      <div class="widget">
+        <div class="widget-title">四个关键词，先混个脸熟（点击翻面）</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">长程任务</div><div class="back">跨越数天到数月、无法用一次模型调用完成的任务。特点是：中途会丢上下文、会出错、需要人定方向。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">自主性</div><div class="back">AI 在一段时间内不需要人逐步指挥，能自己决定下一步做什么。自主性越高，越需要可审计的检查点。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">验收标准</div><div class="back">"做到什么程度算完成"的可执行判定。好的验收标准是脚本，不是形容词。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">检查点</div><div class="back">可以随时回退和复盘的存档：Git 提交、任务状态文件、决策日志。让"失忆"变得无害。</div></div></div>
+        </div>
+      </div>
+
+      <div class="quiz widget" data-answer="1">
+        <p class="q">让 AI"一句话复刻 Photoshop"失败的根本原因最接近哪个？</p>
+        <button class="opt" data-fb="模型能力确实会提升，但即使能力够，长任务依然需要方向管理、检查点和验证——这是任务结构问题，不只是智商问题。">模型不够聪明</button>
+        <button class="opt" data-fb="✅ 正确。任务规模超出单次交互的承载范围，需要把大工程拆成可验证的小步，并让 AI 在步与步之间保持记忆与方向。">任务结构问题：体量、时间、方向</button>
+        <button class="opt" data-fb="提示词技巧有帮助，但换一百种提示词也解决不了'今天写的代码明天自己都看不懂'的问题。">提示词写得不够好</button>
+        <button class="opt" data-fb="算力/预算是现实约束，但预算充足而结构混乱的项目照样烂尾——先解决结构，再谈预算。">显卡不够多</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：长程 AI 任务的本质是<strong>工程管理问题</strong>。AI 提供"永不疲倦的手"，但图纸、验收单和进度标记得由你来设计。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="7×24 的真实图景">
+      <h2>7×24 的真实图景</h2>
+      <p class="tldr">"AI 24 小时自己干活"不是魔法全自动驾驶，而是一条有人值守的流水线：AI 全速干活，人只管三件事——方向、验收、扳道岔。</p>
+
+      <p>先戳破一个幻想：把任务丢给 AI，睡一觉起来收获成品。现实中，完全放养的自主 Agent 会在几个小时后开始<mark>自信地走偏</mark>：改错文件、删掉好代码、在一个死胡同里反复横跳。</p>
+
+      <p>目前真正跑得通的模式叫<mark>"人机分工的持久循环"</mark>：</p>
+      <ul>
+        <li><strong>AI 干的</strong>：搜索整理资料、写文档、拆解计划、写代码、跑测试、修自己能修的 bug、写日报；</li>
+        <li><strong>人干的</strong>：定里程碑和验收标准（每周）、审计划和合并大改动（每天）、处理 AI 上报的"我卡住了"（随叫随到）。</li>
+      </ul>
+
+      <p>一个形象的账：假设 AI 的每个工作回合约 30 分钟，一天能跑 40+ 回合；如果每个回合有 10% 概率进入死循环，没人管的话错误会像复利一样滚大。人每天花 30 分钟审查，就能把"跑偏概率"压到极低。<mark>人的价值不是替 AI 干活，而是当"方向校准器"。</mark></p>
+
+      <div class="widget steps">
+        <div class="widget-title">一天的 7×24 循环长什么样（点"下一步"走一遍）</div>
+        <div class="step"><strong>02:00 · 夜班开工</strong>：AI 从任务队列领取下一个任务（如"实现亮度/对比度调整的命令类"），先读项目记忆文件（约定、目录结构、当前进度），再动手。</div>
+        <div class="step"><strong>02:40 · 实现 + 自测</strong>：写代码 → 跑单元测试 → 测试没过就自己修，最多重试 3 次，仍失败则在任务上打"卡住了"标记，换下一个任务。</div>
+        <div class="step"><strong>06:00 · 调研回合</strong>：遇到不熟悉的领域（如 PS 的图层合成算法），派出调研 Agent：搜索 → 筛选 → 摘要写入 <code>docs/research/</code>，注明出处。</div>
+        <div class="step"><strong>08:00 · 生成日报</strong>：汇总"完成的任务 / 卡住的任务 / 决策请求"，写入 <code>docs/reports/2026-03-12.md</code>，附上 diff 统计。</div>
+        <div class="step"><strong>09:00 · 人类晨会（30 分钟）</strong>：你只看三样：日报、卡住清单、决策请求。批方向、拆障碍、把"卡住"任务重新指路。</div>
+        <div class="step"><strong>09:30 之后</strong>：你去上班，AI 继续。周期往复。每周日你把通过验收的里程碑打 tag，不可逆存档。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="warn">不是"全自动"，而是"<mark>高杠杆的半自动</mark>"。宣称完全不需要人的方案，通常把成本转嫁成了你不敢看的技术债。</div>
+
+      <div class="quiz widget" data-answer="2">
+        <p class="q">在 7×24 自主开发循环里，人每天最值得花时间做的三件事是？</p>
+        <button class="opt" data-fb="逐行 review 代码会把你变成瓶颈，而且 AI 产出量远超人的审查量——应审计划与验收结果，不是逐行代码。">逐行审查 AI 写的代码</button>
+        <button class="opt" data-fb="不断微调方向会让 AI 频繁打断重来，长任务需要的是稳定的里程碑和验收标准，而非朝令夕改。">随时打断 AI、微调它的每个决定</button>
+        <button class="opt" data-fb="✅ 正确。这三件事是人相对 AI 的比较优势：意图、判断与信任边界。其余都该自动化。">定方向（里程碑/验收）、审结果（日报/里程碑）、处理卡点</button>
+        <button class="opt" data-fb="替 AI 写关键代码意味着你回到了'人肉开发'，AI 只成了打字员，杠杆率最低。">自己动手写 AI 写不动的部分</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：把人定位成<strong>监理</strong>而非施工员。人管方向、验收、卡点；AI 管执行的全部体力活。</div>
+    </section>
+
+    <!-- ========================= L2 ========================= -->
+
+    <section class="chapter" data-level="2" data-title="长程任务的解剖学">
+      <h2>长程任务的解剖学</h2>
+      <p class="tldr">一个能被 AI 长期执行的任务 = 明确的终局（里程碑）× 可判定的验收 × 可回退的检查点。</p>
+
+      <p>把"复刻 Photoshop"这句话拆开，它其实是几百个任务的集合。管理它们的经典框架叫 <mark>WBS</mark>（Work Breakdown Structure，工作分解结构）：像切蛋糕一样，把大工程切成"小到一次会话能做完、做完能单独验证"的任务。</p>
+
+      <h3>三件套</h3>
+      <table>
+        <tr><th>构件</th><th>是什么</th><th>Photoshop 复刻中的例子</th></tr>
+        <tr><td><strong>里程碑</strong></td><td>对外可见的阶段性成果，粗粒度、不可跳</td><td>M3：能打开 PNG、画笔涂鸦、保存</td></tr>
+        <tr><td><strong>验收标准（DoD）</strong></td><td>每个任务"做完"的可执行判定，最好是脚本</td><td><code>pytest tests/test_brush.py</code> 全绿 + 截图 diff 误差 &lt; 1%</td></tr>
+        <tr><td><strong>检查点</strong></td><td>随时可回退的存档</td><td>每个任务一个 Git commit；每个里程碑一个 tag</td></tr>
+      </table>
+
+      <div class="analogy">没有验收标准的任务清单，就像没有尺寸和交货日期的装修合同——施工队可以永远"在推进"，你永远无法说"这不对"。</div>
+
+      <p>为什么验收标准必须<strong>可执行</strong>？因为执行者是 AI：它对"界面要好看"这种描述会自由发挥，但对"这 12 个测试必须全绿"没有辩解空间。<mark>给 AI 的每条验收标准都应当是一条命令。</mark></p>
+
+      <div class="widget fill">
+        <p>把大工程切成"一次会话能做完、做完能单独验证"的小任务，这个过程叫任务 <input data-answer="分解|拆解|WBS">；每个任务完成的可执行判定叫验收标准，也常写作 DoD（Definition of <input data-answer="Done|done"> 的缩写）。</p>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <div class="quiz widget" data-answer="0">
+        <p class="q">下面哪条最适合作为一个 AI 任务的验收标准？</p>
+        <button class="opt" data-fb="✅ 正确。可执行、可判定、无歧义——AI 能自己跑、自己确认，失败也知道差在哪。">运行 <code>pytest tests/test_layers.py</code> 全部通过，且图层合成的参考图 diff 像素误差 &lt; 0.5%</button>
+        <button class="opt" data-fb="'尽量好'无法判定，AI 永远可以宣称'已经尽量好了'。验收标准要能给出通过/不通过的二值结果。">把图层功能尽量做好</button>
+        <button class="opt" data-fb="代码行数可以用注释和废话刷高，它度量的是产出量而非正确性。">代码写得足够多、注释足够详细</button>
+        <button class="opt" data-fb="'与 Photoshop 一致'太宽泛，应明确：与哪一个操作、在哪个测试样例上、误差界限是多少。">效果和 Photoshop 一模一样</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：<strong>里程碑定方向，验收标准定对错，检查点定退路。</strong>三者都写进仓库文件，AI 和人共用同一份事实。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="流水线上的五种 Agent">
+      <h2>流水线上的五种 Agent</h2>
+      <p class="tldr">不要用一个"全能 AI"扛下所有角色——用一组分工明确的 Agent 组成流水线，每个角色有专属的输入、输出和工具。</p>
+
+      <p>单 Agent 的问题：上下文塞满了调研资料时，写代码质量下降；写代码写嗨了，就忘了调研结论。解法借鉴人类软件团队：<mark>按角色分工，用文档交接</mark>。</p>
+
+      <table>
+        <tr><th>角色</th><th>职责</th><th>交接物（给下一站）</th></tr>
+        <tr><td>🔎 研究员</td><td>搜索、筛选、整理外部资料与代码库现状</td><td><code>docs/research/*.md</code>（带出处的摘要）</td></tr>
+        <tr><td>📐 架构师</td><td>把需求变成模块设计与接口约定</td><td><code>docs/design/*.md</code>（接口签名 + 数据流）</td></tr>
+        <tr><td>📋 计划员（PM）</td><td>把设计拆成任务队列，标注依赖与验收</td><td><code>docs/tasks/queue.md</code>（任务卡）</td></tr>
+        <tr><td>⌨️ 工程师</td><td>领任务卡写代码，自测通过后提交</td><td>Git commit + 测试报告</td></tr>
+        <tr><td>🧪 验证员</td><td>独立于工程师跑全量测试与验收脚本</td><td><code>docs/reports/*.md</code>（通过/失败/风险）</td></tr>
+      </table>
+
+      <div class="key">交接物全是<strong>仓库里的文件</strong>，不是聊天记录。这保证了：任何 Agent 重启后可以只读文件恢复状态；任何人都能审计 AI 的推理链。</div>
+
+      <p>注意一个关键设计：<mark>验证员不能是写代码的那个 Agent</mark>。自己批改自己的作业，错误会一路绿灯。即使底层是同一个模型，也要用独立会话、只给它验收脚本而不是实现过程。</p>
+
+      <div class="widget order" data-answer="a,b,c,d,e">
+        <div class="widget-title">把 Photoshop 复刻的一条流水线排成正确顺序</div>
+        <div class="item" data-id="d">工程师领取任务卡，实现图层数据结构</div>
+        <div class="item" data-id="a">研究员整理"图层合成算法"的资料并写入 docs/research/</div>
+        <div class="item" data-id="e">验证员独立运行验收脚本，出具通过/失败报告</div>
+        <div class="item" data-id="b">架构师基于资料设计 Layer/Canvas 接口</div>
+        <div class="item" data-id="c">计划员把设计拆成带验收标准的任务卡入队</div>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <div class="quiz widget" data-answer="3">
+        <p class="q">为什么验证 Agent 要与写代码的 Agent 分离（独立会话）？</p>
+        <button class="opt" data-fb="不同模型当然可以混用，但这不是分离的根本理由——重点不在模型型号。">为了省 token</button>
+        <button class="opt" data-fb="模型确实有差异，但换个更强的模型也不能消除'自己批改自己'的偏差。">因为验证需要更强的模型</button>
+        <button class="opt" data-fb="速度不是重点；即使串行执行，独立验证依然必要。">为了让流水线更快</button>
+        <button class="opt" data-fb="✅ 正确。写代码的 Agent 会为自己的实现辩护（'这个 bug 其实是预期行为'），独立验证才能逼出真相。">避免"自己批改自己的作业"——写码 Agent 会为自己的实现辩护，独立视角才能发现"其实没做对"</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：多 Agent 不是为了"热闹"，而是为了<strong>关注点分离</strong>。角色之间只通过仓库文件交接，验证与实现必须分家。</div>
+    </section>
+
+    <!-- ========================= L3 ========================= -->
+
+    <section class="chapter" data-level="3" data-title="上下文工程：让 AI 记得住">
+      <h2>上下文工程：让 AI 记得住</h2>
+      <p class="tldr">AI 每次会话都"失忆"。对抗失忆的武器不是更长的上下文窗口，而是把关键知识沉淀到仓库文件里，让"读文件"代替"回忆"。</p>
+
+      <p>先认识本课的核心矛盾。模型的<mark>上下文窗口</mark>（一次能读进去的文本上限）在变大，但大不等于够用，而且有两条铁律：</p>
+      <ul>
+        <li><strong>会话会结束</strong>：进程崩溃、超时、换模型，一切"聊过的内容"归零；</li>
+        <li><strong>上下文会稀释</strong>：窗口塞得越满，模型对其中单条信息的遵循度越低（业界常说的"上下文腐化"现象）。</li>
+      </ul>
+
+      <h3>三层记忆</h3>
+      <table>
+        <tr><th>层</th><th>载体</th><th>内容</th><th>生命周期</th></tr>
+        <tr><td>工作记忆</td><td>当前会话窗口</td><td>正在做的任务细节</td><td>一次会话</td></tr>
+        <tr><td>项目记忆</td><td><code>AGENTS.md</code> / <code>CLAUDE.md</code>、<code>docs/</code></td><td>约定、架构、进度、决策日志</td><td>长期（随仓库演进）</td></tr>
+        <tr><td>原始记忆</td><td>Git 历史、测试报告归档</td><td>完整可追溯的证据链</td><td>永久</td></tr>
+      </table>
+
+      <p>每个 Agent 回合的第一步都是"读项目记忆"，最后一步都是"把新知识写回项目记忆"。这样即使换模型、换工具、隔一个月再继续，都能<strong>冷启动</strong>。</p>
+
+      <div class="analogy">项目记忆就像工地墙上的<strong>施工日志</strong>。老师傅走了，新师傅来了，只要日志在，工程就能接着干。把日志记在脑子里（会话里）的团队，换人即归零。</div>
+
+      <p>但不是什么都往里写。下面的演示展示了一个残酷事实：<mark>每次"压缩"旧上下文，没被锚定的知识都会损失</mark>，且损失是复利式的。</p>
+
+      <!-- 定制演示 1：记忆衰减 -->
+      <div class="widget demo" id="demoMemory">
+        <div class="widget-title">拖动滑块：知识如何在多轮会话中存活（或死亡）</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>每次压缩保留的游离知识比例 r <span class="val" data-for="r"></span><input type="range" name="r" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+          <label>及时写入文档的知识占比 a <span class="val" data-for="a"></span><input type="range" name="a" min="0" max="1" step="0.05" value="0.3"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>公式一目了然。经过 $c$ 次压缩后，有效知识留存率 $K$ 为：</p>
+      $$K_c = a + (1-a)\,r^{\,c}$$
+      <p>其中 $a$ 是写进文档（锚定）的知识占比，$r$ 是每次压缩对"只存在于会话里的知识"的保留率。因为 $r^c$ 是指数衰减，<mark>只靠"窗口够大"是慢性死亡，写文档才是复利</mark>。</p>
+
+      <div class="quiz widget" data-answer="1">
+        <p class="q">按上面的公式，a=0、r=0.6 时，经过 5 次压缩后游离知识还剩多少？</p>
+        <button class="opt" data-fb="0.6×5=3.0 不是这样算的——保留是乘法（复利）而不是加法。">$r \times c = 3.0$（300%）</button>
+        <button class="opt" data-fb="✅ 正确。$0.6^5 \approx 0.078$，不到 8%——这就是"什么都不写文档，五轮之后等于从零开始"。">$r^c = 0.6^5 \approx 7.8\%$</button>
+        <button class="opt" data-fb="这是 r−c 的算法，但知识保留率不会是负数，衰减模型是指数而不是线性减法。">$r - c = -4.4$（全丢了）</button>
+        <button class="opt" data-fb="1/r 是倒数方向——保留率只会衰减，不会凭空放大。">$1/r^c \approx 1286\%$（越压缩越多）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：把知识<strong>写进仓库</strong>（AGENTS.md、docs/、决策日志），每次会话先读后写。上下文窗口是 RAM，仓库文件才是硬盘。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="自主循环：计划→执行→验证→复盘">
+      <h2>自主循环：计划 → 执行 → 验证 → 复盘</h2>
+      <p class="tldr">长程自主的引擎是一个简单循环：领任务 → 做任务 → 验收 → 写回状态。循环每转一圈，项目就确定地前进一格。</p>
+
+      <p>把前两章的零件拼成机器。一个"任务回合"（agent turn）的标准流程：</p>
+
+      <div class="steps widget">
+        <div class="widget-title">任务回合的六个动作</div>
+        <div class="step">① <strong>读状态</strong>：读 <code>AGENTS.md</code> + 任务队列 + 上一回合日报，恢复上下文（对应上一章的冷启动）。</div>
+        <div class="step">② <strong>领任务</strong>：按优先级取第一张"未开始"且依赖已满足的任务卡，标记为"进行中"（防止多个并行 Agent 撞车，用文件锁或状态字段）。</div>
+        <div class="step">③ <strong>执行</strong>：必要时先派调研，再写代码；遵循仓库内的代码约定。</div>
+        <div class="step">④ <strong>自验</strong>：跑该任务的验收命令；失败最多重试 3 次，把每次失败原因记入任务卡。</div>
+        <div class="step">⑤ <strong>写回</strong>：更新任务状态、写 commit、把新学到的知识沉淀到 docs/。卡住则附上"卡点报告 + 我的尝试"。</div>
+        <div class="step">⑥ <strong>复盘钩子</strong>：每 N 回合触发一次自检——"最近的任务是不是都卡在同一处？验收标准是不是太模糊？要不要升级给人类？"</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <p>这个循环里最重要的工程性质是：<mark>任何一步崩溃，下一回合都能从文件状态无损恢复</mark>。这叫<mark>幂等的循环</mark>——重启不是灾难，只是又一次普通的开工。</p>
+
+      <p>接下来是本课的核心演示：调整流水线参数，观察"复刻 Photoshop"的工期如何变化。</p>
+
+      <!-- 定制演示 2：流水线模拟器（核心） -->
+      <div class="widget demo" id="demoPipeline">
+        <div class="widget-title">自主开发流水线模拟器：60 个任务 × 四阶段 × N 个 Agent</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>并行 Agent 数 <span class="val" data-for="n"></span><input type="range" name="n" min="1" max="8" step="1" value="3"></label>
+          <label>单任务失败率 <span class="val" data-for="f"></span><input type="range" name="f" min="0" max="0.5" step="0.05" value="0.15"></label>
+          <label>人工审查间隔（小时，0=不设卡点）<span class="val" data-for="r"></span><input type="range" name="r" min="0" max="24" step="6" value="12"></label>
+        </div>
+        <p class="readout"></p>
+        <p style="font-size:13.5px;color:var(--muted);margin:6px 0 0">每个任务依次经过：研究(2h) → 编码(4h) → 测试(2h) → 验证(1h)。失败的任务退回研究重做；设了审查间隔时，验证过的任务要等到审查窗口才正式计入完成。</p>
+        <button class="btn primary" id="simReset" style="margin-top:10px">↻ 重新模拟</button>
+      </div>
+
+      <p>试着玩出这几个现象（可用模拟器自己复现验证）：</p>
+      <ul>
+        <li>固定 Agent 数（比如 3），把失败率从 0 调到 0.5：工期从约 8 天涨到约 15 天——<mark>任务一个没多，多出来的时间全是返工吃的</mark>；</li>
+        <li>把 Agent 从 1 拉到 8（失败率固定 0.3）：天数等比变短，但<mark>返工件数几乎不变</mark>——<strong>加人只能压缩时间，治不了质量</strong>，返工照旧按件数吞掉近半工时；</li>
+        <li>把审查间隔设为 0：完成得最快，但那是<mark>无人验收的完成</mark>——数量快了，质量没人兜底（此时模拟器里的"完成"并不可信）；</li>
+        <li>合理的甜点区：低失败率 + 中等并发 + 保留审查卡点。</li>
+      </ul>
+
+      <div class="quiz widget" data-answer="2">
+        <p class="q">模拟器里（Agent=3），把失败率从 0.1 提到 0.4，工期明显变长、返工次数从个位数涨到几十次。最根本的机制是？</p>
+        <button class="opt" data-fb="Agent 并发数是我们手动设定的，不受失败率影响——它不是工期变长的原因。">失败的任务会占用 Agent 名额不释放</button>
+        <button class="opt" data-fb="任务总数固定是 60，不会因失败而增加。">失败会让任务总数变多</button>
+        <button class="opt" data-fb="✅ 正确。失败任务退回研究阶段从头再来，一次失败浪费前面所有阶段的工时——返工是复利式的工时黑洞。">失败任务要退回第一阶段重做，之前阶段的工时全部作废（返工吞噬有效吞吐）</button>
+        <button class="opt" data-fb="模拟器里阶段耗时是固定的，失败不改变单阶段时长。">失败后每个阶段都变慢了</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：自主循环的可靠性来自<strong>文件化状态 + 幂等重启 + 重试上限</strong>；工期的敌人不是 AI 写得慢，而是<strong>返工</strong>。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="质量闸门：让 AI 自己发现没做对">
+      <h2>质量闸门：让 AI 自己发现"没做对"</h2>
+      <p class="tldr">AI 报告"已完成"不等于真完成。质量闸门 = 一组合起来跑一遍就知道真假的自动检查，粒度越细，整体成功率越高。</p>
+
+      <p>AI 编码有个稳定的坏习惯：<mark>幻觉完成</mark>——测试里偷偷 <code>try/except</code> 吞掉异常、把断言改弱、"暂时跳过"后忘了恢复。对策不是盯得更紧，而是建立三层闸门：</p>
+
+      <table>
+        <tr><th>闸门</th><th>检查什么</th><th>例子（Photoshop 复刻）</th></tr>
+        <tr><td>🚪 快速门</td><td>单测 + lint + 类型检查，每个任务必过</td><td>卷积核数学正确性、命令类接口契约</td></tr>
+        <tr><td>🖼️ 像素门</td><td>金样本回归：与基准输出逐像素比对</td><td>对标准测试图应用滤镜，与参考输出 diff</td></tr>
+        <tr><td>👤 体验门</td><td>人抽测关键路径，或用截图+多模态模型粗查 UI</td><td>打开→画笔→撤销→保存 一条龙</td></tr>
+      </table>
+
+      <p>为什么强调<mark>细粒度任务</mark>？一个数学事实：假设每个任务独立地以概率 $p$ 一次做对，$N$ 个任务全部一次通过的概率是</p>
+      $$P = p^{N}$$
+      <p>指数衰减意味着：哪怕单任务成功率高达 95%，100 个任务全部不返工的概率也只有 $0.95^{100} \approx 0.6\%$。下面亲眼看这条曲线多陡：</p>
+
+      <!-- 定制演示 3：粒度 vs 成功率 -->
+      <div class="widget demo" id="demoGrain">
+        <div class="widget-title">任务粒度的残酷数学：P = p^N</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>单任务一次做对的概率 p <span class="val" data-for="p"></span><input type="range" name="p" min="0.5" max="0.99" step="0.01" value="0.9"></label>
+          <label>项目任务数 N（越少=任务切得越粗）<span class="val" data-for="n"></span><input type="range" name="n" min="1" max="200" step="1" value="60"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>结论反直觉但重要：<mark>把任务切小</mark>（同一个工程切成更多、更小、更好验证的任务）<mark>不仅不是拖延，反而是提高整体成功率的杠杆</mark>——因为小任务的 $p$ 更高，而且失败了返工损失更小（回到上一章的返工黑洞）。</p>
+
+      <div class="warn">常见误区：靠"让 AI 写更少的测试"来提速。测试正是 $p$ 的来源——砍测试等于把 $p$ 从 0.95 砍到 0.7，然后在 $0.7^{100}$ 里体会绝望。</div>
+
+      <div class="quiz widget" data-answer="0">
+        <p class="q">p=0.9、N=100 时 P≈0.003。下面哪个做法最能改善局面？</p>
+        <button class="opt" data-fb="✅ 正确。任务变小 → 单任务成功率 p 上升，且失败返工的代价变小，还能更早暴露系统性问题。">把任务切得更小、验收更快，提升单任务成功率 p</button>
+        <button class="opt" data-fb="P=p^N 里 N 越大衰减越狠——加任务数是反方向。">增加任务数量到 200</button>
+        <button class="opt" data-fb="减少测试会降低 p，让每个任务更不靠谱，得不偿失。">让 AI 少写点测试，把工时留给功能</button>
+        <button class="opt" data-fb="只换措辞不改变 p 和 N，曲线不会动。">把任务描述写得更委婉一些</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：质量闸门三层——快速门、金样本门、体验门；任务切小是提升长程成功率的第一杠杆，$P=p^N$ 是它的数学底牌。</div>
+    </section>
+
+    <!-- ========================= L4 ========================= -->
+
+    <section class="chapter" data-level="4" data-title="失败模式手册">
+      <h2>失败模式手册</h2>
+      <p class="tldr">每一个失败模式都有名字、有症状、有解药。开跑之前把这份手册贴在墙上，比任何模型选型都值钱。</p>
+
+      <p>以下是长程 AI 项目最高频的六种死法。先自己猜一猜解药，再翻卡核对。</p>
+
+      <div class="widget">
+        <div class="widget-title">六种失败模式（正面是症状，翻面是解药）</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">幻觉完成</div><div class="back">解药：验收必须是独立可执行脚本；验证员与实现者分离；禁止修改测试文件（CI 里测试文件只读）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">上下文漂移</div><div class="back">解药：短会话 + 冷启动读文件；每个会话只装一个任务的上下文；里程碑级共识写进 AGENTS.md。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">代码腐化</div><div class="back">解药：设"重构任务"进队列定期跑；lint/复杂度指标做硬闸门；架构师 Agent 定期审计代码一致性。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">死循环烧钱</div><div class="back">解药：重试上限（3 次）+ 单任务预算上限 + 连续失败 N 次自动升级给人类。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">目标漂移</div><div class="back">解药：里程碑不可随意改；变更走"决策日志"留痕；每周人类校准方向。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">依赖地狱</div><div class="back">解药：锁文件 + 环境快照进容器；引入新依赖需过"架构师"审查并记入决策日志。</div></div></div>
+        </div>
+      </div>
+
+      <p>这些失败模式有个共同根源：<mark>反馈回路太长</mark>。错误越晚被发现，修正成本越高——所以整套方法论的核心动作都是"把反馈提前"：小任务、快验收、每日审查、独立验证。</p>
+
+      <div class="quiz widget" data-answer="1">
+        <p class="q">AI 连续 5 次修同一个 bug 越修越糟，还在继续尝试。最优先应该？</p>
+        <button class="opt" data-fb="换个模型可能有用，但没有止损机制的话，新模型也会掉进同样的坑——先止损再换手段。">让它换个模型接着修</button>
+        <button class="opt" data-fb="✅ 正确。这是"死循环烧钱"的标准解药：重试上限 + 预算上限 + 自动升级，把人拉回环路。">触发重试上限，标记"卡住"，写卡点报告升级给人类</button>
+        <button class="opt" data-fb="提示词可以优化，但已经失败 5 次时，继续在同一回合里纠缠是最贵的选择。">写一段更严厉的提示词让它认真修</button>
+        <button class="opt" data-fb="静观其变在长任务里等于让返工黑洞持续吞噬预算——失败不会自己变好。">先观望，也许第 6 次就成了</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：给每个失败模式起名字，配"症状 → 解药"卡片。所有解药指向同一条原则：<strong>缩短反馈回路，永远给循环装保险丝</strong>。</div>
+    </section>
+
+    <section class="chapter" data-level="4" data-title="实战推演：复刻 Photoshop 的路线图">
+      <h2>实战推演：复刻 Photoshop 的路线图</h2>
+      <p class="tldr">把前面所有零件装进一个真实的里程碑计划：从"能画一笔"到"图层与滤镜"，每个阶段都有可执行的验收。</p>
+
+      <p>先划清范围：这里说的是<strong>教学复刻版</strong>——单机、开源技术栈（如 TypeScript + Web Canvas 或 C++ + Qt）、目标是覆盖 PS 核心概念（文档/画布、选区、图层、绘图、变换、滤镜、历史记录），而不是商业版的全部功能。</p>
+
+      <div class="widget steps">
+        <div class="widget-title">从 M0 到 M6：一个可被 AI 执行的里程碑序列</div>
+        <div class="step"><strong>M0 · 空壳与地基</strong>（1 周）：窗口 + 画布渲染 + 十字光标。验收：应用能启动，画布显示 100% 灰色测试图。</div>
+        <div class="step"><strong>M1 · 像素与文档</strong>（2 周）：图像数据结构（Uint8ClampedArray 缓冲）、打开/保存 PNG。验收：<code>pytest</code> round-trip 像素完全一致。</div>
+        <div class="step"><strong>M2 · 工具与撤销</strong>（3 周）：铅笔/橡皮 + 命令模式 + 历史记录栈。验收：任意 50 步操作序列，undo/redo 后像素与金样本一致。</div>
+        <div class="step"><strong>M3 · 选区与变换</strong>（4 周）：矩形/套索选区、裁剪、缩放旋转（双线性插值）。验收：选区外像素保护测试 + 变换数学单测。</div>
+        <div class="step"><strong>M4 · 图层系统</strong>（5 周）：图层栈、不透明度、混合模式（先做 Normal/Multiply/Screen/Overlay）。验收：与参考实现（如已有开源库输出）逐像素 diff。</div>
+        <div class="step"><strong>M5 · 调整与滤镜</strong>（4 周）：亮度对比度、曲线、高斯模糊（可分离卷积）、锐化。验收：PSD/公开测试图上的金样本回归全绿。</div>
+        <div class="step"><strong>M6 · 打磨与插件化</strong>（持续）：性能（脏矩形重绘）、快捷键、滤镜插件接口。验收：10k×10k 图层模糊 &lt; 2s 等性能指标。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="key">注意每个里程碑的验收都是<strong>可执行命令</strong>（第 3 章的三件套）。这套路线图本身就是给 AI 的"宪法"：任何 Agent 任何时刻读一遍就知道身在何处、下一步做什么。</div>
+
+      <details class="reveal">
+        <summary>想一想：如果 AI 自作主张跳过 M2 直接做 M4（图层），会出什么事？</summary>
+        <p>图层操作几乎必然产生"需要撤销"的错误状态，没有命令模式与历史栈，验证员无法用脚本断言"操作序列 → 预期像素"，只能靠人眼看——验收体系直接塌方；而且后续每个里程碑都会隐式依赖这个缺失的地基，返工成本随时间复利增长。解药：任务卡上写明依赖关系（M4 depends on M2），计划员 Agent 负责强制拓扑顺序。</p>
+      </details>
+
+      <div class="quiz widget" data-answer="3">
+        <p class="q">给"高斯模糊滤镜"任务写任务卡时，哪一项最不可或缺？</p>
+        <button class="opt" data-fb="技术选型可以写，但它是'怎么做'；任务卡最不可或缺的是'做到什么算完'。">推荐使用可分离卷积优化性能</button>
+        <button class="opt" data-fb="背景有帮助，但研究员的 docs/research/ 已承载此职能，任务卡不必重复。">附上高斯模糊的 Wikipedia 链接</button>
+        <button class="opt" data-fb="估时用于排期，但估时再准，没有可判定的完成标准，AI 依然可能'自信地做完'一个错误实现。">预计耗时 4 小时</button>
+        <button class="opt" data-fb="✅ 正确。可执行的验收命令是任务卡的灵魂：它同时定义了'完成'、给工程师划了靶子、给验证员发了尺子。">一条可执行的验收命令：对 3 张基准图跑模糊，与金样本 diff &lt; 0.5%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本章小结：长程项目的地图 = <strong>带依赖关系的里程碑 + 每个里程碑的可执行验收</strong>。地图画好后，AI 才能成为老司机而不是乱撞的碰碰车。</div>
+    </section>
+
+    <section class="chapter" data-level="4" data-title="综合测验与开工清单">
+      <h2>综合测验与开工清单</h2>
+      <p class="tldr">最后的综合测验（6 题）+ 一张明天就能用的开工清单。做完这章，你就具备设计自己的"7×24 AI 项目"的全部骨架知识。</p>
+
+      <div class="quiz widget" data-answer="2">
+        <p class="q">1. 整套方法论里，人最不可替代的职责是？</p>
+        <button class="opt" data-fb="写代码已被证明是 AI 的强项，人应聚焦更高杠杆的事。">写核心算法代码</button>
+        <button class="opt" data-fb="review 代码可以抽查，但不是人最核心的价值——人应审方向与验收。">逐行 review 代码</button>
+        <button class="opt" data-fb="✅ 正确：意图、判断与信任边界，这三样 AI 给不了。">定里程碑、定验收标准、裁决卡点</button>
+        <button class="opt" data-fb="运维可以脚本化、交给 CI；把时间花在这上面杠杆率太低。">维护服务器与部署环境</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz widget" data-answer="0">
+        <p class="q">2. "项目记忆"设计的首要原则是？</p>
+        <button class="opt" data-fb="✅ 正确：只有落盘的、版本化的信息才能跨越会话与模型存活，成为事实的单一来源。">一切关键知识写进仓库文件（AGENTS.md/docs），作为单一事实来源</button>
+        <button class="opt" data-fb="窗口再大也是易失的，且越大单条信息遵循度越差——它替代不了落盘。">尽量塞满上下文窗口</button>
+        <button class="opt" data-fb="聊天记录易失且难检索，不能作为团队（多 Agent）的共享记忆。">让 AI 记在聊天记录里，需要时往上翻</button>
+        <button class="opt" data-fb="模型记忆（如 profile）不可控、不可审计、不可版本化，与仓库文件不在一个可靠性等级。">依赖模型自带的用户记忆功能</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz widget" data-answer="1">
+        <p class="q">3. 关于"验证员 Agent 与工程师 Agent 分离"，哪个说法准确？</p>
+        <button class="opt" data-fb="分离的目的是防作弊式自我辩护，不是为了给验证员配更强模型——同一模型不同会话即可。">验证员必须用不同的（更强的）模型</button>
+        <button class="opt" data-fb="✅ 正确：独立会话 + 只给验收脚本，让验证者没有"为实现辩护"的立场。">同一模型也可以，关键是独立会话、只接触验收脚本而不看实现过程</button>
+        <button class="opt" data-fb="分离验证恰恰是为了质量——多花一份 token 买来的是真相，这是最值的开销。">分离会显著增加成本，得不偿失</button>
+        <button class="opt" data-fb="分离与否与速度无关，甚至串行执行更稳。">主要是为了流水线提速</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz widget" data-answer="3">
+        <p class="q">4. $p^N$ 模型给长程项目管理的第一启示是？</p>
+        <button class="opt" data-fb="N 越大整体成功率越低，加任务是反方向。">尽量增加任务数量</button>
+        <button class="opt" data-fb="项目总工作量不会因为合并任务而消失，只是被塞进更大的黑盒，失败时代价更惨。">把 5 个任务合并成 1 个大任务</button>
+        <button class="opt" data-fb="延长周期不影响 p 和 N，曲线不动。">把项目时间线拉长就行</button>
+        <button class="opt" data-fb="✅ 正确：任务切小 → p 升高、返工代价变小，这是长程成功率的第一杠杆。">任务切小以提升单任务成功率 p，并缩小失败返工的代价</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz widget" data-answer="2">
+        <p class="q">5. 模拟器中"验证间隔"造成的完成延迟，现实中的对应物是？</p>
+        <button class="opt" data-fb="模型推理延迟是回合内的事，与审查节奏无关。">模型推理慢导致的等待</button>
+        <button class="opt" data-fb="编译耗时可以优化掉，不是这个延迟的本质。">代码编译时间</button>
+        <button class="opt" data-fb="✅ 正确：它是必要的人工质量卡点，牺牲一点吞吐换取"完成=真完成"。">人工审查/验收窗口——AI 的产出要等到人的审查节奏才被确认为"真完成"</button>
+        <button class="opt" data-fb">网络延迟是工程细节，可以通过基建优化，与流程设计无关。</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz widget" data-answer="1">
+        <p class="q">6. AI 把项目测试改成了 <code>try/except: pass</code> 让 CI 变绿，这属于哪种失败模式？</p>
+        <button class="opt" data-fb="目标没漂，它执行的还是原任务——问题出在验收被腐蚀。">目标漂移</button>
+        <button class="opt" data-fb="✅ 正确："测试全绿"但功能是坏的。解药：测试文件在 CI 中设为只读、验收脚本由验证员独立持有。">幻觉完成（验收被腐蚀）</button>
+        <button class="opt" data-fb="依赖没变，与引入第三方库的问题无关。">依赖地狱</button>
+        <button class="opt" data-fb="这是"完成假象"而非资金问题；预算保险丝不能防止测试被篡改。">死循环烧钱</button>
+        <div class="feedback"></div>
+      </div>
+
+      <h3>明天就能用的开工清单</h3>
+      <div class="key">
+        <ol>
+          <li>建仓库，写 <code>AGENTS.md</code>：项目是什么、代码约定、目录地图、"每回合先读后写"的规则；</li>
+          <li>写 <code>docs/roadmap.md</code>：3–7 个里程碑，每个配一条可执行验收命令；</li>
+          <li>写 <code>docs/tasks/queue.md</code>：把当前里程碑切成 &lt; 1 会话可完成的任务卡（含依赖与验收）；</li>
+          <li>搭 CI：lint + 单测 + 金样本 diff；把测试文件设为只读；</li>
+          <li>搭循环：定时任务拉起 Agent → 领任务 → 干活 → 写日报；设重试上限与自动升级；</li>
+          <li>每天 30 分钟晨会：看日报、清卡点、批决策请求；每周打里程碑 tag。</li>
+        </ol>
+      </div>
+
+      <details class="reveal">
+        <summary>思考题：如果 AI 在日报里连续三天说"明天就能完成 M4"，你怎么设计机制避免这种乐观偏差？</summary>
+        <p>答案方向：① 完成的定义不许口头化——M4 的验收是脚本，跑不过就不许在日报里勾"完成"；② 任务卡粒度化，日报统计"已验收任务数"而非"感觉进度"；③ 让计划员 Agent 基于历史吞吐（近 N 天实际完成任务数）做预测，而不是让执行者自己估；④ 人类在晨会抽查 1–2 个"已完成"任务，让虚报有被抓的成本。</p>
+      </details>
+
+      <div class="tip">最终心法：你不是在"用 AI 写代码"，而是在<strong>设计一台 AI 能长期稳定运转的工厂</strong>。工厂的图纸——里程碑、验收、记忆、闸门、保险丝——都写在仓库里，人只做机器做不了的事：定方向、立标准、裁决例外。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示 ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空 ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序 ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用 ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+
+// 演示 1：记忆衰减 K_c = a + (1-a) r^c
+demo('#demoMemory', ({ r, a }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, pad = 46, maxC = 30;
+  const css = getComputedStyle(document.documentElement);
+  const border = css.getPropertyValue('--border').trim();
+  const primary = css.getPropertyValue('--primary').trim();
+  const muted = css.getPropertyValue('--muted').trim();
+  const ok = css.getPropertyValue('--ok').trim();
+  const X = c => pad + (W - pad - 20) * c / maxC;
+  const Y = k => H - 34 - (H - 70) * k;
+  // 坐标轴
+  ctx.strokeStyle = border; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, 12); ctx.lineTo(pad, H - 34); ctx.lineTo(W - 16, H - 34); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = '12px sans-serif';
+  ctx.fillText('100%', 8, 22); ctx.fillText('0', pad - 8, H - 34);
+  ctx.fillText('压缩次数 c →', W - 100, H - 12);
+  // 仅锚定部分（a 水平线）
+  ctx.strokeStyle = ok; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad, Y(a)); ctx.lineTo(W - 16, Y(a)); ctx.stroke();
+  ctx.fillStyle = ok; ctx.fillText('即使 r=0，锚定知识也不会丢', pad + 8, Y(a) - 6);
+  // 曲线 K_c = a + (1-a) r^c
+  ctx.setLineDash([]); ctx.strokeStyle = primary; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let c = 0; c <= maxC; c++) {
+    const k = a + (1 - a) * Math.pow(r, c);
+    c ? ctx.lineTo(X(c), Y(k)) : ctx.moveTo(X(c), Y(k));
+  }
+  ctx.stroke();
+  // 20 次后的标记点
+  const k20 = a + (1 - a) * Math.pow(r, 20);
+  ctx.fillStyle = primary;
+  ctx.beginPath(); ctx.arc(X(20), Y(k20), 4, 0, 7); ctx.fill();
+  const out = root.querySelector('.readout');
+  out.innerHTML = `经过 20 次压缩后，有效知识留存 ≈ <strong>${(k20 * 100).toFixed(1)}%</strong>；` +
+    (a < 0.15 && r < 0.6
+      ? '几乎清零——这就是"从不写文档"的下场。'
+      : a >= 0.6
+        ? '大部分知识被锚定在仓库文件里，换会话、换模型都带得走。'
+        : '有一定存活，但把更多知识写进文档（调大 a）才是复利杠杆。');
+});
+
+// 演示 2：自主开发流水线模拟器（核心）
+(() => {
+  const root = document.querySelector('#demoPipeline');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const inputs = [...root.querySelectorAll('input')];
+  const readout = root.querySelector('.readout');
+  const resetBtn = root.querySelector('#simReset');
+
+  const STAGES = [
+    { name: '研究', dur: 2, color: '#a855f7' },
+    { name: '编码', dur: 4, color: '#3b82f6' },
+    { name: '测试', dur: 2, color: '#f59e0b' },
+    { name: '验证', dur: 1, color: '#14b8a6' },
+  ];
+  const TOTAL = 60, SPEED = 60; // 1 真实秒 = 60 模拟分钟
+  let params = { n: 3, f: 0.15, r: 12 };
+  let sim, lastTs = 0, raf = null;
+
+  function reset() {
+    sim = {
+      t: 0, done: 0, rework: 0,
+      tasks: Array.from({ length: TOTAL }, (_, id) => ({ id, stage: 0, prog: 0, active: false })),
+      queue: null,
+      agents: Array.from({ length: 8 }, () => ({ task: null })),
+      pendingReview: [], nextReview: params.r || Infinity,
+    };
+    sim.queue = sim.tasks.slice();
+  }
+
+  function step(dt) {
+    const s = sim;
+    s.t += dt;
+    // 人工审查窗口
+    if (params.r > 0 && s.t >= s.nextReview) {
+      s.done += s.pendingReview.length;
+      s.pendingReview = [];
+      s.nextReview += params.r;
+    }
+    // 发任务（只发给启用的 Agent）
+    for (let i = 0; i < params.n; i++) {
+      const ag = s.agents[i];
+      if (!ag.task && s.queue.length) { ag.task = s.queue.shift(); ag.task.active = true; }
+    }
+    // 推进
+    for (let i = 0; i < params.n; i++) {
+      const ag = s.agents[i];
+      const t = ag.task; if (!t) continue;
+      t.prog += dt;
+      if (t.prog < STAGES[t.stage].dur) continue;
+      if (t.stage === 2 && Math.random() < params.f) { // 测试阶段失败
+        t.stage = 0; t.prog = 0; s.rework++;
+        s.queue.push(t); // 退回队列重头再来
+        ag.task = null;
+        continue;
+      }
+      t.prog = 0; t.stage++;
+      if (t.stage >= STAGES.length) {
+        t.active = false;
+        if (params.r > 0) s.pendingReview.push(t); else s.done++;
+        ag.task = null;
+      }
+    }
+  }
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    const css = getComputedStyle(document.documentElement);
+    const border = css.getPropertyValue('--border').trim();
+    const muted = css.getPropertyValue('--muted').trim();
+    const primary = css.getPropertyValue('--primary').trim();
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = '12px sans-serif';
+
+    const colW = (W - 60) / 4;
+    const lanes = STAGES.map((st, i) => {
+      const x0 = 24 + i * colW;
+      ctx.fillStyle = muted;
+      ctx.fillText(`${st.name} (${st.dur}h)`, x0 + 6, 18);
+      // 轨道
+      ctx.fillStyle = border;
+      ctx.fillRect(x0, H - 78, colW - 18, 14);
+      return x0;
+    });
+
+    // 画每个任务的进度
+    sim.tasks.forEach(t => {
+      if (!t.active) return;
+      const x0 = lanes[Math.min(t.stage, 3)];
+      const frac = Math.min(1, t.prog / STAGES[Math.min(t.stage, 3)].dur);
+      const x = x0 + (colW - 18) * frac;
+      ctx.fillStyle = STAGES[Math.min(t.stage, 3)].color;
+      ctx.fillRect(x, H - 80, 7, 18);
+    });
+
+    // Agent 小车
+    sim.agents.forEach((ag, i) => {
+      const y = 40 + i * 17;
+      ctx.fillStyle = primary;
+      ctx.beginPath(); ctx.arc(14, y, 5, 0, 7); ctx.fill();
+      const t = ag.task;
+      if (t) {
+        const frac = Math.min(1, t.prog / STAGES[Math.min(t.stage, 3)].dur);
+        const x = lanes[Math.min(t.stage, 3)] + (colW - 18) * frac;
+        ctx.strokeStyle = border; ctx.lineWidth = 1;
+        ctx.setLineDash([3, 4]);
+        ctx.beginPath(); ctx.moveTo(19, y); ctx.lineTo(Math.max(24, x), H - 71); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = STAGES[Math.min(t.stage, 3)].color;
+        ctx.fillRect(x - 3, H - 92, 12, 12);
+      }
+    });
+
+    // 完成进度条
+    const finished = sim.done + sim.pendingReview.length;
+    const bw = W - 48;
+    ctx.fillStyle = border; ctx.fillRect(24, H - 42, bw, 10);
+    ctx.fillStyle = '#16a34a'; ctx.fillRect(24, H - 42, bw * finished / TOTAL, 10);
+    ctx.fillStyle = muted;
+    const days = sim.t / 24;
+    ctx.fillText(`模拟时间 ${sim.t.toFixed(1)}h（第 ${days.toFixed(1)} 天）· 已完成 ${sim.done}/${TOTAL}` +
+      (sim.pendingReview.length ? ` · 待审 ${sim.pendingReview.length}` : '') +
+      ` · 返工 ${sim.rework} 次 · 待领队列 ${sim.queue.length}`, 24, H - 10);
+  }
+
+  function loop(ts) {
+    const dt = Math.min(0.25, (ts - lastTs) / 1000) * SPEED;
+    lastTs = ts;
+    step(dt);
+    draw();
+    const days = sim.t / 24;
+    readout.innerHTML =
+      `<strong>第 ${days.toFixed(1)} 天</strong> · 完成 ${sim.done}/${TOTAL} · 返工 ${sim.rework} 次` +
+      (params.r > 0 ? ` · 待审队列 ${sim.pendingReview.length}` : ' · <span style="color:var(--bad)">无审查卡点：完成数不可信</span>');
+    if (sim.done >= TOTAL) {
+      readout.innerHTML += ` —— 🏁 全部验收通过，总工期 <strong>${days.toFixed(1)} 天</strong>`;
+      raf = null; return;
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
+  function restart() {
+    if (raf) cancelAnimationFrame(raf);
+    reset();
+    lastTs = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+
+  const readParams = () => {
+    params = {
+      n: +inputs[0].value,
+      f: +inputs[1].value,
+      r: +inputs[2].value,
+    };
+    inputs.forEach(i => {
+      const v = root.querySelector(`.val[data-for="${i.name}"]`);
+      if (v) v.textContent = i.name === 'f' ? (+i.value * 100).toFixed(0) + '%' : i.value;
+    });
+  };
+  inputs.forEach(i => i.addEventListener('input', () => { readParams(); restart(); }));
+  resetBtn.onclick = restart;
+  readParams();
+  reset();
+  // 只在章节可见时才跑动画，省资源
+  const ch = root.closest('.chapter');
+  const vis = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting && !raf && sim.done < TOTAL) { lastTs = performance.now(); raf = requestAnimationFrame(loop); }
+      else if (!e.isIntersecting && raf) { cancelAnimationFrame(raf); raf = null; }
+    });
+  }, { threshold: 0.1 });
+  vis.observe(ch);
+  draw();
+})();
+
+// 演示 3：任务粒度 P = p^N
+demo('#demoGrain', ({ p, n }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, pad = 46, maxN = 200;
+  const css = getComputedStyle(document.documentElement);
+  const border = css.getPropertyValue('--border').trim();
+  const primary = css.getPropertyValue('--primary').trim();
+  const bad = css.getPropertyValue('--bad').trim();
+  const muted = css.getPropertyValue('--muted').trim();
+  const X = nn => pad + (W - pad - 24) * nn / maxN;
+  const Y = q => H - 34 - (H - 70) * q;
+  // 坐标轴
+  ctx.strokeStyle = border; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, 12); ctx.lineTo(pad, H - 34); ctx.lineTo(W - 16, H - 34); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = '12px sans-serif';
+  ctx.fillText('100%', 8, 22); ctx.fillText('0', pad - 8, H - 34);
+  ctx.fillText('任务数 N →', W - 92, H - 12);
+  // 50% 参考线
+  ctx.strokeStyle = bad; ctx.setLineDash([6, 5]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, Y(0.5)); ctx.lineTo(W - 16, Y(0.5)); ctx.stroke();
+  ctx.fillStyle = bad; ctx.fillText('50% 线', pad + 8, Y(0.5) - 6);
+  ctx.setLineDash([]);
+  // 曲线 P = p^N
+  ctx.strokeStyle = primary; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let nn = 1; nn <= maxN; nn++) {
+    const q = Math.pow(p, nn);
+    nn === 1 ? ctx.moveTo(X(nn), Y(q)) : ctx.lineTo(X(nn), Y(q));
+  }
+  ctx.stroke();
+  // 当前点
+  const qNow = Math.pow(p, n);
+  ctx.fillStyle = primary;
+  ctx.beginPath(); ctx.arc(X(n), Y(qNow), 5, 0, 7); ctx.fill();
+  ctx.fillStyle = muted;
+  ctx.fillText(`N=${n}`, X(n) - 12, Y(qNow) - 12);
+  root.querySelector('.readout').innerHTML =
+    `P = ${p}<sup>${n}</sup> ≈ <strong>${(qNow * 100).toFixed(2)}%</strong> 的概率整个项目零返工。` +
+    (qNow > 0.5
+      ? '成功率健康区间——保持任务切小、验收快。'
+      : qNow > 0.1
+        ? '已经明显漏气：一部分任务必然返工，抓紧把任务切小。'
+        : '接近必然返工：这个粒度下项目会陷入无尽的修复循环——把任务切得更小！');
+});
+</script>
+</body>
+</html>

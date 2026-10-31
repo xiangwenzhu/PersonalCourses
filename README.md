@@ -14,6 +14,7 @@
 | 读懂高赔率逆向评估报告（宁德时代案例） | 投资 · 金融 | [catl-report-course.html](./catl-report-course.html) |
 | 股票估值指标互动实验室 | 投资 · 金融工具 | [stock-valuation-lab.html](./stock-valuation-lab.html) |
 | 英伟达 GPU、CUDA 与机器人 AI 平台 | 机器人 · 算力与平台 | [nvidia-robotics-ai-course.html](./nvidia-robotics-ai-course.html) |
+| 长程自主 AI 开发任务 | AI 工程 · 长程自主任务 | [long-horizon-ai-course.html](./long-horizon-ai-course.html) |
 | 微电网 · 学习路径（系列入口页） | 能源 · 电力系统 | [microgrid-hub.html](./microgrid-hub.html) |
 | 微电网入门 | 能源 · 电力系统 | [microgrid-basics.html](./microgrid-basics.html) |
 | 微电网的组成与关键设备 | 能源 · 电力系统 | [microgrid-components.html](./microgrid-components.html) |
