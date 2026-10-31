@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python/R 生信编程基础：Biopython 与 Bioconductor · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto;font-size:14px}
+pre .c{color:#9ca3af}
+pre .k{color:#f472b6}
+pre .s{color:#a5f3fc}
+pre .f{color:#c084fc}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:130px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>Python/R 生信编程基础：Biopython 与 Bioconductor</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="为什么生信需要编程">
+      <h2>为什么生信需要编程</h2>
+      <p class="tldr">命令行是"手工作坊"，编程是"自动化工厂"。当你要处理 100 个样本、重复 10 次分析时，编程是唯一可持续的方式。</p>
+
+      <p>前两课学了 Linux 命令和文件格式。但现实中的分析往往更复杂：</p>
+      <ul>
+        <li>对 50 个样本跑同一流程，每个样本参数略有不同</li>
+        <li>从 GFF 文件提取特定类型的特征（如所有外显子长度 &gt; 200bp）</li>
+        <li>把 VCF 中的变异按基因分组，计算每个基因的突变频率</li>
+      </ul>
+
+      <div class="analogy">命令行像用计算器一个一个算，编程像写公式后批量填充。前者适合探索，后者适合生产。生信工程师必须两者都会。</div>
+
+      <h3>Python vs R：怎么选？</h3>
+      <table>
+        <tr><th>语言</th><th>生态</th><th>擅长场景</th></tr>
+        <tr><td><strong>Python</strong></td><td>Biopython, pandas, scikit-learn</td><td>序列操作、文件解析、流程自动化、机器学习</td></tr>
+        <tr><td><strong>R</strong></td><td>Bioconductor, ggplot2, DESeq2</td><td>统计分析、高通量数据处理、可视化</td></tr>
+      </table>
+
+      <div class="key">生信界共识：序列处理和流程用 Python，统计分析和画图用 R。两者通过 rpy2 或文件中间格式（CSV/TSV）互通。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你有 200 个 RNA-seq 样本，要做差异表达分析并画热图，首选哪种语言/生态？</p>
+        <button class="opt" data-fb">Python 的 pandas 能做数据处理，但统计模型和画热图不如 R 生态成熟。">Python + pandas</button>
+        <button class="opt" data-fb="正确。DESeq2（差异表达）和 ggplot2/pheatmap（热图）是 R/Bioconductor 的黄金组合。">R + DESeq2</button>
+        <button class="opt" data-fb">Biopython 擅长序列操作，不擅长高通量统计。">Python + Biopython</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">本课教"最小必要编程"：够处理日常生信数据即可，不求成为软件工程师。接下来从 Python 开始。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="Python 生信速通">
+      <h2>Python 生信速通</h2>
+      <p class="tldr">掌握 Biopython 的 Seq 对象和文件解析，你就能处理 80% 的序列任务：读 FASTA、提取子序列、算 GC 含量、翻译蛋白质。</p>
+
+      <h3>核心代码模式</h3>
+      <pre><span class="c"># 读 FASTA 文件，计算每条序列的 GC 含量</span>
+<span class="k">from</span> Bio <span class="k">import</span> SeqIO
+
+<span class="k">for</span> record <span class="k">in</span> SeqIO.parse(<span class="s">"sequences.fasta"</span>, <span class="s">"fasta"</span>):
+    seq = record.seq
+    gc = <span class="f">100</span> * <span class="f">float</span>(seq.count(<span class="s">"G"</span>) + seq.count(<span class="s">"C"</span>)) / <span class="f">len</span>(seq)
+    <span class="f">print</span>(<span class="s">f"{record.id}: GC = {gc:.1f}%"</span>)</pre>
+
+      <!-- 互动演示：Python 代码执行模拟 -->
+      <div class="widget demo" id="pyDemo">
+        <div class="widget-title">Python 代码模拟器：点"运行"看代码如何逐行处理序列</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runPy">▶ 运行</button>
+          <button class="btn" id="resetPy">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">Biopython 核心对象：<code>Seq</code>（序列，支持 .complement()/.translate()）、<code>SeqRecord</code>（带 ID/注释）、<code>SeqIO</code>（读写文件）。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">在 Biopython 中，如何读取一个 FASTA 文件并遍历每条序列？</p>
+        <button class="opt" data-fb="正确。SeqIO.parse 返回迭代器，每个元素是 SeqRecord。">SeqIO.parse("file.fa", "fasta")</button>
+        <button class="opt" data-fb">Seq 是单个序列对象，不能解析文件。">Seq("file.fa")</button>
+        <button class="opt" data-fb">open 返回文件句柄，没有 FASTA 解析逻辑。">open("file.fa", "fasta")</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">Python 是"胶水语言"：把命令行工具（BWA、samtools）串成流程，同时处理中间数据。掌握基础语法 + Biopython 就能干活。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="R 与 Bioconductor 入门">
+      <h2>R 与 Bioconductor 入门</h2>
+      <p class="tldr">R 的核心是向量化和数据框（data.frame）。Bioconductor 提供统一的矩阵容器（SummarizedExperiment），DESeq2、edgeR 都基于它。</p>
+
+      <h3>核心代码模式</h3>
+      <pre><span class="c"># 安装和加载 Bioconductor 包</span>
+<span class="k">if</span> (!<span class="f">requireNamespace</span>(<span class="s">"BiocManager"</span>, quietly = TRUE))
+    <span class="f">install.packages</span>(<span class="s">"BiocManager"</span>)
+BiocManager::<span class="f">install</span>(<span class="s">"DESeq2"</span>)
+<span class="k">library</span>(DESeq2)
+
+<span class="c"># 读入表达矩阵（行=基因，列=样本）</span>
+countData &lt;- <span class="f">read.csv</span>(<span class="s">"counts.csv"</span>, row.names = <span class="f">1</span>)
+colData &lt;- <span class="f">read.csv</span>(<span class="s">"samples.csv"</span>)
+
+<span class="c"># 构建 DESeq2 对象并做差异表达</span>
+dds &lt;- <span class="f">DESeqDataSetFromMatrix</span>(countData = countData,
+                              colData = colData,
+                              design = ~ condition)
+dds &lt;- <span class="f">DESeq</span>(dds)
+res &lt;- <span class="f">results</span>(dds)</pre>
+
+      <div class="analogy">R 的 data.frame 像 Excel 表，但每一列可以是不同类型（数字、文本、因子）。Bioconductor 在其上加了"生物语义"：行是基因，列是样本，还有注释信息。</div>
+
+      <!-- 互动演示：R 数据框结构 -->
+      <div class="widget demo" id="rDemo">
+        <div class="widget-title">R 数据框解剖：点按钮看 countData 和 colData 如何合并成 DESeq2 对象</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runR">▶ 构建对象</button>
+          <button class="btn" id="resetR">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">DESeq2 流程三步走：① DESeqDataSetFromMatrix（数据+设计公式）→ ② DESeq()（标准化+统计）→ ③ results()（提取差异基因）。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">在 DESeq2 中，<code>design = ~ condition</code> 这个公式的作用是什么？</p>
+        <button class="opt" data-fb">design 不是过滤条件。">过滤低表达基因</button>
+        <button class="opt" data-fb">那是 normalization 的事，发生在 DESeq() 内部。">标准化计数数据</button>
+        <button class="opt" data-fb="正确。design 公式告诉模型用哪个分组变量来比较。">指定分组变量（如处理 vs 对照）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">R 的学习曲线在前 2 周最陡（语法古怪），但一旦上手，统计分析的效率是 Python 难以匹敌的。坚持住。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="实战：自动化处理 100 个样本">
+      <h2>实战：自动化处理 100 个样本</h2>
+      <p class="tldr">用一个 Python 脚本批量处理 100 个 FASTQ 文件：读文件名、跑质控、调用比对工具、收集结果——这就是"生信流程"的雏形。</p>
+
+      <h3>流程自动化模式</h3>
+      <pre><span class="k">import</span> subprocess
+<span class="k">from</span> pathlib <span class="k">import</span> Path
+
+fastq_dir = Path(<span class="s">"data"</span>)
+<span class="k">for</span> fastq <span class="k">in</span> fastq_dir.glob(<span class="s">"*.fq.gz"</span>):
+    sample = fastq.stem.replace(<span class="s">".fq"</span>, <span class="s">""</span>)
+    output = <span class="s">f"results/{sample}.bam"</span>
+
+    <span class="c"># 调用命令行工具（BWA + samtools）</span>
+    cmd = <span class="s">f"bwa mem ref.fa {fastq} | samtools sort -o {output}"</span>
+    subprocess.run(cmd, shell=True, check=True)
+    <span class="f">print</span>(<span class="s">f"Done: {sample}"</span>)</pre>
+
+      <div class="analogy">这段代码是"自动流水线"：机械臂（Python）抓取零件（FASTQ），放到机床（BWA）加工，再放到下一个工位（samtools）。你只需要写一次，就能 7×24 小时跑。</div>
+
+      <!-- 互动演示：流程自动化可视化 -->
+      <div class="widget demo" id="pipelineDemo">
+        <div class="widget-title">流程模拟器：看 Python 脚本如何批量调度 5 个样本（点击"运行"启动）</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runPipe">▶ 运行流程</button>
+          <button class="btn" id="resetPipe">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>进阶：Snakemake 流程管理</h3>
+      <p>当流程变复杂（10+ 步骤、依赖关系交错），用 <strong>Snakemake</strong> 或 <strong>Nextflow</strong> 来管理：定义规则、自动调度、并行执行、断点续跑。</p>
+
+      <div class="key">自己写脚本适合探索性分析；生产环境（重复跑、要给同事用）务必用 Snakemake/Nextflow，保证可复现、可维护。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你要跑一个 20 步的分析流程，中途第 10 步失败了，修改后想从断点继续而不是从头跑，用什么工具最合适？</p>
+        <button class="opt" data-fb">shell 脚本只能顺序执行，不支持断点续跑。">纯 Python 脚本</button>
+        <button class="opt" data-fb="正确。Snakemake/Nextflow 自动检测已完成步骤，只重跑失败部分。">Snakemake / Nextflow</button>
+        <button class="opt" data-fb">Makefile 可做依赖管理，但生物信息生态不如 Snakemake 完善。">Makefile</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">自动化是生信工程师和"跑命令的人"的分水岭。学会写循环 + 调命令行 + 管理流程，你就升级了。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="数据可视化：让数据说话">
+      <h2>数据可视化：让数据说话</h2>
+      <p class="tldr">Python 的 matplotlib/seaborn 和 R 的 ggplot2 是生信可视化的双雄。选对图层和几何对象，就能把枯燥的表格变成有洞察的图。</p>
+
+      <h3>常用生信图表</h3>
+      <table>
+        <tr><th>图型</th><th>用途</th><th>推荐工具</th></tr>
+        <tr><td>火山图</td><td>展示差异表达基因（log2FC vs -log10 p）</td><td>R ggplot2</td></tr>
+        <tr><td>热图</td><td>基因表达模式聚类</td><td>R pheatmap / Python seaborn</td></tr>
+        <tr><td>MA plot</td><td>表达量 vs  fold change</td><td>R DESeq2::plotMA</td></tr>
+        <tr><td>IGV 轨道图</td><td>基因组比对可视化</td><td>IGV 软件</td></tr>
+        <tr><td>曼哈顿图</td><td>GWAS 全基因组关联</td><td>R qqman</td></tr>
+      </table>
+
+      <!-- 互动演示：火山图生成器 -->
+      <div class="widget demo" id="volcanoDemo">
+        <div class="widget-title">火山图生成器：拖动阈值，看差异基因筛选标准如何影响结果</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>log2FoldChange 阈值 <span class="val" data-for="fc"></span><input type="range" name="fc" min="0" max="3" step="0.5" value="1"></label>
+          <label>p-value 阈值 <span class="val" data-for="pval"></span><input type="range" name="pval" min="1" max="10" step="1" value="3"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="analogy">火山图是"差异表达的标准照"：X 轴是变化倍数（往左降，往右升），Y 轴是显著性（越高越显著）。右上和左上角的点，就是你要关注的基因。</div>
+
+      <div class="key">ggplot2 的哲学：图形 = 数据 + 映射（aes）+ 几何对象（geom）。理解这三层，就能自由组合出任何图。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">火山图中，一个基因 log2FoldChange = 3 且 p &lt; 0.001，说明什么？</p>
+        <button class="opt" data-fb="正确。log2FC=3 意味着 2³=8 倍上调，且统计显著。">该基因在处理组中显著上调 8 倍</button>
+        <button class="opt" data-fb">log2FC 3 是 8 倍（2³），不是 3 倍。">上调 3 倍</button>
+        <button class="opt" data-fb">p 值小是显著，不是不显著。">该基因没有显著变化</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">可视化是"数据的翻译器"。选好图型，评委/导师 10 秒就能看懂你的结论；选错图型，数据再漂亮也白搭。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="调试与最佳实践">
+      <h2>调试与最佳实践</h2>
+      <p class="tldr">代码报错不可怕，可怕的是不知道哪里错了。掌握调试技巧和工程规范，让你的代码从"能跑"变成"可靠"。</p>
+
+      <h3>常见错误类型</h3>
+      <table>
+        <tr><th>错误</th><th>示例</th><th>解决思路</th></tr>
+        <tr><td>语法错误</td><td>漏了冒号/括号</td><td>看 traceback 最后一行，检查该行</td></tr>
+        <tr><td>索引越界</td><td>序列长度 100，取了第 101 位</td><td>检查循环边界，用 len() 验证</td></tr>
+        <tr><td>类型错误</td><td>把字符串当数字加</td><td>print(type(x)) 确认类型</td></tr>
+        <tr><td>文件不存在</td><td>路径写错</td><td>用 os.path.exists() 检查</td></tr>
+        <tr><td>逻辑错误</td><td>代码能跑但结果不对</td><td>用 assert 或打印中间值验证</td></tr>
+      </table>
+
+      <!-- 互动演示：调试挑战 -->
+      <div class="widget demo" id="debugDemo">
+        <div class="widget-title">调试挑战：这段代码有 3 个 bug，点击你认为有问题的行</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="checkBugs">✓ 提交答案</button>
+          <button class="btn" id="resetBugs">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>工程最佳实践</h3>
+      <ul>
+        <li><strong>版本控制</strong>：用 Git 管理代码，每次改动都写 commit message</li>
+        <li><strong>虚拟环境</strong>：Conda/venv 隔离项目依赖，避免"在我电脑上能跑"</li>
+        <li><strong>参数外置</strong>：把路径、阈值写在配置文件（YAML），不要硬编码</li>
+        <li><strong>日志记录</strong>：用 logging 模块记录关键步骤，方便回溯</li>
+        <li><strong>单元测试</strong>：对核心函数写 test，改动后自动验证</li>
+      </ul>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你的代码在本地能跑，但同事克隆后报错 "ModuleNotFoundError"，最可能的原因是什么？</p>
+        <button class="opt" data-fb">报错是模块缺失，不是语法问题。">代码有语法错误</button>
+        <button class="opt" data-fb="正确。依赖未记录/未安装，需要用 requirements.txt 或 environment.yml 固定。">依赖环境不一致</button>
+        <button class="opt" data-fb">操作系统不同可能导致路径问题，但 ModuleNotFoundError 特指 Python 包缺失。">操作系统不同</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>Biopython 中解析 FASTA 用 <input data-answer="SeqIO.parse">；DESeq2 的差异分析函数是 <input data-answer="DESeq|DESeq()">；批量处理文件时，Python 中遍历目录用 <input data-answer="glob|Path.glob|os.listdir|os.scandir">。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">你已经掌握了生信编程的"最小可行技能"：能写脚本处理数据、能调包做统计、能画图展示结果。L2 全部完成，准备进入 L3 实战课程！</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示1：Python 代码执行模拟
+(() => {
+  const root = document.getElementById('pyDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+
+  const sequences = [
+    { id: 'seq1', seq: 'ATGCGTACGTAGCTAGCTAGCATCGATCGTACGATCGATCGATCG' },
+    { id: 'seq2', seq: 'GCGCGCGCGCATATATATATGCGCGCGCATATATATAT' },
+    { id: 'seq3', seq: 'ATATATATATATATATATATATATATATATATATATATAT' }
+  ];
+
+  let step = 0; // 0: idle, 1: import, 2: parse, 3-5: process each seq, 6: done
+
+  function draw() {
+    ctx.clearRect(0, 0, W, cv.height);
+    const lineH = 40;
+
+    // 代码行（左侧）
+    const codeLines = [
+      'from Bio import SeqIO',
+      'for record in SeqIO.parse("seqs.fa", "fasta"):',
+      '    seq = record.seq',
+      '    gc = 100 * (seq.count("G") + seq.count("C")) / len(seq)',
+      '    print(f"{record.id}: GC = {gc:.1f}%")'
+    ];
+    ctx.font = '13px monospace'; ctx.textAlign = 'left';
+    codeLines.forEach((line, i) => {
+      const y = 40 + i * lineH;
+      const isActive = (step === 1 && i === 0) || (step >= 2 && (i === 1 || i === 2)) || (step >= 3 && i === 3) || (step >= 3 && i === 4);
+      ctx.fillStyle = isActive ? cssVar('--primary') : cssVar('--muted');
+      ctx.fillText(line, 20, y);
+      if (isActive) {
+        ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 1;
+        ctx.strokeRect(15, y - 14, 340, 20);
+      }
+    });
+
+    // 执行结果（右侧）
+    if (step >= 3) {
+      ctx.fillStyle = cssVar('--muted'); ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('执行结果:', 420, 40);
+      ctx.font = '13px monospace';
+      for (let i = 0; i < Math.min(step - 2, sequences.length); i++) {
+        const s = sequences[i];
+        const gc = (100 * (s.seq.split('G').length - 1 + s.seq.split('C').length - 1) / s.seq.length).toFixed(1);
+        ctx.fillStyle = cssVar('--ok');
+        ctx.fillText(`${s.id}: GC = ${gc}%`, 420, 70 + i * 25);
+      }
+    }
+
+    // 当前处理的序列
+    if (step >= 3 && step <= 5) {
+      const idx = step - 3;
+      const s = sequences[idx];
+      ctx.fillStyle = cssVar('--text'); ctx.font = '14px monospace';
+      ctx.fillText(`→ 处理中: ${s.id}`, 420, 160);
+      ctx.fillStyle = cssVar('--muted');
+      ctx.fillText(s.seq.slice(0, 30) + '...', 420, 185);
+      // 高亮 G 和 C
+      const seqX = 420;
+      for (let i = 0; i < Math.min(30, s.seq.length); i++) {
+        if (s.seq[i] === 'G' || s.seq[i] === 'C') {
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(seqX + i * 8.4, 192, 8, 3);
+        }
+      }
+    }
+
+    // 步骤说明
+    const msgs = [
+      '点击「运行」开始执行',
+      'Step 1: 导入 Biopython 的 SeqIO 模块',
+      'Step 2: 打开文件，准备遍历每条序列',
+      'Step 3: 处理第 1 条序列 (seq1)，计算 GC 含量...',
+      'Step 4: 处理第 2 条序列 (seq2)...',
+      'Step 5: 处理第 3 条序列 (seq3)...',
+      '✅ 全部完成！5 行代码处理了 3 条序列'
+    ];
+    ctx.fillStyle = step === 6 ? cssVar('--ok') : cssVar('--muted');
+    ctx.font = '14px sans-serif';
+    ctx.fillText(msgs[step], 20, cv.height - 20);
+  }
+
+  document.getElementById('runPy').onclick = () => {
+    if (step < 6) { step++; draw(); }
+  };
+  document.getElementById('resetPy').onclick = () => { step = 0; draw(); readout.textContent = ''; };
+  draw();
+})();
+
+// 演示2：R 数据框结构
+(() => {
+  const root = document.getElementById('rDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+
+  let phase = 0; // 0: idle, 1: show countData, 2: show colData, 3: merged
+
+  function draw() {
+    ctx.clearRect(0, 0, W, cv.height);
+
+    // countData 表格
+    if (phase >= 1) {
+      ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillStyle = cssVar('--primary'); ctx.fillText('countData (表达矩阵)', 30, 40);
+      ctx.font = '13px monospace';
+      const cols = ['', 'sample1', 'sample2', 'sample3', 'sample4'];
+      cols.forEach((c, i) => { ctx.fillStyle = cssVar('--muted'); ctx.fillText(c, 40 + i * 90, 70); });
+      const genes = ['GeneA', 'GeneB', 'GeneC', 'GeneD'];
+      genes.forEach((g, r) => {
+        ctx.fillStyle = cssVar('--text'); ctx.fillText(g, 40, 95 + r * 25);
+        for (let c = 1; c < 5; c++) {
+          const val = Math.floor(Math.random() * 100 + 50);
+          ctx.fillStyle = cssVar('--muted');
+          ctx.fillText(String(val), 40 + c * 90, 95 + r * 25);
+        }
+      });
+    }
+
+    // colData 表格
+    if (phase >= 2) {
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillStyle = '#3b82f6'; ctx.fillText('colData (样本信息)', 450, 40);
+      ctx.font = '13px monospace';
+      const cols2 = ['', 'condition', 'batch'];
+      cols2.forEach((c, i) => { ctx.fillStyle = cssVar('--muted'); ctx.fillText(c, 460 + i * 100, 70); });
+      const samples = ['sample1', 'sample2', 'sample3', 'sample4'];
+      samples.forEach((s, r) => {
+        ctx.fillStyle = cssVar('--text'); ctx.fillText(s, 460, 95 + r * 25);
+        ctx.fillStyle = cssVar('--muted');
+        ctx.fillText(r < 2 ? 'control' : 'treated', 560, 95 + r * 25);
+        ctx.fillText(r % 2 === 0 ? 'batch1' : 'batch2', 660, 95 + r * 25);
+      });
+    }
+
+    // 合并箭头
+    if (phase === 2) {
+      ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(350, 150); ctx.lineTo(450, 150); ctx.stroke();
+      ctx.fillStyle = cssVar('--primary');
+      ctx.beginPath(); ctx.moveTo(450, 150); ctx.lineTo(440, 145); ctx.lineTo(440, 155); ctx.fill();
+    }
+
+    // 合并后对象
+    if (phase >= 3) {
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillStyle = cssVar('--ok'); ctx.fillText('dds (DESeqDataSet)', 30, 230);
+      ctx.font = '14px sans-serif'; ctx.fillStyle = cssVar('--text');
+      ctx.fillText('assays: counts [4 genes × 4 samples]', 30, 260);
+      ctx.fillText('colData: condition, batch', 30, 285);
+      ctx.fillText('design: ~ condition', 30, 310);
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif';
+      ctx.fillText('现在可以运行 dds <- DESeq(dds) 做差异表达了！', 30, 335);
+    }
+  }
+
+  document.getElementById('runR').onclick = () => {
+    phase = (phase + 1) % 4;
+    const msgs = ['', '已加载 countData（表达矩阵）', '已加载 colData（样本分组）', '✅ 已合并为 DESeqDataSet 对象'];
+    readout.textContent = msgs[phase];
+    draw();
+  };
+  document.getElementById('resetR').onclick = () => { phase = 0; readout.textContent = ''; draw(); };
+  draw();
+})();
+
+// 演示3：流程自动化
+(() => {
+  const root = document.getElementById('pipelineDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const W = cv.width;
+
+  const samples = ['S1', 'S2', 'S3', 'S4', 'S5'];
+  let running = false, progress = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, cv.height);
+
+    // 流程步骤
+    const steps = ['FASTQ', 'FastQC', 'BWA', 'sort BAM', 'flagstat'];
+    const boxW = 120, boxH = 50, gap = 30;
+    const startX = (W - (steps.length * boxW + (steps.length - 1) * gap)) / 2;
+    const y = 80;
+
+    steps.forEach((s, i) => {
+      const x = startX + i * (boxW + gap);
+      ctx.fillStyle = cssVar('--card');
+      ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2;
+      ctx.fillRect(x, y, boxW, boxH);
+      ctx.strokeRect(x, y, boxW, boxH);
+      ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(s, x + boxW/2, y + 30);
+
+      if (i < steps.length - 1) {
+        ctx.strokeStyle = cssVar('--muted'); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x + boxW, y + boxH/2); ctx.lineTo(x + boxW + gap, y + boxH/2); ctx.stroke();
+      }
+    });
+
+    // 样本进度
+    ctx.textAlign = 'left'; ctx.font = '14px monospace';
+    samples.forEach((s, i) => {
+      const y2 = 180 + i * 25;
+      const isActive = running && Math.floor(progress) === i;
+      const isDone = running && progress > i;
+
+      ctx.fillStyle = isDone ? cssVar('--ok') : isActive ? cssVar('--primary') : cssVar('--muted');
+      ctx.fillText(s, 30, y2);
+
+      // 进度条
+      ctx.fillStyle = cssVar('--border');
+      ctx.fillRect(80, y2 - 10, W - 200, 12);
+      if (isDone) {
+        ctx.fillStyle = cssVar('--ok');
+        ctx.fillRect(80, y2 - 10, W - 200, 12);
+      } else if (isActive) {
+        ctx.fillStyle = cssVar('--primary');
+        ctx.fillRect(80, y2 - 10, (W - 200) * (progress - i), 12);
+      }
+
+      // 状态
+      ctx.fillStyle = isDone ? cssVar('--ok') : isActive ? cssVar('--primary') : cssVar('--muted');
+      ctx.fillText(isDone ? '✓ done' : isActive ? 'running...' : 'waiting', W - 110, y2);
+    });
+
+    if (!running) {
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '16px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('点击「运行流程」启动批量处理', W/2, cv.height - 20);
+    }
+  }
+
+  document.getElementById('runPipe').onclick = () => {
+    if (running) return;
+    running = true; progress = 0;
+    readout.textContent = '正在批量处理 5 个样本...';
+    const interval = setInterval(() => {
+      progress += 0.02;
+      if (progress >= samples.length) {
+        progress = samples.length;
+        clearInterval(interval);
+        running = false;
+        readout.textContent = '✅ 全部样本处理完成！结果保存在 results/ 目录';
+      }
+      draw();
+    }, 50);
+  };
+  document.getElementById('resetPipe').onclick = () => { running = false; progress = 0; readout.textContent = ''; draw(); };
+  draw();
+})();
+
+// 演示4：火山图生成器
+demo('#volcanoDemo', ({ fc, pval }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const pThreshold = Math.pow(10, -pval);
+  const n = 500;
+  const points = [];
+
+  // 生成模拟数据
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let i = 0; i < n; i++) {
+    const log2fc = (rand() - 0.5) * 6;
+    const negLogP = Math.max(0, (rand() * rand() * 8 - Math.abs(log2fc) * 0.8 + 2));
+    points.push({ log2fc, negLogP });
+  }
+
+  const x1 = 80, x2 = W - 40, y1 = 40, y2 = H - 50;
+  const xScale = v => x1 + ((v + 3) / 6) * (x2 - x1);
+  const yScale = v => y2 - (v / 8) * (y2 - y1);
+
+  // 点
+  points.forEach(p => {
+    const isSig = Math.abs(p.log2fc) >= fc && p.negLogP >= -Math.log10(pThreshold);
+    const isUp = p.log2fc > 0;
+    ctx.fillStyle = isSig ? (isUp ? '#dc2626' : '#3b82f6') : 'rgba(150,150,150,0.3)';
+    ctx.beginPath();
+    ctx.arc(xScale(p.log2fc), yScale(p.negLogP), isSig ? 4 : 2.5, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // 阈值线
+  ctx.strokeStyle = cssVar('--warn'); ctx.setLineDash([5,5]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(xScale(-fc), y1); ctx.lineTo(xScale(-fc), y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xScale(fc), y1); ctx.lineTo(xScale(fc), y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x1, yScale(-Math.log10(pThreshold))); ctx.lineTo(x2, yScale(-Math.log10(pThreshold))); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 轴
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('log2 Fold Change →', (x1+x2)/2, H - 15);
+  ctx.fillText('−log10(p-value) →', 20, (y1+y2)/2);
+  ctx.fillText('-3', xScale(-3), y2 + 18);
+  ctx.fillText('0', xScale(0), y2 + 18);
+  ctx.fillText('3', xScale(3), y2 + 18);
+
+  // 图例
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#dc2626'; ctx.fillText('▲ 显著上调', x2 - 100, y1 + 20);
+  ctx.fillStyle = '#3b82f6'; ctx.fillText('▼ 显著下调', x2 - 100, y1 + 40);
+  ctx.fillStyle = cssVar('--muted'); ctx.fillText('• 不显著', x2 - 100, y1 + 60);
+
+  const nSig = points.filter(p => Math.abs(p.log2fc) >= fc && p.negLogP >= -Math.log10(pThreshold)).length;
+  root.querySelector('.readout').textContent =
+    `阈值：|log2FC| ≥ ${fc} 且 p < ${pThreshold.toExponential(1)} | 显著基因数：${nSig} (${(nSig/n*100).toFixed(1)}%)`;
+});
+
+// 演示5：调试挑战
+(() => {
+  const root = document.getElementById('debugDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+
+  const codeLines = [
+    'def process_sequence(seq):',
+    '    gc = (seq.count("G") + seq.count("C")) / len(seq)',
+    '    result = gc * 100',
+    '    return result',
+    '',
+    'sequences = ["ATGC", "GCGC", ""]',
+    'for seq in sequences:',
+    '    print(process_sequence(seq))'
+  ];
+  const bugLines = [6, 7, 2]; // 索引从 0 开始：第 7、8、3 行有 bug
+  // Bug 1 (line 6, idx 6): 空字符串 ""
+  // Bug 2 (line 7, idx 7): 没有处理空序列的异常
+  // Bug 3 (line 2, idx 2): 除以 len(seq) 可能除零
+
+  let selected = new Set();
+  let revealed = false;
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.font = '15px monospace'; ctx.textAlign = 'left';
+
+    codeLines.forEach((line, i) => {
+      const y = 40 + i * 30;
+      const isSelected = selected.has(i);
+      const isBug = revealed && bugLines.includes(i);
+
+      ctx.fillStyle = isSelected ? cssVar('--primary-soft') : cssVar('--card');
+      ctx.fillRect(20, y - 15, cv.width - 40, 25);
+      if (isSelected) {
+        ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2;
+        ctx.strokeRect(20, y - 15, cv.width - 40, 25);
+      }
+      if (isBug) {
+        ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 2;
+        ctx.strokeRect(20, y - 15, cv.width - 40, 25);
+      }
+
+      ctx.fillStyle = isBug ? '#dc2626' : cssVar('--text');
+      ctx.fillText(line, 30, y);
+    });
+
+    if (revealed) {
+      ctx.fillStyle = cssVar('--text'); ctx.font = '14px sans-serif';
+      ctx.fillText('Bug 1 (第 7 行): 序列表里有空字符串 ""，会导致除零错误', 30, 285);
+      ctx.fillText('Bug 2 (第 8 行): 循环没有 try/except，遇到错误会中断整个流程', 30, 305);
+      ctx.fillText('Bug 3 (第 3 行): 应该先检查 len(seq) > 0 再计算', 30, 325);
+    }
+  }
+
+  cv.addEventListener('click', e => {
+    if (revealed) return;
+    const rect = cv.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const lineIdx = Math.floor((y - 25) / 30);
+    if (lineIdx >= 0 && lineIdx < codeLines.length) {
+      if (selected.has(lineIdx)) selected.delete(lineIdx);
+      else selected.add(lineIdx);
+      draw();
+    }
+  });
+
+  document.getElementById('checkBugs').onclick = () => {
+    if (revealed) return;
+    revealed = true;
+    const correct = selected.size === 3 && [...selected].every(i => bugLines.includes(i));
+    readout.textContent = correct ? '✅ 完美！你找到了全部 3 个 bug。' : `❌ 你选了 ${selected.size} 处，实际有 3 处 bug。红色框标出正确答案。`;
+    readout.style.color = correct ? cssVar('--ok') : cssVar('--bad');
+    draw();
+  };
+  document.getElementById('resetBugs').onclick = () => {
+    selected.clear(); revealed = false;
+    readout.textContent = '';
+    draw();
+  };
+
+  readout.textContent = '提示：找出 3 个会导致代码崩溃或结果错误的行';
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RNA-seq 实战：从原始数据到差异表达 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto;font-size:14px}
+pre .c{color:#9ca3af}
+pre .k{color:#f472b6}
+pre .s{color:#a5f3fc}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:130px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>RNA-seq 实战：从原始数据到差异表达</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="RNA-seq 是什么">
+      <h2>RNA-seq 是什么</h2>
+      <p class="tldr">RNA-seq 测的是"基因的表达量"：把细胞里的 mRNA 反转录成 cDNA 再测序，数每个基因有多少条 reads 落在上面。</p>
+
+      <p>DNA 是"图纸"，RNA 是"正在生产的产品清单"。RNA-seq 就是给这个清单拍照：哪个基因转录得多（表达高），哪个转录得少（表达低）。</p>
+
+      <div class="analogy">DNA-seq 像查图书馆藏书（有什么书），RNA-seq 像查借阅记录（哪些书正被大量借阅）。借阅量 = 表达量。</div>
+
+      <h3>核心概念速览</h3>
+      <div class="widget">
+        <div class="widget-title">点击卡片，记住 4 个核心概念</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">Read count</div><div class="back">比对到某基因上的 reads 数，是表达量的原始度量。但受基因长度和测序深度影响，不能直接比。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">FPKM/RPKM</div><div class="back">Fragments Per Kilobase per Million：校正了基因长度和测序深度的表达量，可跨样本比。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">TPM</div><div class="back">Transcripts Per Million：另一种标准化，样本间总和恒定（100万），比 FPKM 更适合跨样本比较。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">Fold change</div><div class="back">倍数变化：处理组表达 / 对照组表达。log2FC = 1 表示 2 倍上调，-1 表示 2 倍下调。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">RNA-seq 回答的问题：在不同条件（疾病 vs 健康、处理 vs 对照）下，哪些基因的表达发生了显著变化？</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">RNA-seq 与 DNA-seq 的核心区别是什么？</p>
+        <button class="opt" data-fb">DNA-seq 也能间接看拷贝数，但这不是主要区别。">DNA-seq 更精确</button>
+        <button class="opt" data-fb="正确。RNA-seq 测转录本（动态），DNA-seq 测基因组（静态）。">RNA-seq 测表达量，DNA-seq 测序列本身</button>
+        <button class="opt" data-fb">两者建库方式不同，但这不是本质区别。">RNA-seq 不需要建库</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">理解"reads 数 → 表达量"的转换，是 RNA-seq 分析的第一步。接下来：数据怎么从 FASTQ 变成表达矩阵。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="分析流程：六步走到表达矩阵">
+      <h2>分析流程：六步走到表达矩阵</h2>
+      <p class="tldr">标准 RNA-seq 流程：质控 → 去接头 → 比对 → 定量 → 合并 → 差异表达。每一步都有对应工具，像流水线一样自动跑。</p>
+
+      <div class="widget order" data-answer="a,b,c,d,e,f">
+        <div class="widget-title">动手排一排：RNA-seq 分析的正确顺序</div>
+        <div class="item" data-id="d">比对到参考基因组（HISAT2/STAR）</div>
+        <div class="item" data-id="a">原始数据质控（FastQC）</div>
+        <div class="item" data-id="f">差异表达分析（DESeq2）</div>
+        <div class="item" data-id="c">表达定量（featureCounts/StringTie）</div>
+        <div class="item" data-id="b">去除接头和低质量（fastp/Trimmomatic）</div>
+        <div class="item" data-id="e">合并所有样本的表达矩阵</div>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <h3>常用工具组合</h3>
+      <table>
+        <tr><th>步骤</th><th>工具</th><th>输出</th></tr>
+        <tr><td>质控</td><td>FastQC + fastp</td><td>HTML 报告 +  cleaned FASTQ</td></tr>
+        <tr><td>比对</td><td>HISAT2 / STAR</td><td>SAM/BAM（含比对坐标）</td></tr>
+        <tr><td>定量</td><td>featureCounts</td><td>基因 × 样本的 count 矩阵</td></tr>
+        <tr><td>差异表达</td><td>DESeq2 / edgeR</td><td>差异基因列表（含 log2FC, p, FDR）</td></tr>
+      </table>
+
+      <div class="analogy">RNA-seq 分析像洗车：冲水（质控）、打泡沫（去接头）、刷洗（比对）、冲净（定量）、擦干（合并）、上蜡（差异分析）。每道工序都有专用工具。</div>
+
+      <div class="key">比对到基因组后，一条 read 可能跨外显子（CIGAR 中的 N），所以比对工具（STAR）和定量工具（featureCounts）要配合处理剪接。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">为什么 RNA-seq 比对工具（如 STAR）需要特别处理"跨外显子的 reads"，而 DNA-seq 比对工具不需要？</p>
+        <button class="opt" data-fb="正确。mRNA 剪接后不含内含子，reads 可能跨越外显子接头，需要容忍大 gap（N）。">因为 mRNA 是剪接后的，不含内含子</button>
+        <button class="opt" data-fb">DNA-seq 也有重复序列问题，但这不是剪接的问题。">因为 DNA 有重复序列</button>
+        <button class="opt" data-fb">RNA-seq 读长不一定更短。">因为 RNA-seq reads 更短</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住这个流程，你就有了 RNA-seq 的"地图"。接下来深入每一步的关键参数和陷阱。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="质控与比对：细节决定成败">
+      <h2>质控与比对：细节决定成败</h2>
+      <p class="tldr">FastQC 看数据质量，fastp 做清理；比对率 &gt;70% 才算合格， &lt;50% 要怀疑参考基因组选错或样本污染。</p>
+
+      <h3>FastQC 关键指标</h3>
+      <ul>
+        <li><strong>Per base sequence quality</strong>：每个位置的平均质量，通常 5' 端高，3' 端低（测序衰减）</li>
+        <li><strong>Adapter content</strong>：接头污染比例，&gt;5% 需要去接头</li>
+        <li><strong>Sequence duplication</strong>：重复序列比例，过高提示 PCR bias 或文库复杂度低</li>
+      </ul>
+
+      <!-- 互动演示：比对质量评估 -->
+      <div class="widget demo" id="alignQcDemo">
+        <div class="widget-title">比对质量诊断：滑块调整参数，看比对率如何变化</div>
+        <canvas width="800" height="320"></canvas>
+        <div class="controls">
+          <label>测序质量 <span class="val" data-for="qual"></span><input type="range" name="qual" min="10" max="40" step="1" value="30"></label>
+          <label>参考基因组匹配度 <span class="val" data-for="match"></span><input type="range" name="match" min="50" max="100" step="5" value="90"></label>
+          <label>read 长度 <span class="val" data-for="len"></span><input type="range" name="len" min="50" max="150" step="10" value="100"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="warn">比对率突然暴跌？常见原因：① 参考基因组版本不对（hg19 vs hg38）② 样本污染（人源样本混了细菌）③ 接头没去除，干扰比对。</div>
+
+      <div class="key">STAR 比 HISAT2 更准但内存大（人类基因组需 30GB+ RAM）；HISAT2 更快更省内存，适合资源有限时。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">比对后你发现比对率只有 40%，最不可能的原因是什么？</p>
+        <button class="opt" data-fb">参考基因组选错（如把 hg38 的 reads 比对到小鼠）会导致大量 read 无法匹配。">参考基因组版本不对</button>
+        <button class="opt" data-fb">接头污染会干扰比对，特别是 read 3' 端。">接头没去干净</button>
+        <button class="opt" data-fb="正确。FPKM 是定量后的标准化值，不影响比对阶段。">FPKM 计算错误</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">质控和比对是"地基"，这一步没做好，后面的差异表达全是空中楼阁。多花 10 分钟看报告，省得后面返工。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="定量：从 BAM 到表达矩阵">
+      <h2>定量：从 BAM 到表达矩阵</h2>
+      <p class="tldr">featureCounts 数每个基因有多少 reads 覆盖，输出 count 矩阵（行=基因，列=样本）。这是差异表达的输入。</p>
+
+      <h3>featureCounts 的核心逻辑</h3>
+      <pre># 对每个样本的 BAM 文件计数
+featureCounts -a annotation.gtf \
+              -o counts.txt \
+              -t exon \
+              -g gene_id \
+              sample1.bam sample2.bam sample3.bam</pre>
+
+      <!-- 互动演示：read 计数模拟 -->
+      <div class="widget demo" id="countDemo">
+        <div class="widget-title">Read 计数模拟器：点击"计数"看 reads 如何被分配到基因</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runCount">▶ 开始计数</button>
+          <button class="btn" id="resetCount">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>计数中的边界情况</h3>
+      <ul>
+        <li><strong>多重比对（multi-mapping）</strong>：一条 read 比对到多个位置，默认丢弃或按比例分配</li>
+        <li><strong>跨外显子 reads</strong>：只算一次，归到该基因</li>
+        <li><strong>基因重叠</strong>：两个基因有重叠区域，featureCounts 默认跳过 ambiguous reads</li>
+      </ul>
+
+      <div class="key">Count 矩阵是整数（0, 1, 2, 3...），不能直接取 log 或标准化。后续 DESeq2 会用负二项分布模型处理。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">一条 read 同时落在 GeneA 和 GeneB 的重叠区，featureCounts 默认会怎么处理？</p>
+        <button class="opt" data-fb">同时计数会导致两个基因的表达量都虚高。">同时算给两个基因</button>
+        <button class="opt" data-fb="正确。无法确定来源，默认跳过（ambiguous）。">丢弃这条 read</button>
+        <button class="opt" data-fb">featureCounts 不是随机分配，而是跳过。">随机分给一个</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">定量是"数数"，但要数得准：处理好多重比对、剪接、基因重叠，才能得到可靠的表达矩阵。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="差异表达：DESeq2 的统计魔法">
+      <h2>差异表达：DESeq2 的统计魔法</h2>
+      <p class="tldr">DESeq2 用负二项分布建模基因表达，通过标准化 → 离散度估计 → Wald 检验，找出处理 vs 对照的显著差异基因。</p>
+
+      <h3>DESeq2 三步走</h3>
+      <div class="widget steps">
+        <div class="widget-title">DESeq2 内部流程</div>
+        <div class="step"><strong>① 标准化（Size factor）</strong>：计算每个样本的"测序深度校正系数"，让样本间可比。</div>
+        <div class="step"><strong>② 离散度估计（Dispersion）</strong>：估计每个基因的生物学变异程度（重复样本间的波动）。</div>
+        <div class="step"><strong>③ Wald 检验</strong>：对每个基因检验"处理效应是否为 0"，输出 p 值和 log2FC。</div>
+        <div class="step"><strong>④ 多重检验校正</strong>：2 万个基因同时检验，用 BH 法控制 FDR（假发现率）。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="analogy">DESeq2 像"严格的裁判"：不仅看处理组和对照组的平均值差多少（log2FC），还看组内重复样本的波动（离散度）。波动小 → 容易显著；波动大 → 即使均值差大也可能不显著。</div>
+
+      <!-- 互动演示：离散度影响 -->
+      <div class="widget demo" id="dispDemo">
+        <div class="widget-title">离散度演示：拖动滑块看组内变异如何影响显著性</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls">
+          <label>组内变异（离散度）<span class="val" data-for="disp"></span><input type="range" name="disp" min="0" max="50" step="5" value="15"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <p>输出结果解读：padj &lt; 0.05 且 |log2FC| &gt; 1（即 2 倍变化）通常作为筛选阈值。</p>
+
+      <div class="key">不要只看 p 值！必须同时看 log2FC 和 baseMean（平均表达量）。低表达基因的 p 值可能假显著。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">两个基因 log2FC 都是 2，但 GeneA 的 p=0.001，GeneB 的 p=0.2。最可能的解释是？</p>
+        <button class="opt" data-fb="正确。GeneB 的重复样本间波动大，导致统计上不显著。">GeneB 的组内变异更大</button>
+        <button class="opt" data-fb">log2FC 相同说明均值差相同。">GeneB 的均值差更大</button>
+        <button class="opt" data-fb">样本量影响所有基因，不能解释两者差异。">GeneB 的样本量更小</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">DESeq2 是 RNA-seq 差异表达的金标准。理解"离散度"这个概念，你就能看懂为什么有些"看起来差异大"的基因并不显著。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="结果可视化与生物学解读">
+      <h2>结果可视化与生物学解读</h2>
+      <p class="tldr">火山图看全局，热图看模式，GO 富集看功能。差异表达不是终点，回答生物学问题才是。</p>
+
+      <h3>三张关键图</h3>
+      <table>
+        <tr><th>图</th><th>看什么</th><th>异常信号</th></tr>
+        <tr><td>火山图</td><td>整体差异分布，找显著基因</td><td>没有明显上调/下调群 → 处理效应弱</td></tr>
+        <tr><td>热图</td><td>基因表达模式聚类</td><td>样本不按处理/对照分开 → 存在批次效应</td></tr>
+        <tr><td>MA plot</td><td>表达量 vs 倍数变化</td><td>低表达区高 fold change  → 可能是噪音</td></tr>
+      </table>
+
+      <!-- 互动演示：热图与批次效应 -->
+      <div class="widget demo" id="heatmapDemo">
+        <div class="widget-title">热图诊断：点按钮加入"批次效应"，看样本聚类如何被破坏</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runHeatmap">▶ 生成热图</button>
+          <button class="btn" id="addBatch">⚠️ 加入批次效应</button>
+          <button class="btn" id="resetHeatmap">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>功能富集分析（GO/KEGG）</h3>
+      <p>拿到 500 个差异基因后，下一步是问：<strong>这些基因集中在哪些功能类别？</strong> 用 clusterProfiler 做 GO 富集，找显著富集的通路（p.adj &lt; 0.05）。</p>
+
+      <div class="key">经典故事线：处理 → 差异基因 → 富集到 "免疫反应" 通路 → 验证关键基因 → 得出结论。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">热图中，处理组和对照组没有分开聚类，而是随机混在一起，最可能说明什么？</p>
+        <button class="opt" data-fb">聚类不分组通常是技术噪音大，而非生物学效应强。">处理效应很强</button>
+        <button class="opt" data-fb="正确。批次效应（测序时间、操作者、试剂批次）掩盖了真实的生物学差异。">存在批次效应</button>
+        <button class="opt" data-fb">基因数量影响统计功效，但不直接导致聚类失败。">基因数量太少</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>RNA-seq 中校正基因长度和测序深度后的表达量单位是 <input data-answer="FPKM|TPM|RPKM">；DESeq2 用 <input data-answer="负二项|negative binomial|NB"> 分布建模；多重检验校正后常用的阈值 <input data-answer="padj|FDR|adj.P.Val|调整p值"> &lt; 0.05。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">你已经掌握了 RNA-seq 的完整分析链：从 FASTQ 到差异基因，再到生物学解读。这是 L3 的第一门实战，继续变异检测或蛋白质结构预测？</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示1：比对质量诊断
+demo('#alignQcDemo', ({ qual, match, len }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const x1 = 80, x2 = W - 40, y1 = 50, y2 = H - 60;
+
+  // 计算比对率（模拟公式）
+  const alignRate = Math.min(99, Math.max(5,
+    match * 0.7 + qual * 0.5 + (len - 50) * 0.1 + Math.random() * 3
+  ));
+
+  // 条形图
+  const barY = y2 - 30;
+  ctx.fillStyle = cssVar('--border');
+  ctx.fillRect(x1, barY, x2 - x1, 30);
+  const color = alignRate >= 70 ? cssVar('--ok') : alignRate >= 50 ? cssVar('--warn') : '#dc2626';
+  ctx.fillStyle = color;
+  ctx.fillRect(x1, barY, (x2 - x1) * alignRate / 100, 30);
+
+  // 刻度
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  for (let i = 0; i <= 100; i += 10) {
+    const x = x1 + (x2 - x1) * i / 100;
+    ctx.fillText(String(i), x, barY + 45);
+  }
+
+  // 阈值线
+  ctx.strokeStyle = cssVar('--ok'); ctx.setLineDash([5,5]);
+  ctx.beginPath(); ctx.moveTo(x1 + (x2-x1)*0.7, y1); ctx.lineTo(x1 + (x2-x1)*0.7, barY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = cssVar('--ok'); ctx.fillText('70% 合格线', x1 + (x2-x1)*0.7, y1 - 8);
+
+  // 数字
+  ctx.font = 'bold 48px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = color;
+  ctx.fillText(`${alignRate.toFixed(1)}%`, W/2, 140);
+
+  // 状态
+  ctx.font = '16px sans-serif';
+  ctx.fillText(alignRate >= 70 ? '✅ 比对率合格' : alignRate >= 50 ? '⚠️ 偏低，检查参数' : '❌ 严重异常，排查污染/参考基因组', W/2, 180);
+
+  root.querySelector('.readout').textContent =
+    `质量 Q${qual} | 匹配度 ${match}% | 长度 ${len}bp → 预估比对率 ${alignRate.toFixed(1)}%`;
+});
+
+// 演示2：read 计数模拟
+(() => {
+  const root = document.getElementById('countDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+
+  // 简化的基因组：3 个基因，2 条染色体
+  const genes = [
+    { name: 'GeneA', chr: 'chr1', start: 100, end: 300, color: '#3b82f6' },
+    { name: 'GeneB', chr: 'chr1', start: 350, end: 500, color: '#f59e0b' },
+    { name: 'GeneC', chr: 'chr2', start: 200, end: 400, color: '#a855f7' }
+  ];
+
+  // 生成 reads
+  const reads = [];
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let i = 0; i < 40; i++) {
+    const g = genes[Math.floor(rand() * 3)];
+    const start = g.start + rand() * (g.end - g.start - 50);
+    reads.push({ chr: g.chr, start, end: start + 50, gene: g.name, assigned: false });
+  }
+  // 加一条 ambiguous read（跨 GeneA 和 GeneB）
+  reads.push({ chr: 'chr1', start: 280, end: 330, gene: null, assigned: false, ambiguous: true });
+
+  let phase = 0; // 0: idle, 1: showing reads, 2: counted
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const chrY = { chr1: 80, chr2: 200 };
+
+    // 染色体线
+    Object.entries(chrY).forEach(([chr, y]) => {
+      ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(50, y); ctx.lineTo(cv.width - 50, y); ctx.stroke();
+      ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(chr, 10, y + 5);
+    });
+
+    // 基因
+    genes.forEach(g => {
+      const y = chrY[g.chr];
+      const x1 = 50 + (g.start / 500) * (cv.width - 100);
+      const x2 = 50 + (g.end / 500) * (cv.width - 100);
+      ctx.fillStyle = g.color + '30';
+      ctx.fillRect(x1, y - 15, x2 - x1, 30);
+      ctx.strokeStyle = g.color; ctx.lineWidth = 2;
+      ctx.strokeRect(x1, y - 15, x2 - x1, 30);
+      ctx.fillStyle = g.color; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(g.name, (x1+x2)/2, y - 20);
+    });
+
+    // Reads
+    if (phase >= 1) {
+      reads.forEach((r, i) => {
+        const y = chrY[r.chr] + 40 + (i % 3) * 12;
+        const x1 = 50 + (r.start / 500) * (cv.width - 100);
+        const x2 = 50 + (r.end / 500) * (cv.width - 100);
+        ctx.fillStyle = r.ambiguous ? '#dc2626' : r.assigned ? cssVar('--ok') : '#6b7280';
+        ctx.globalAlpha = r.assigned ? 1 : 0.7;
+        ctx.fillRect(x1, y, x2 - x1, 6);
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    // 计数结果
+    if (phase >= 2) {
+      const counts = { GeneA: 0, GeneB: 0, GeneC: 0 };
+      reads.forEach(r => { if (r.assigned && r.gene) counts[r.gene]++; });
+      ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillStyle = cssVar('--text');
+      ctx.fillText('Count 结果:', 50, 320);
+      ctx.font = '14px monospace';
+      ctx.fillText(`GeneA: ${counts.GeneA}  GeneB: ${counts.GeneB}  GeneC: ${counts.GeneC}  Ambiguous: 1 (skipped)`, 50, 345);
+    }
+  }
+
+  document.getElementById('runCount').onclick = () => {
+    phase++;
+    if (phase === 1) {
+      readout.textContent = '显示所有 reads（灰色=未分配，红色=跨基因边界）';
+    } else if (phase === 2) {
+      reads.forEach(r => { if (!r.ambiguous) r.assigned = true; });
+      readout.textContent = '✅ 计数完成！Ambiguous read 被跳过';
+    } else {
+      phase = 2;
+      return;
+    }
+    draw();
+  };
+  document.getElementById('resetCount').onclick = () => {
+    phase = 0;
+    reads.forEach(r => r.assigned = false);
+    readout.textContent = '';
+    draw();
+  };
+  draw();
+})();
+
+// 演示3：离散度影响
+demo('#dispDemo', ({ disp }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const y1 = 80, y2 = H - 80;
+  const group1X = 200, group2X = 500;
+
+  // 生成数据点
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const mean1 = 50, mean2 = 65;
+
+  // 组内点
+  for (let i = 0; i < 20; i++) {
+    const jitter = (rand() - 0.5) * disp * 2;
+    // 组1
+    ctx.fillStyle = '#3b82f6';
+    ctx.beginPath();
+    ctx.arc(group1X + (rand() - 0.5) * 40, y2 - (mean1 + jitter) * 2, 5, 0, Math.PI*2);
+    ctx.fill();
+    // 组2
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.arc(group2X + (rand() - 0.5) * 40, y2 - (mean2 + jitter) * 2, 5, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // 均值线
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(group1X - 30, y2 - mean1 * 2); ctx.lineTo(group1X + 30, y2 - mean1 * 2); ctx.stroke();
+  ctx.strokeStyle = '#dc2626';
+  ctx.beginPath(); ctx.moveTo(group2X - 30, y2 - mean2 * 2); ctx.lineTo(group2X + 30, y2 - mean2 * 2); ctx.stroke();
+
+  // 标签
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('对照组', group1X, y2 + 30);
+  ctx.fillText('处理组', group2X, y2 + 30);
+  ctx.fillText('表达量 →', 40, (y1+y2)/2);
+
+  // p 值模拟
+  const tStat = (mean2 - mean1) / (disp / Math.sqrt(20) + 0.1);
+  const pValue = Math.max(0.0001, Math.exp(-Math.abs(tStat) * 0.8));
+  const isSig = pValue < 0.05;
+
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillStyle = isSig ? cssVar('--ok') : '#dc2626';
+  ctx.fillText(`p = ${pValue.toFixed(4)} ${isSig ? '✓ 显著' : '✗ 不显著'}`, W/2, 50);
+
+  ctx.font = '15px sans-serif';
+  ctx.fillStyle = cssVar('--text');
+  const msg = disp < 15 ? '组内变异小 → 均值差 15 很容易被检测到' :
+              disp < 30 ? '中等变异 → 需要更大样本量或更大差异' :
+                          '组内变异大 → 即使均值差 15 也可能不显著';
+  ctx.fillText(msg, W/2, H - 20);
+
+  root.querySelector('.readout').textContent = `离散度 = ${disp} | log2FC ≈ ${(Math.log2(mean2/mean1)).toFixed(2)} | p = ${pValue.toFixed(4)}`;
+});
+
+// 演示4：热图与批次效应
+(() => {
+  const root = document.getElementById('heatmapDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+
+  const nGenes = 20, nSamples = 8;
+  let hasBatch = false;
+  let phase = 0; // 0: idle, 1: drawn
+
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+
+  function generateData() {
+    const data = [];
+    for (let g = 0; g < nGenes; g++) {
+      const row = [];
+      const isDE = g < 8; // 前 8 个是差异基因
+      const base = rand() * 5 + 2;
+      for (let s = 0; s < nSamples; s++) {
+        const isTreated = s >= 4;
+        let val = base;
+        if (isDE) val += isTreated ? 2 : -1;
+        val += (rand() - 0.5) * 1.5;
+        if (hasBatch) {
+          // 批次效应：前 4 个样本（对照）偏高
+          if (s < 4) val += 1.5;
+          else val -= 1.5;
+        }
+        row.push(val);
+      }
+      data.push(row);
+    }
+    return data;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const data = generateData();
+    const cellW = 45, cellH = 18;
+    const startX = 120, startY = 50;
+
+    // 样本标签
+    ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    for (let s = 0; s < nSamples; s++) {
+      ctx.fillStyle = s < 4 ? '#3b82f6' : '#dc2626';
+      ctx.fillText(s < 4 ? `C${s+1}` : `T${s-3}`, startX + s * cellW + cellW/2, startY - 8);
+    }
+
+    // 热图格子
+    let min = Infinity, max = -Infinity;
+    data.forEach(row => row.forEach(v => { min = Math.min(min, v); max = Math.max(max, v); }));
+    data.forEach((row, g) => {
+      row.forEach((v, s) => {
+        const frac = (v - min) / (max - min);
+        const r = Math.round(255 * frac);
+        const b = Math.round(255 * (1 - frac));
+        ctx.fillStyle = `rgb(${r}, 100, ${b})`;
+        ctx.fillRect(startX + s * cellW, startY + g * cellH, cellW - 1, cellH - 1);
+      });
+    });
+
+    // 图例
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('低表达', 50, startY + nGenes * cellH + 20);
+    ctx.fillStyle = 'rgb(0, 100, 255)';
+    ctx.fillRect(110, startY + nGenes * cellH + 8, 30, 15);
+    ctx.fillStyle = 'rgb(255, 100, 0)';
+    ctx.fillRect(145, startY + nGenes * cellH + 8, 30, 15);
+    ctx.fillStyle = cssVar('--muted');
+    ctx.fillText('高表达', 180, startY + nGenes * cellH + 20);
+
+    // 批次标注
+    if (hasBatch) {
+      ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+      ctx.strokeRect(startX - 5, startY - 5, 4 * cellW + 10, nGenes * cellH + 10);
+      ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('批次 1（偏高）', startX - 10, startY + nGenes * cellH + 45);
+    }
+  }
+
+  document.getElementById('runHeatmap').onclick = () => {
+    phase = 1;
+    draw();
+    readout.textContent = hasBatch ?
+      '⚠️ 批次效应掩盖了处理效应！样本按批次聚类，而非按处理/对照分组' :
+      '✅ 正常热图：处理组（T1-T4）和对照组（C1-C4）清晰分开聚类';
+  };
+  document.getElementById('addBatch').onclick = () => {
+    hasBatch = true;
+    draw();
+    readout.textContent = '⚠️ 已加入批次效应：对照组整体偏高，可能混淆差异分析';
+  };
+  document.getElementById('resetHeatmap').onclick = () => {
+    hasBatch = false;
+    phase = 0;
+    readout.textContent = '';
+    draw();
+  };
+  draw();
+})();
+</script>
+</body>
+</html>

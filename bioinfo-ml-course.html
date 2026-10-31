@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器学习 × 生物信息学：从特征到预测 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto;font-size:14px}
+pre .c{color:#9ca3af}
+pre .k{color:#f472b6}
+pre .s{color:#a5f3fc}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:130px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+.seq-input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-family:ui-monospace,Consolas,monospace;font-size:15px;letter-spacing:1px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>机器学习 × 生物信息学：从特征到预测</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="ML 在生信中的应用全景">
+      <h2>ML 在生信中的应用全景</h2>
+      <p class="tldr">机器学习正在重塑生物信息学：从序列分类、结构预测，到药物筛选和疾病诊断，凡是"从数据找规律"的任务，都有 ML 的身影。</p>
+
+      <p>生物数据爆炸式增长：一次测序能产生数亿条序列、数万个基因的表达值。人脑无法从这些高维数据里直接看出规律，而机器学习恰好擅长这件事——<strong>从大量样本中学习"特征 → 结论"的映射</strong>。</p>
+
+      <div class="analogy">传统生信分析像"查字典"（按固定规则比对、注释）；机器学习像"总结经验"（看过一万个例子后，判断新来的这个属于哪类）。规则写不全的问题，经验可以补上。</div>
+
+      <h3>四大经典战场</h3>
+      <div class="widget">
+        <div class="widget-title">点击卡片，了解 ML 的四个代表应用</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">序列分类</div><div class="back">判断 DNA/RNA/蛋白序列属于哪种功能类型。例：预测启动子、增强子、非编码 RNA、蛋白质亚细胞定位。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">结构预测</div><div class="back">从序列推三维结构。代表：AlphaFold 用深度学习预测蛋白质结构，精度接近实验水平，2021 年震动整个领域。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">药物筛选</div><div class="back">预测小分子与靶点蛋白的结合亲和力，从百万级化合物库中优先挑选候选药物，大幅降低成本。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">疾病诊断</div><div class="back">从基因组变异、表达谱、影像或病理切片预测疾病风险与分型。例：基于甲基化的癌症早筛、肿瘤突变负荷预测。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">ML 在生信中的共同范式：把生物对象（序列、结构、表达谱）表示成数值特征向量 $\mathbf{x}$，让模型学习 $f(\mathbf{x}) \to y$ 的映射，其中 $y$ 是我们关心的标签（类别、亲和力、风险评分）。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">AlphaFold 解决的核心问题是？</p>
+        <button class="opt" data-fb">序列比对已有 BLAST 等传统工具，不是 AlphaFold 的贡献。">比对新测序的 DNA 序列</button>
+        <button class="opt" data-fb="正确。AlphaFold 从氨基酸序列直接预测三维结构，颠覆了传统模板建模路线。">从蛋白质序列预测三维结构</button>
+        <button class="opt" data-fb">质谱数据分析不是 AlphaFold 的目标。">分析质谱数据找修饰位点</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住这个总框架：生物对象 → 特征 → 模型 → 预测。这门课的后面五章，就是把这条链路拆开，一环一环讲清楚。</div>
+    </section>
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="监督 vs 无监督">
+      <h2>监督 vs 无监督：两种学习范式</h2>
+      <p class="tldr">有标签用监督学习（分类/回归），没标签用无监督学习（聚类/降维）。生信里两类任务各占半壁江山，选错范式是新手最常见的错误。</p>
+
+      <h3>监督学习：有标准答案的练习册</h3>
+      <p>训练数据带标签 $y$，模型学习从特征到标签的映射：</p>
+      <ul>
+        <li><strong>分类</strong>：$y$ 是离散类别。例：判断一段 DNA 是否为增强子（是/否）；预测 SNP 是否为致病突变。</li>
+        <li><strong>回归</strong>：$y$ 是连续数值。例：预测药物与靶点的结合亲和力（Kd）；预测基因表达量。</li>
+      </ul>
+
+      <h3>无监督学习：自己找结构的拼图</h3>
+      <p>没有标签，模型自行发现数据中的结构：</p>
+      <ul>
+        <li><strong>聚类</strong>：把相似样本分组。例：对肿瘤样本的基因表达谱聚类，发现新的分子亚型（如乳腺癌的 Luminal A/B、HER2+、Basal）。</li>
+        <li><strong>降维</strong>：把高维数据压到 2-3 维便于观察。例：t-SNE/UMAP 可视化单细胞 RNA-seq 数据，识别细胞类型。</li>
+      </ul>
+
+      <div class="analogy">监督学习像"带着答案刷题"——每道题（样本）都有标准答案（标签），刷多了就会做新题。无监督学习像"把一堆袜子按相似度配对"——没人告诉你哪双该配，你得自己发现"颜色、花纹接近"。</div>
+
+      <table>
+        <tr><th>范式</th><th>生信任务</th><th>代表算法</th></tr>
+        <tr><td>分类</td><td>启动子识别、致病突变预测、增强子判别</td><td>随机森林、SVM、逻辑回归、CNN</td></tr>
+        <tr><td>回归</td><td>亲和力预测、表达量预测、生存风险评分</td><td>线性回归、梯度提升、深度学习</td></tr>
+        <tr><td>聚类</td><td>癌症分子分型、单细胞分群、共表达模块</td><td>K-means、层次聚类、Louvain</td></tr>
+        <tr><td>降维</td><td>单细胞可视化、批次校正、去噪</td><td>PCA、t-SNE、UMAP、autoencoder</td></tr>
+      </table>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">你有一组肿瘤病人的基因表达数据，没有任何亚型标签，想自动发现病人分成几类，应该用什么方法？</p>
+        <button class="opt" data-fb">逻辑回归需要已知的类别标签，你没有。">逻辑回归（分类）</button>
+        <button class="opt" data-fb">线性回归预测连续值，不能自动分组。">线性回归</button>
+        <button class="opt" data-fb="正确。无标签数据用无监督聚类（如 K-means / 层次聚类）发现潜在亚群。">聚类分析</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">判断范式的口诀：先问"我有标签吗？"有 → 监督（预测类问题）；没有 → 无监督（探索结构）。生信中大量有意思的问题是"半监督"：少量有标签 + 大量无标签，这个进阶话题 L4 会提到。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="特征工程：把序列变成数字">
+      <h2>特征工程：把序列变成数字</h2>
+      <p class="tldr">模型不能直接读 DNA 序列，必须先编码成数值向量。k-mer 频率是最经典的序列特征；此外还有物化性质、进化保守性、结构特征。</p>
+
+      <h3>为什么特征工程是"最后一公里"</h3>
+      <p>同样的分类任务，用朴素特征 + 简单模型，可能不如用好特征 + 简单模型。<strong>特征决定了模型的上限</strong>——经典机器学习（随机森林、SVM）的性能高度依赖人工设计的特征。</p>
+
+      <h3>四类常用特征</h3>
+      <table>
+        <tr><th>特征类型</th><th>内容</th><th>生信应用</th></tr>
+        <tr><td>k-mer 频率</td><td>长度为 k 的子串在序列中出现的频率</td><td>物种分类、启动子预测、RNA 结合位点</td></tr>
+        <tr><td>物化性质</td><td>GC 含量、分子量、疏水性、电荷分布</td><td>蛋白质功能分类、抗菌肽预测</td></tr>
+        <tr><td>进化保守性</td><td>PhastCons/GERP 保守性得分</td><td>致病突变识别、功能元件定位</td></tr>
+        <tr><td>结构特征</td><td>二级结构、溶剂可及性、无序区</td><td>翻译后修饰位点预测、结合位点识别</td></tr>
+      </table>
+
+      <p>k-mer 特征的大小：$4^k$（DNA，4 种碱基）。$k=2$ 时 16 维，$k=3$ 时 64 维，$k=4$ 时 256 维——维度随 k 指数增长，这也是高维小样本问题的来源之一。</p>
+
+      <!-- 互动演示：k-mer 特征提取器 -->
+      <div class="widget demo" id="kmerDemo">
+        <div class="widget-title">k-mer 特征提取器：输入 DNA 序列，实时计算 k-mer 频率条形图</div>
+        <input class="seq-input" name="seq" value="ATGCGTACGTTAGCCGATCGATGCTAGCTAGCATCGATCGTACGATCGATGCTAGCATCG" spellcheck="false">
+        <div class="controls">
+          <label>k 值（子串长度）
+            <span class="val" data-for="k"></span>
+            <input type="range" name="k" min="2" max="4" step="1" value="3">
+          </label>
+          <label style="justify-content:flex-end">
+            <button class="btn" id="randSeq" style="align-self:flex-start">🎲 随机序列</button>
+          </label>
+        </div>
+        <canvas width="800" height="360"></canvas>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">k-mer 能捕获"序列上下文"信息：比如启动子区富含 "TA" 和 "TATA" 类 motif，k-mer 频率向量中这些分量会偏高，模型据此学习区分。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">DNA 序列用 k=3 做 k-mer 特征，特征向量是多少维？</p>
+        <button class="opt" data-fb="正确。DNA 有 4 种碱基，k-mer 总数 = 4³ = 64（即 3-mer / trimer）。">64 维</button>
+        <button class="opt" data-fb="3 是 k 的值，不是特征维度。">3 维</button>
+        <button class="opt" data-fb="256 是 k=4 时的维度。">256 维</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">特征工程是经典 ML 的核心竞争力。好消息是：深度学习（L3）能自动学特征，把这一步交给模型——但它不是免费的午餐，需要更多数据和算力。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="模型评估：你的模型真的准吗">
+      <h2>模型评估：你的模型真的准吗</h2>
+      <p class="tldr">训练集上的高分可能是假象。交叉验证、ROC/AUC 是生信 ML 的标配评估工具；过拟合是头号敌人，正则化是对策。</p>
+
+      <h3>为什么不能只看训练集准确率</h3>
+      <p>模型在训练数据上表现好，可能只是"背答案"。真正的考验是<strong>在没见过的数据（测试集）上的表现</strong>。评估分类器最常用的工具是 ROC 曲线。</p>
+
+      <h3>ROC 与 AUC：分类器的体检报告</h3>
+      <p>分类器输出的是一个分数，我们需要一个<strong>阈值</strong>把它切成"正类/负类"。阈值移动时：</p>
+      <ul>
+        <li>真阳性率（敏感度）：$TPR = \dfrac{TP}{TP + FN}$</li>
+        <li>假阳性率：$FPR = \dfrac{FP}{FP + TN}$</li>
+      </ul>
+      <p>以 FPR 为横轴、TPR 为纵轴画出的曲线就是 ROC 曲线，曲线下面积 <strong>AUC</strong> 越大越好（1.0 = 完美，0.5 = 瞎猜）。</p>
+
+      <!-- 互动演示：ROC 曲线生成器 -->
+      <div class="widget demo" id="rocDemo">
+        <div class="widget-title">ROC 曲线生成器：拖动分类阈值，看 TPR/FPR 与 AUC 如何变化</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls">
+          <label>分类阈值 <span class="val" data-for="thr"></span><input type="range" name="thr" min="0" max="100" step="1" value="50"></label>
+          <label>类别可分性（两分布距离） <span class="val" data-for="sep"></span><input type="range" name="sep" min="10" max="90" step="5" value="40"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>交叉验证：把数据用充分</h3>
+      <p>数据宝贵，不能浪费。K 折交叉验证把数据分 K 份，轮流拿 K-1 份训练、1 份验证，取平均性能——生信中常用 5 折或 10 折。</p>
+
+      <!-- 互动演示：过拟合 -->
+      <div class="widget demo" id="overfitDemo">
+        <div class="widget-title">过拟合演示：拖动滑块增加模型复杂度（多项式阶数），看训练误差和测试误差何时"分叉"</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls">
+          <label>模型复杂度（多项式阶数） <span class="val" data-for="deg"></span><input type="range" name="deg" min="1" max="16" step="1" value="1"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="warn">生信数据"小样本 + 高维度"的特点让过拟合极其常见：100 个样本、10000 个特征，随便一个模型都能"背下"训练集。必须交叉验证 + 独立测试集双保险。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">你的模型在训练集 AUC = 0.98，但在独立测试集上 AUC = 0.62，最可能的解释是？</p>
+        <button class="opt" data-fb">数据不匹配可能导致下降，但训练集上 0.98 本身就提示过拟合。">测试集质量差</button>
+        <button class="opt" data-fb="正确。巨大的 train/test 差距是过拟合的典型特征：模型记住了训练数据的噪音。">模型过拟合了</button>
+        <button class="opt" data-fb">特征多不直接导致这种差距。">特征数量不够</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">评估是 ML 的"质检环节"：交叉验证选模型、ROC/AUC 报性能、警惕过拟合。这三个工具会贯穿你之后所有的生信 ML 项目。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="深度学习：让模型自己学特征">
+      <h2>深度学习：让模型自己学特征</h2>
+      <p class="tldr">CNN 从序列中自动提取 motif 特征（DeepBind），RNN/LSTM 建模长程依赖，Transformer 架构（ESM）把蛋白质当作"语言"来学习。</p>
+
+      <h3>为什么深度学习适合序列数据</h3>
+      <p>回想 L2：k-mer 需要人工选 k 值、手工统计频率。深度学习把这一步也纳入学习：<strong>卷积核就是可学习的 motif 探测器</strong>。模型自己学"什么模式的序列重要"，不用人告诉它。</p>
+
+      <h3>三条技术路线</h3>
+      <div class="widget steps">
+        <div class="widget-title">深度学习在生信中的演进</div>
+        <div class="step"><strong>① CNN 处理序列（DeepBind, 2015）</strong>：把 DNA/RNA 序列 one-hot 编码后过卷积层，自动学习转录因子结合的序列模式（motif），性能超越人工特征 + SVM。</div>
+        <div class="step"><strong>② RNN/LSTM 建模长程依赖</strong>：序列信息可以从远处传递（如一个基因的增强子可能在几万个碱基之外），LSTM 的门控机制能记住长距离上下文。例：DeepCRISPR 预测 gRNA 效率。</div>
+        <div class="step"><strong>③ Transformer 与蛋白质语言模型（ESM, 2021+）</strong>：把氨基酸当"单词"、蛋白质当"句子"，用自注意力机制建模全局依赖。ESM-2、AlphaFold2 的 Evoformer 都属于这一路线，能从未标注的海量蛋白序列中学到进化约束信息。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="analogy">传统 ML：你给厨师一本菜谱（人工特征），他照着做菜。深度学习：你只做一件事——把食材（原始序列）给它，告诉它"好吃"的标准（损失函数），它自己摸索怎么做。</div>
+
+      <h3>one-hot 编码：序列怎么进神经网络</h3>
+      <pre>序列 A T G C → one-hot 矩阵（4 列 × 序列长度）：
+
+A → [1, 0, 0, 0]
+T → [0, 1, 0, 0]
+G → [0, 0, 1, 0]
+C → [0, 0, 0, 1]</pre>
+
+      <div class="key">深度学习的隐含假设：数据够多。ESM 用了 2.5 亿条蛋白质序列预训练——这种"大数据红利"在多数湿实验场景难以复制，这也是 L4 要讨论的挑战。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">DeepBind 用 CNN 处理 DNA 序列，卷积层学到的主要是什么？</p>
+        <button class="opt" data-fb">超参数是人为设定的，不是卷积层学出来的。">最优的模型超参数</button>
+        <button class="opt" data-fb">标签是训练数据自带的。">序列的分类标签</button>
+        <button class="opt" data-fb="正确。卷积核在扫描序列时激活的位置和模式，对应转录因子结合的 motif 特征。">序列中的 motif 模式</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">深度学习把"特征工程"也变成了学习的一部分：CNN 学局部 motif，RNN 学长程依赖，Transformer 学全局注意力。这条路线从 2015 年 DeepBind 开始，到今天 ESM 和 AlphaFold2，已经成为生信 ML 的主流。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="可解释性与现实挑战">
+      <h2>可解释性与现实挑战</h2>
+      <p class="tldr">模型准还不够——生物学家要问"为什么"。SHAP 值拆解特征贡献；同时要正视数据偏差、小样本和跨域失效这三大现实挑战。</p>
+
+      <h3>可解释性：让模型开口说话</h3>
+      <p>在生信中，"黑盒模型给出一个预测"往往不够。如果你预测某突变致病，审稿人和临床医生会追问：<strong>依据是什么？</strong></p>
+      <ul>
+        <li><strong>SHAP 值</strong>：把每个特征对单次预测的贡献量化分解。正 SHAP = 推高预测值，负 SHAP = 压低预测值。例：某突变预测为致病，SHAP 显示"该位点保守性得分"贡献了 +0.35，是主要依据。</li>
+        <li><strong>梯度归因（ saliency / Integrated Gradients）</strong>：在序列模型上，看"哪些碱基对预测最重要"，可视化出来往往就是已知的 motif。</li>
+      </ul>
+
+      <p>SHAP 的核心思想基于博弈论的 Shapley 值：对每个特征 $i$，计算它在所有可能的特征组合中的边际贡献的加权平均：</p>
+      <p>$$\phi_i = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!(n-|S|-1)!}{n!}\left[f(S \cup \{i\}) - f(S)\right]$$</p>
+
+      <div class="analogy">SHAP 像"分账"：一次预测的分数是团队合作的成果，SHAP 给每个特征（队员）分配合适的贡献份额——谁干得多、谁干得少，一目了然。</div>
+
+      <h3>三大现实挑战</h3>
+      <table>
+        <tr><th>挑战</th><th>表现</th><th>对策</th></tr>
+        <tr><td>数据偏差</td><td>训练集偏向欧洲人群 → 对亚洲人群预测不准；某个实验批次的数据被模型"记住"</td><td>平衡采样、批次校正、外部验证</td></tr>
+        <tr><td>小样本</td><td>罕见病只有几十个样本，深度模型直接过拟合</td><td>迁移学习、预训练模型微调、数据增强、简单模型</td></tr>
+        <tr><td>领域自适应</td><td>在小鼠数据上训练的模型，迁移到人源数据性能暴跌</td><td>域对抗训练、多物种联合训练、保守特征</td></tr>
+      </table>
+
+      <div class="warn">"训练集/测试集同源"是生信论文常见的水分来源：同一实验室、同一批次的数据随机划分，模型学到的可能是批次信号而非生物学信号。理想做法：用完全独立队列做外部验证。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">某突变致病性预测模型在欧洲人群数据上 AUC = 0.92，在东亚人群队列上只有 0.71。最可能的根本原因是？</p>
+        <button class="opt" data-fb">0.71 仍略高于随机，说明模型学到了一些东西，只是不通用。">模型完全没用</button>
+        <button class="opt" data-fb="正确。训练数据缺乏东亚人群多样性，模型学到的规律不能跨人群泛化，属于数据偏差问题。">训练数据的人群偏差</button>
+        <button class="opt" data-fb">正则化针对过拟合，不解决人群偏差。">正则化不够</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>DNA 序列 k=4 的 k-mer 特征有 <input data-answer="256"> 维；ROC 曲线下面积叫 <input data-answer="AUC|auc">，0.5 表示 <input data-answer="随机猜测|瞎猜|random|随机">；把每个特征对单次预测的贡献量化分解的方法是 <input data-answer="SHAP|Shapley|shap"> 值。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">恭喜完成本课程！你已走通"特征 → 模型 → 评估 → 解释"的完整链路。生信 ML 的下一步是动手：用 scikit-learn 跑通一个 k-mer + 随机森林的启动子分类基线，再尝试微调一个 ESM 模型。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示1：k-mer 特征提取器
+(() => {
+  const root = document.getElementById('kmerDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const seqInput = root.querySelector('.seq-input');
+  const kInput = root.querySelector('input[name=k]');
+  const kVal = root.querySelector('.val[data-for=k]');
+
+  const COMP = { A: 'T', T: 'A', G: 'C', C: 'G' };
+  const BASES = ['A', 'T', 'G', 'C'];
+
+  function allKmers(k) {
+    if (k === 1) return BASES.slice();
+    const prev = allKmers(k - 1);
+    const out = [];
+    prev.forEach(p => BASES.forEach(b => out.push(p + b)));
+    return out;
+  }
+
+  function draw() {
+    const seq = seqInput.value.toUpperCase().replace(/[^ATGC]/g, '');
+    const k = +kInput.value;
+    kVal.textContent = 'k = ' + k;
+
+    ctx.clearRect(0, 0, cv.width, cv.height);
+
+    // 计算 k-mer 频率
+    const kmers = allKmers(k);
+    const counts = Object.fromEntries(kmers.map(m => [m, 0]));
+    let total = 0;
+    for (let i = 0; i + k <= seq.length; i++) {
+      const s = seq.slice(i, i + k);
+      if (counts[s] !== undefined) { counts[s]++; total++; }
+    }
+
+    // 按频率排序取 Top 展示（k=4 有 256 个，画不下）
+    const sorted = kmers.map(m => ({ m, c: counts[m], f: total ? counts[m] / total : 0 }))
+      .sort((a, b) => b.c - a.c);
+    const showN = k === 2 ? 16 : k === 3 ? 64 : 32; // k=4 时只画 top 32
+    const shown = sorted.slice(0, showN);
+
+    const W = cv.width, H = cv.height;
+    const x1 = 60, x2 = W - 30, y1 = 40, y2 = H - 60;
+    const maxF = Math.max(...shown.map(s => s.f), 1e-6);
+    const barW = (x2 - x1) / shown.length;
+
+    // 坐标轴
+    ctx.strokeStyle = cssVar('--border');
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1, y2); ctx.lineTo(x2, y2); ctx.stroke();
+
+    // 条形
+    shown.forEach((s, i) => {
+      const h = (s.f / maxF) * (y2 - y1 - 10);
+      const x = x1 + i * barW;
+      ctx.fillStyle = cssVar('--primary');
+      ctx.globalAlpha = 0.35 + 0.65 * (s.f / maxF);
+      ctx.fillRect(x + 1, y2 - h, barW - 2, h);
+      ctx.globalAlpha = 1;
+      // 标签
+      if (barW >= 11 || i % 2 === 0) {
+        ctx.save();
+        ctx.translate(x + barW / 2, y2 + 4);
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillStyle = cssVar('--muted');
+        ctx.font = (k === 2 ? 11 : 9) + 'px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(s.m, 0, 0);
+        ctx.restore();
+      }
+    });
+
+    // 顶部标题信息
+    ctx.fillStyle = cssVar('--text');
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`序列长度 ${seq.length} bp | ${total} 个 k-mer | 特征维度 4^${k} = ${kmers.length}`, x1, 24);
+
+    ctx.fillStyle = cssVar('--muted');
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText((k === 4 ? 'Top 32 k-mer（按频率）' : '全部 k-mer（按频率降序）') + '  |  频率轴 max = ' + (maxF * 100).toFixed(1) + '%', x2, 24);
+
+    readout.textContent = total
+      ? `最高频 k-mer：${shown[0].m}（${(shown[0].f * 100).toFixed(1)}%）| 输入序列（已清理非法字符）：${seq}`
+      : '⚠️ 请输入至少 ' + k + ' 个碱基的 DNA 序列（仅含 A/T/G/C）';
+  }
+
+  seqInput.addEventListener('input', draw);
+  kInput.addEventListener('input', draw);
+
+  document.getElementById('randSeq').onclick = () => {
+    let s = '';
+    // 人为制造偏向：前 2/3 随机，后 1/3 重复某 motif，让频率分布更有趣
+    for (let i = 0; i < 40; i++) s += BASES[Math.floor(Math.random() * 4)];
+    const motif = 'ATGC'[Math.floor(Math.random() * 4)] + 'CGTA'[Math.floor(Math.random() * 4)] + 'GATC'[Math.floor(Math.random() * 4)];
+    for (let i = 0; i < 4; i++) s += motif;
+    for (let i = 0; i < 20; i++) s += BASES[Math.floor(Math.random() * 4)];
+    seqInput.value = s;
+    draw();
+  };
+
+  draw();
+})();
+
+// 演示2：ROC 曲线生成器
+demo('#rocDemo', ({ thr, sep }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const x1 = 60, x2 = W / 2 - 30, y1 = 40, y2 = H - 60;      // ROC 区（左半）
+  const d1 = W / 2 + 40, d2 = W - 40;                         // 分布区（右半）
+
+  // 两个高斯分布：负类 N(50, 15)，正类 N(50+sep, 15)
+  const muN = 50, muP = 50 + +sep, sigma = 15;
+  const gauss = (x, mu) => Math.exp(-((x - mu) ** 2) / (2 * sigma * sigma));
+
+  // —— 右侧：分数分布 + 阈值线 ——
+  const distY1 = y1, distY2 = y1 + (y2 - y1) * 0.55;
+  ctx.strokeStyle = cssVar('--border');
+  ctx.beginPath(); ctx.moveTo(d1, distY1); ctx.lineTo(d1, distY2); ctx.lineTo(d2, distY2); ctx.stroke();
+  let maxG = 0;
+  for (let x = 0; x <= 100; x += 1) maxG = Math.max(maxG, gauss(x, muN), gauss(x, muP));
+  const drawCurve = (mu, color) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    for (let x = 0; x <= 100; x += 1) {
+      const px = d1 + (d2 - d1) * x / 100;
+      const py = distY2 - (gauss(x, mu) / maxG) * (distY2 - distY1 - 10);
+      x === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  };
+  drawCurve(muN, '#3b82f6');
+  drawCurve(muP, '#dc2626');
+  const thrX = d1 + (d2 - d1) * thr / 100;
+  ctx.strokeStyle = cssVar('--warn'); ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(thrX, distY1); ctx.lineTo(thrX, distY2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('负类', d1 + 20, distY1 + 14);
+  ctx.fillStyle = '#dc2626';
+  ctx.fillText('正类', d1 + 20 + sep, distY1 + 14);
+
+  // 当前阈值的 TPR / FPR（解析式）
+  const Phi = v => 0.5 * (1 + Math.tanh(0.7978845608 * (v / Math.SQRT2))); // 近似标准正态 CDF
+  const z = (thr - muN) / sigma;
+  const fpr = 1 - Phi(z);
+  const tpr = 1 - Phi((thr - muP) / sigma);
+
+  // —— 左侧：ROC 曲线 ——
+  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1, y2); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('FPR', (x1 + x2) / 2, y2 + 22);
+  ctx.save(); ctx.translate(x1 - 28, (y1 + y2) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('TPR', 0, 0); ctx.restore();
+  for (let i = 0; i <= 10; i += 5) {
+    const fx = x1 + (x2 - x1) * i / 10;
+    const fy = y2 - (y2 - y1) * i / 10;
+    ctx.fillStyle = cssVar('--muted');
+    ctx.fillText((i / 10).toFixed(1), fx, y2 + 14);
+    ctx.textAlign = 'right'; ctx.fillText((i / 10).toFixed(1), x1 - 6, fy + 4); ctx.textAlign = 'center';
+  }
+
+  // 对角线（随机基准）
+  ctx.strokeStyle = cssVar('--border'); ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(x1, y2); ctx.lineTo(x2, y1); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ROC 曲线：扫描所有阈值
+  ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2.5; ctx.beginPath();
+  const rocPt = t => {
+    const f = 1 - Phi((t - muN) / sigma);
+    const r = 1 - Phi((t - muP) / sigma);
+    return [x1 + (x2 - x1) * f, y2 - (y2 - y1) * r];
+  };
+  for (let t = 0; t <= 100; t += 1) {
+    const [px, py] = rocPt(t);
+    t === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // AUC（正态分布解析解）
+  const auc = Phi((muP - muN) / (sigma * Math.SQRT2));
+  ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`AUC = ${auc.toFixed(3)}`, x1 + 10, y1 + 22);
+  ctx.font = '13px sans-serif'; ctx.fillStyle = cssVar('--muted');
+  ctx.fillText(auc > 0.9 ? '优秀' : auc > 0.8 ? '良好' : auc > 0.7 ? '一般' : auc > 0.6 ? '较弱' : '接近随机', x1 + 10, y1 + 42);
+
+  // 当前阈值在 ROC 上的点
+  const [cx, cy] = rocPt(+thr);
+  ctx.fillStyle = cssVar('--warn');
+  ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+  // 底部读数
+  ctx.textAlign = 'center';
+  ctx.fillStyle = cssVar('--text'); ctx.font = '14px sans-serif';
+  ctx.fillText(`阈值 = ${thr}  →  TPR(敏感度) = ${tpr.toFixed(2)}   FPR = ${fpr.toFixed(2)}`, (x1 + x2) / 2, H - 18);
+
+  root.querySelector('.readout').textContent =
+    `阈值 ${thr}：敏感度 ${(tpr * 100).toFixed(0)}%，假阳性率 ${(fpr * 100).toFixed(0)}% | 拖动"可分性"看 AUC 从 0.5 升到接近 1.0`;
+});
+
+// 演示3：过拟合（多项式拟合）
+demo('#overfitDemo', ({ deg }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const x1 = 60, x2 = W - 40, y1 = 40, y2 = H - 60;
+
+  // 固定伪随机数据：真函数 sin + 噪音
+  let seed = 7;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const trueF = x => Math.sin(x * 2.2) * 0.9;
+  const nTrain = 20, nTest = 60;
+  const trainPts = [], testPts = [];
+  for (let i = 0; i < nTrain; i++) {
+    const x = -1 + 2 * i / (nTrain - 1);
+    trainPts.push({ x, y: trueF(x) + (rand() - 0.5) * 0.55 });
+  }
+  for (let i = 0; i < nTest; i++) {
+    const x = -1 + 2 * (i + 0.5) / nTest;
+    testPts.push({ x, y: trueF(x) + (rand() - 0.5) * 0.55 });
+  }
+
+  // 最小二乘拟合（带轻微岭正则防止高阶矩阵奇异）
+  const d = +deg;
+  const A = [];
+  trainPts.forEach(p => A.push(Array.from({ length: d + 1 }, (_, j) => Math.pow(p.x, j))));
+  // 正规方程 (AtA + λI) w = At y
+  const m = d + 1;
+  const AtA = Array.from({ length: m }, () => Array(m).fill(0));
+  const AtY = Array(m).fill(0);
+  const lam = 1e-8;
+  trainPts.forEach((p, i) => {
+    for (let r = 0; r < m; r++) {
+      AtY[r] += A[i][r] * p.y;
+      for (let c = 0; c < m; c++) AtA[r][c] += A[i][r] * A[i][c];
+    }
+  });
+  for (let r = 0; r < m; r++) AtA[r][r] += lam;
+  // 高斯消元
+  const w = AtY.slice();
+  for (let col = 0; col < m; col++) {
+    let piv = col;
+    for (let r = col + 1; r < m; r++) if (Math.abs(AtA[r][col]) > Math.abs(AtA[piv][col])) piv = r;
+    [AtA[col], AtA[piv]] = [AtA[piv], AtA[col]];
+    [w[col], w[piv]] = [w[piv], w[col]];
+    for (let r = col + 1; r < m; r++) {
+      const f = AtA[r][col] / AtA[col][col];
+      for (let c = col; c < m; c++) AtA[r][c] -= f * AtA[col][c];
+      w[r] -= f * w[col];
+    }
+  }
+  const coef = Array(m).fill(0);
+  for (let r = m - 1; r >= 0; r--) {
+    let s = w[r];
+    for (let c = r + 1; c < m; c++) s -= AtA[r][c] * coef[c];
+    coef[r] = s / AtA[r][r];
+  }
+  const fit = x => coef.reduce((acc, c, j) => acc + c * Math.pow(x, j), 0);
+
+  // 误差
+  const mse = pts => pts.reduce((s, p) => s + (p.y - fit(p.x)) ** 2, 0) / pts.length;
+  const trainErr = mse(trainPts), testErr = mse(testPts);
+
+  // 坐标映射：数据域 x∈[-1.1,1.1], y∈[-1.6,1.6]
+  const px = x => x1 + (x + 1.1) / 2.2 * (x2 - x1);
+  const py = y => y2 - (y + 1.6) / 3.2 * (y2 - y1);
+
+  // 坐标轴
+  ctx.strokeStyle = cssVar('--border');
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1, y2); ctx.lineTo(x2, y2); ctx.stroke();
+
+  // 真函数（虚线）
+  ctx.strokeStyle = cssVar('--muted'); ctx.setLineDash([5, 5]); ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let x = -1.1; x <= 1.1; x += 0.02) {
+    const X = px(x), Y = py(trueF(x));
+    x <= -1.09 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 拟合曲线
+  ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let x = -1.1; x <= 1.1; x += 0.01) {
+    const X = px(x), Y = py(Math.max(-1.6, Math.min(1.6, fit(x))));
+    x <= -1.09 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y);
+  }
+  ctx.stroke();
+
+  // 测试集点（淡）
+  ctx.fillStyle = cssVar('--muted');
+  testPts.forEach(p => { ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.arc(px(p.x), py(p.y), 3, 0, Math.PI * 2); ctx.fill(); });
+  ctx.globalAlpha = 1;
+
+  // 训练集点（实）
+  ctx.fillStyle = '#dc2626';
+  trainPts.forEach(p => { ctx.beginPath(); ctx.arc(px(p.x), py(p.y), 4.5, 0, Math.PI * 2); ctx.fill(); });
+
+  // 误差读数
+  const gap = testErr - trainErr;
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillStyle = '#dc2626';
+  ctx.fillText(`训练误差 = ${trainErr.toFixed(3)}`, x1 + 12, y1 + 22);
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillText(`测试误差 = ${testErr.toFixed(3)}`, x1 + 12, y1 + 44);
+  ctx.fillStyle = Math.abs(gap) < 0.04 ? cssVar('--ok') : '#f59e0b';
+  ctx.fillText(`差距 = ${gap >= 0 ? '+' : ''}${gap.toFixed(3)} ${Math.abs(gap) < 0.04 ? '✓ 拟合良好' : '⚠️ 开始过拟合！'}`, x1 + 12, y1 + 66);
+
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+  ctx.fillText('红点是训练集（20 个），灰点是测试集（60 个），虚线是真函数', x1 + 12, y2 - 8);
+
+  root.querySelector('.readout').textContent =
+    d <= 3 ? `阶数 ${d}：模型太简单，训练/测试误差都高（欠拟合）`
+    : d <= 8 ? `阶数 ${d}：恰到好处的复杂度，训练与测试误差接近 ✓`
+    : `阶数 ${d}：模型开始"背诵"训练集的噪音，测试误差飙升（过拟合）——试试 L2 正则化`;
+});
+</script>
+</body>
+</html>

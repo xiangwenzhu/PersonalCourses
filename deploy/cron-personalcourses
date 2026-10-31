@@ -1,2 +1,3 @@
-# PersonalCourses 课程站拉取式部署：每分钟检查 GitHub 新提交（flock 防并发）
+# PersonalCourses 课程站拉取式部署：每分钟检查新提交（flock 防并发）
+# fetch 主源用 gh-proxy 镜像（服务器直连 GitHub 间歇超时），失败兜底直连，见 deploy.sh
 * * * * * root flock -n /run/personalcourses-deploy.lock /opt/personalcourses/deploy.sh

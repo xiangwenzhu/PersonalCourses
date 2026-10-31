@@ -13,6 +13,7 @@
 | 邓普顿的逆向投资方法 | 投资 · 金融 | [templeton-course.html](./templeton-course.html) |
 | 读懂高赔率逆向评估报告（宁德时代案例） | 投资 · 金融 | [catl-report-course.html](./catl-report-course.html) |
 | 股票估值指标互动实验室 | 投资 · 金融工具 | [stock-valuation-lab.html](./stock-valuation-lab.html) |
+| 英伟达 GPU、CUDA 与机器人 AI 平台 | 机器人 · 算力与平台 | [nvidia-robotics-ai-course.html](./nvidia-robotics-ai-course.html) |
 | 微电网 · 学习路径（系列入口页） | 能源 · 电力系统 | [microgrid-hub.html](./microgrid-hub.html) |
 | 微电网入门 | 能源 · 电力系统 | [microgrid-basics.html](./microgrid-basics.html) |
 | 微电网的组成与关键设备 | 能源 · 电力系统 | [microgrid-components.html](./microgrid-components.html) |
@@ -22,6 +23,7 @@
 | 微电网保护与安全 | 能源 · 电力系统 | [microgrid-protection.html](./microgrid-protection.html) |
 | 微电网标准、经济与工程实践 | 能源 · 电力系统 | [microgrid-practice.html](./microgrid-practice.html) |
 | Microduck 复刻工程（12 课系列，入口页） | 机器人 · 具身智能 | [microduck.html](./microduck.html) |
+| MindPaw：ESP8266 极低成本桌面四足机器狗 | 机器人 · 具身智能 | [mindpaw-course.html](./mindpaw-course.html) |
 | 生物信息学学习路径（系列入口页） | 生物信息学 · 学习路线 | [bioinfo-track.html](./bioinfo-track.html) |
 | 大模型微调 · 学习路径（系列入口页） | AI 工程 · 学习路线 | [llm-finetuning.html](./llm-finetuning.html) |
 | 生物信息学导论：从中心法则到数据库 | 生物信息学 · 导论 | [bioinfo-101-course.html](./bioinfo-101-course.html) |
@@ -34,6 +36,12 @@
 | 生信人的 Linux 命令行实战 | 生物信息学 · 工具链 | [bioinfo-linux-course.html](./bioinfo-linux-course.html) |
 | 生信文件格式完全指南：FASTA 到 VCF | 生物信息学 · 工具链 | [bioinfo-file-formats-course.html](./bioinfo-file-formats-course.html) |
 | 序列比对：从打分矩阵到 BLAST | 生物信息学 · 算法 | [bioinfo-alignment-course.html](./bioinfo-alignment-course.html) |
+| Python/R 生信编程基础 | 生物信息学 · 编程 | [bioinfo-programming-course.html](./bioinfo-programming-course.html) |
+| RNA-seq 实战：从原始数据到差异表达 | 生物信息学 · 实战 | [bioinfo-rnaseq-course.html](./bioinfo-rnaseq-course.html) |
+| 基因组变异检测实战：从 BAM 到 VCF | 生物信息学 · 实战 | [bioinfo-variant-calling-course.html](./bioinfo-variant-calling-course.html) |
+| 蛋白质结构预测入门：从序列到三维形状 | 生物信息学 · 实战 | [bioinfo-protein-structure-course.html](./bioinfo-protein-structure-course.html) |
+| 单细胞转录组分析：解锁细胞异质性 | 生物信息学 · 前沿 | [bioinfo-single-cell-course.html](./bioinfo-single-cell-course.html) |
+| 机器学习 × 生物信息学：从特征到预测 | 生物信息学 · 前沿 | [bioinfo-ml-course.html](./bioinfo-ml-course.html) |
 
 ## 使用方式
 

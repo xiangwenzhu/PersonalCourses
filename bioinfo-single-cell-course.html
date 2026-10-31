@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>单细胞转录组分析：解锁细胞异质性 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto;font-size:14px}
+pre .c{color:#9ca3af}
+pre .k{color:#f472b6}
+pre .s{color:#a5f3fc}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:130px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>单细胞转录组分析：解锁细胞异质性</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1-1 -->
+    <section class="chapter" data-level="1" data-title="什么是单细胞 RNA-seq">
+      <h2>什么是单细胞 RNA-seq</h2>
+      <p class="tldr">Bulk RNA-seq 测的是一群细胞的"平均表达"，单细胞 RNA-seq（scRNA-seq）逐个细胞测量，能发现被平均值掩盖的稀有细胞类型和细胞状态。</p>
+
+      <p>人体约有 37 万亿个细胞。Bulk RNA-seq 把一块组织里所有细胞的 RNA 混在一起测序，得到的每个基因表达量是"平均数"：</p>
+      <p>$$\bar{x}_g = \frac{1}{N}\sum_{i=1}^{N} x_{g,i}$$</p>
+      <p>如果某种关键细胞只占组织的 1%，它的表达信号会被 99% 的其他细胞稀释到几乎看不见。scRNA-seq 的思路很直接：<strong>把每个细胞单独装进一个"反应室"，各自测各自的</strong>。</p>
+
+      <div class="analogy">Bulk 像把一整篮水果打成一杯混合果汁——你能尝出"有点苹果味、有点香蕉味"，但不知道篮子里到底有几种水果、各有多少。单细胞像把水果一颗颗拿出来看：3 个苹果、2 根香蕉、还有 1 颗你从没见过的稀有水果。</div>
+
+      <h3>核心概念速览</h3>
+      <div class="widget">
+        <div class="widget-title">点击卡片，记住 4 个核心概念</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">细胞异质性</div><div class="back">同一组织里不同细胞的基因表达千差万别。肿瘤里既有癌细胞也有免疫细胞、基质细胞——bulk 把它们混为一谈。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">稀有细胞类型</div><div class="back">如血液中的树突状细胞（&lt;1%）。单细胞能捕捉它们；bulk 中它们的信号被淹没在平均值里。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">Dropout</div><div class="back">单细胞数据大量为 0：不是基因没表达，而是 RNA 量太少没测到。这是 scRNA-seq 最主要的噪音来源。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">细胞通量</div><div class="back">一次实验能测多少细胞。10x Genomics 一次可测上万到几十万细胞，成本远低于传统手工分选。</div></div></div>
+        </div>
+      </div>
+
+      <!-- 互动演示：Bulk vs 单细胞 -->
+      <div class="widget demo" id="bulkScDemo">
+        <div class="widget-title">Bulk vs 单细胞：拖动滑块改变稀有细胞比例，看平均值如何"掩盖"差异</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls">
+          <label>稀有细胞（C 型）比例 <span class="val" data-for="rare"></span><input type="range" name="rare" min="2" max="45" step="1" value="10"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">单细胞革命性的地方不在于测得更"准"，而在于测得更"细"——把组织拆解成细胞类型的拼图，而非一张模糊的合影。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">Bulk RNA-seq 分析肿瘤组织时，最大的局限是什么？</p>
+        <button class="opt" data-fb">成本高不是 bulk 的本质局限，通量低才更符合单细胞。">测序成本太高</button>
+        <button class="opt" data-fb="正确。癌细胞、免疫细胞、基质细胞的信号混在一起，无法区分细胞类型。">无法区分组织中的不同细胞类型</button>
+        <button class="opt" data-fb="">read 短是测序技术问题，不是 bulk 特有的。">read 长度太短</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住一句话：Bulk 问"这个组织平均表达什么"，单细胞问"每种细胞各自表达什么"。下一章看单细胞实验是怎么做到的。</div>
+    </section>
+
+    <!-- L1-2 -->
+    <section class="chapter" data-level="1" data-title="实验流程：从组织到表达矩阵">
+      <h2>实验流程：从组织到表达矩阵</h2>
+      <p class="tldr">组织解离成单细胞悬液 → 微流控液滴包裹（一细胞一液滴）→ 液滴内反转录并打上条形码 → 建库测序 → cellranger 输出"基因 × 细胞"表达矩阵。</p>
+
+      <p>单细胞实验的核心工程挑战是：<strong>如何在一台测序仪上同时测几万个细胞，还能分清哪条 read 来自哪个细胞？</strong>答案是"液滴 + 条形码"：每个细胞和一个带唯一条形码的凝胶珠（GEM）一起被包裹在油包水的微滴里，在液滴内完成 RNA 捕获和反转录。</p>
+
+      <div class="widget order" data-answer="a,b,c,d,e,f">
+        <div class="widget-title">动手排一排：10x 单细胞实验的正确顺序</div>
+        <div class="item" data-id="c">细胞悬液与凝胶珠在微流控芯片上形成液滴</div>
+        <div class="item" data-id="a">组织解离 + 细胞活性检测（活细胞 &gt;80%）</div>
+        <div class="item" data-id="f">cellranger count 输出表达矩阵</div>
+        <div class="item" data-id="d">液滴内裂解细胞、捕获 mRNA 并反转录（带 barcode + UMI）</div>
+        <div class="item" data-id="b">文库构建（打断、加测序接头、PCR 扩增）</div>
+        <div class="item" data-id="e">上机测序（NovaSeq，PE150）</div>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <h3>双条形码：cell barcode 与 UMI</h3>
+      <p>每条 read 携带两段关键信息：</p>
+      <ul>
+        <li><strong>Cell barcode</strong>：标识这条 read 来自<strong>哪个细胞</strong>（每个凝胶珠一个码）</li>
+        <li><strong>UMI</strong>（Unique Molecular Identifier）：标识它来自<strong>哪个原始 mRNA 分子</strong>，用于去除 PCR 扩增重复</li>
+      </ul>
+
+      <pre># cellranger 一步完成比对、定量、细胞识别
+cellranger count --id=sample1 \
+  --transcriptome=refdata-gex-GRCh38-2020-A \
+  --fastqs=./fastqs \
+  --sample=sample1 \
+  --expect-cells=10000</pre>
+
+      <div class="analogy">条形码像快递单号：cell barcode 告诉你包裹（细胞）寄件人是谁，UMI 告诉你包裹里每件商品（mRNA 分子）的唯一编号——即使商家复印了十份发货单（PCR 扩增），按编号也只算一件。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">UMI（Unique Molecular Identifier）的主要作用是什么？</p>
+        <button class="opt" data-fb">区分细胞靠的是 cell barcode，不是 UMI。">区分不同的细胞</button>
+        <button class="opt" data-fb">比对到基因组靠的是序列本身，UMI 不参与比对。">帮助比对到参考基因组</button>
+        <button class="opt" data-fb="正确。同一 UMI 的多条 read 是同一 mRNA 的 PCR 拷贝，只计一次。">去除 PCR 扩增重复，准确定量 mRNA 分子数</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">液滴微流控 + 双条形码是高通量单细胞的技术基石。理解了"一细胞一码、一分子一号"，下游所有数据结构就顺理成章了。</div>
+    </section>
+
+    <!-- L2-1 -->
+    <section class="chapter" data-level="2" data-title="数据结构：稀疏矩阵与 Seurat 对象">
+      <h2>数据结构：稀疏矩阵与 Seurat 对象</h2>
+      <p class="tldr">scRNA-seq 的核心数据是"基因 × 细胞"的表达矩阵（通常 2 万+ 基因 × 1 万+ 细胞），其中超过 90% 的元素是 0——所以用稀疏格式存储，在 R 里装进 Seurat 对象统一管理。</p>
+
+      <h3>cellranger 的输出</h3>
+      <table>
+        <tr><th>文件/目录</th><th>内容</th></tr>
+        <tr><td><code>filtered_feature_bc_matrix/</code></td><td>过滤后的表达矩阵（barcodes.tsv + features.tsv + matrix.mtx）</td></tr>
+        <tr><td><code>raw_feature_bc_matrix/</code></td><td>未过滤矩阵（含空液滴/环境 RNA，背景噪音高）</td></tr>
+        <tr><td><code>web_summary.html</code></td><td>关键指标：测到的细胞数、每细胞中位 UMI、测序饱和度</td></tr>
+        <tr><td><code>cloupe.cloupe</code></td><td>Loupe 浏览器文件，可视化预分群结果</td></tr>
+      </table>
+
+      <p>MTX 格式只存非零值（行号, 列号, 值），把 2 万 × 1 万的稠密矩阵压缩到几十分之一：</p>
+      <pre># matrix.mtx 片段（% 后是注释）
+%%MatrixMarket matrix coordinate integer general
+33694 10000 2345678   <span class="c"># 33694 基因 × 10000 细胞，234 万个非零值（约 0.7%）</span>
+1 1 14
+7 1 3
+...</pre>
+
+      <!-- 互动演示：稀疏矩阵可视化 -->
+      <div class="widget demo" id="sparseDemo">
+        <div class="widget-title">稀疏矩阵长什么样：拖动滑块过滤低计数，体会"90% 是零"</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>低计数过滤阈值（只显示 ≥ 该值的计数）<span class="val" data-for="minc"></span><input type="range" name="minc" min="1" max="12" step="1" value="1"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>Seurat 对象：R 里的"集装箱"</h3>
+      <p>Seurat 是单细胞分析最主流的 R 包。它的对象把表达矩阵、细胞元数据（质控指标、样本来源）、降维结果（PCA/UMAP 坐标）、聚类标签、marker 基因表全部装进一个结构：</p>
+      <pre><span class="c"># Seurat v5 对象的核心槽位</span>
+obj@assays$RNA$counts  <span class="c"># 原始 count 矩阵（稀疏）</span>
+obj@meta.data          <span class="c"># 每个细胞的元数据：nCount_RNA, nFeature_RNA, percent.mt</span>
+obj@reductions$pca     <span class="c"># PCA 坐标</span>
+obj@reductions$umap    <span class="c"># UMAP 坐标</span>
+obj$seurat_clusters    <span class="c"># 聚类标签</span></pre>
+
+      <div class="analogy">Seurat 对象像一个多功能收纳箱：表达矩阵是"货物"，元数据是"标签贴"，降维结果是"折叠好的地图"，聚类标签是"分拣格"。所有后续分析都在这个箱子里进行。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">为什么单细胞表达矩阵要用稀疏格式（如 MTX）存储？</p>
+        <button class="opt" data-fb="正确。dropout + 低捕获率使 90%+ 元素为 0，稀疏格式只存非零值，大幅节省空间。">超过 90% 的元素是 0，稀疏存储极大节省空间</button>
+        <button class="opt" data-fb">稀疏与否取决于零的比例，不是矩阵形状。">矩阵行数太少</button>
+        <button class="opt" data-fb">稀疏格式主要不是为了加快比对。">比对软件只认这种格式</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住三个词：稀疏矩阵（怎么存）、cellranger（怎么产生）、Seurat 对象（怎么用）。下一章解决一个现实问题：测出来的细胞并不都是"好细胞"。</div>
+    </section>
+
+    <!-- L2-2 -->
+    <section class="chapter" data-level="2" data-title="质控与过滤：剔除"坏细胞"">
+      <h2>质控与过滤：剔除"坏细胞"</h2>
+      <p class="tldr">不是所有"条形码"都代表完整细胞：死/濒死细胞线粒体基因比例高，空液滴基因数极低，两个细胞共用一个液滴形成 doublet。质控就是设阈值把它们过滤掉。</p>
+
+      <h3>三大质控指标</h3>
+      <ul>
+        <li><strong>线粒体基因比例（percent.mt）</strong>：细胞膜破裂后细胞质 RNA 流失，线粒体 RNA 残留 → 比例高 = 细胞受伤或已死。通常阈值 10%–20%</li>
+        <li><strong>检测到的基因数（nFeature）</strong>：过低（&lt;200）多为空液滴或碎片；过高（&gt;5000–6000，视组织而定）疑似 doublet</li>
+        <li><strong>doublet 检测</strong>：一个液滴混入两个细胞，表达量异常高且基因谱"像两种细胞的混合"。用 DoubletFinder / Scrublet 算法打分</li>
+      </ul>
+
+      <p>线粒体比例的计算公式：</p>
+      <p>$$\text{percent.mt} = \frac{\sum \text{线粒体基因 UMI}}{\sum \text{全部基因 UMI}} \times 100\%$$</p>
+
+      <!-- 互动演示：质控阈值 -->
+      <div class="widget demo" id="qcDemo">
+        <div class="widget-title">质控阈值实验：拖动两个滑块，看保留多少细胞</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>线粒体比例上限 (%) <span class="val" data-for="mito"></span><input type="range" name="mito" min="2" max="40" step="1" value="15"></label>
+          <label>最少检测基因数 <span class="val" data-for="ngene"></span><input type="range" name="ngene" min="200" max="6000" step="100" value="1000"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="warn">不要把阈值当成绝对真理！不同组织、不同解离方案的"正常"线粒体比例差异很大（如心肌、肝脏天然偏高）。阈值要<strong>看分布</strong>（小提琴图/散点图），而不是照搬默认值。</div>
+
+      <div class="key">质控是"双向"的：过滤太松 → 死细胞/doublet 污染下游聚类；过滤太狠 → 丢掉真实的高代谢或脆弱细胞类型（如某些神经元、浆细胞）。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">某细胞的线粒体基因比例高达 45%，最可能的原因是什么？</p>
+        <button class="opt" data-fb">线粒体多不等于膜破裂，健康的细胞质 RNA 也会一起被测到。">这个细胞代谢特别旺盛</button>
+        <button class="opt" data-fb="正确。细胞膜破裂后细胞质 RNA 流失，只有线粒体内的 RNA 残留被捕获。">细胞膜破裂，细胞质 RNA 流失</button>
+        <button class="opt" data-fb">doublet 的典型特征是基因数和 UMI 总数异常高，而非线粒体比例高。">这是一个 doublet（双细胞）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">质控的目标是"让进入分析的每个点都尽量是一个完整、活着的细胞"。阈值服务于这个目标，而不是反过来。下一章进入最激动人心的一步：给上万细胞分群。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="降维与聚类：给细胞分群">
+      <h2>降维与聚类：给细胞分群</h2>
+      <p class="tldr">2 万维的基因表达无法直接观察。流程：选高变基因 → PCA 降到 30–50 维 → 建 KNN 邻接图 → Louvain/Leiden 聚类 → UMAP 画成 2D 图 → 用 marker 基因给每群命名。</p>
+
+      <div class="widget steps">
+        <div class="widget-title">Seurat 标准聚类流程（点"下一步"逐步展开）</div>
+        <div class="step"><strong>① FindVariableFeatures</strong>：挑出 2000 个"在不同细胞间波动最大"的高变基因，去掉所有细胞都恒定表达的"管家噪音"。</div>
+        <div class="step"><strong>② ScaleData + RunPCA</strong>：标准化后做 PCA，取前 30–50 个主成分。每个 PC 是一个"表达模式的方向"，保留它既降噪又压缩。</div>
+        <div class="step"><strong>③ FindNeighbors + FindClusters</strong>：在 PC 空间里找每个细胞的 K 个最近邻居，连成图后用 Leiden/Louvain 算法把图切成"社群"，即细胞簇。分辨率参数控制簇的粗细。</div>
+        <div class="step"><strong>④ RunUMAP + 注释</strong>：UMAP 把高维结构压到 2D 供人眼观察；然后用已知 marker 基因（如 CD3E=T 细胞，MS4A1=B 细胞）给每个簇写上生物学名字。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="analogy">聚类像给图书馆新书分架：先看每本书的"主题关键词"（高变基因），把相似的书摆到一起（KNN 图 + Leiden 切分），最后给每个书架贴标签（marker 基因注释）。UMAP 只是"楼层导览图"，方便人逛，书的真实位置在高维空间里。</div>
+
+      <!-- 互动演示：UMAP 聚类模拟 -->
+      <div class="widget demo" id="umapDemo">
+        <div class="widget-title">降维聚类模拟：点"运行 UMAP"，看高维细胞如何投影成 2D 并分成 3 簇</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runUmap">▶ 运行 UMAP</button>
+          <button class="btn" id="resetUmap">↺ 重置</button>
+          <label style="min-width:220px">簇间分离度 <span class="val" id="sepVal"></span><input type="range" id="sepSlider" min="40" max="140" step="10" value="90"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>marker 基因鉴定</h3>
+      <p>用 <code>FindAllMarkers</code> 对每个簇做"本簇 vs 其他所有簇"的差异检验（Wilcoxon 秩和），找出每个簇特异性高表达的基因，对照已知文献命名：</p>
+      <table>
+        <tr><th>Marker 基因</th><th>对应细胞类型</th></tr>
+        <tr><td>CD3D / CD3E</td><td>T 细胞</td></tr>
+        <tr><td>MS4A1 / CD79A</td><td>B 细胞</td></tr>
+        <tr><td>LYZ / S100A8</td><td>单核/髓系细胞</td></tr>
+        <tr><td>NKG7 / GNLY</td><td>NK / 细胞毒性淋巴细胞</td></tr>
+      </table>
+
+      <div class="key">Leiden/Louvain 的"分辨率"参数是聚类的总开关：调大 → 簇变多变细；调小 → 簇合并变粗。没有唯一正确值，取决于你的生物学问题。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">在聚类流程中，PCA 和 UMAP 各自的角色是什么？</p>
+        <button class="opt" data-fb="正确。PCA 用于计算（聚类在 PC 空间进行），UMAP 主要用于可视化。">PCA 用于降维计算，UMAP 用于可视化展示</button>
+        <button class="opt" data-fb">聚类应该在 PC 空间做，直接在 UMAP 坐标上聚类会失真。">UMAP 坐标用来聚类，PCA 只是预处理</button>
+        <button class="opt" data-fb">两者都不还原物理位置。">PCA 还原细胞在组织中的物理位置</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">走完这章你就掌握了单细胞分析的主干：质控 → 归一化 → PCA → 聚类 → 注释。剩下的是在这个骨架上长出更高级的分析。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="高级分析：轨迹、互作与整合">
+      <h2>高级分析：轨迹、互作与整合</h2>
+      <p class="tldr">分群只是起点。高级分析回答更深的问题：细胞如何沿时间分化（轨迹推断/pseudotime）、细胞之间如何"对话"（配体-受体互作）、如何联合多种组学（多组学整合）。</p>
+
+      <h3>三大高级方向</h3>
+      <table>
+        <tr><th>问题</th><th>方法</th><th>代表工具</th></tr>
+        <tr><td>细胞如何随时间分化？</td><td>轨迹推断 + 拟时序（pseudotime）</td><td>Monocle3 / Slingshot / scVelo（RNA 速率）</td></tr>
+        <tr><td>哪些细胞在互相"对话"？</td><td>配体-受体互作分析</td><td>CellPhoneDB / CellChat / NicheNet</td></tr>
+        <tr><td>同一个细胞的多种组学如何整合？</td><td>多组学整合（RNA + ATAC / 蛋白 / TCR）</td><td>Seurat WNN / MultiVI / MOFA</td></tr>
+      </table>
+
+      <details class="reveal">
+        <summary>拟时序（pseudotime）的原理是什么？</summary>
+        <p>单细胞转录组是"静态快照"，但细胞状态构成一条连续的分化轨迹。轨迹推断把高维表达空间拟合成一条树状流形（manifold），再计算每个细胞沿树的"距离"作为伪时间：</p>
+        <p>$$\text{pseudotime}(c_i) = \text{沿轨迹从根节点到细胞 } c_i \text{ 的测地距离}$$</p>
+        <p>配合 RNA 速率（scVelo 用未剪接/已剪接 mRNA 比例推断转录动态方向）可以判断"细胞正往哪走"，而不仅停留在哪。找分支点上差异表达的基因，就能锁定驱动分化的关键调控因子。</p>
+      </details>
+
+      <div class="analogy">轨迹推断像看一张全班合影推断每个人的成长历程：虽然只拍了一瞬间，但有人戴乳牙、有人戴牙套、有人戴假牙——把"状态"排成序，就还原出了"时间"。配体-受体分析则像分析谁在给谁递纸条（配体=纸条，受体=接收的手）。</div>
+
+      <div class="key">CellPhoneDB 的逻辑：某对<strong>配体-受体</strong>基因在 A 群高表达、其对应受体/配体在 B 群高表达，就推断"A 可能在向 B 发信号"。统计检验比较真实细胞群组合 vs 随机置换，排除"表达高只是偶然"。</div>
+
+      <h3>多组学整合：一个细胞，多个侧面</h3>
+      <p>10x Multiome 可同时测同一细胞的 RNA 和 ATAC（染色质开放性）；CITE-seq 加测表面蛋白（ADT）。整合的难点是<strong>模态间的批次与量纲差异</strong>，常用加权最近邻（WNN）为每个细胞在每种模态找邻居再融合：</p>
+      <pre><span class="c"># Seurat v5：加权最近邻整合 RNA + ATAC</span>
+obj &lt;- FindMultiModalNeighbors(obj,
+  reduction.list = list(<span class="s">"pca"</span>, <span class="s">"lsi"</span>),
+  dims.list = list(1:30, 2:40))</pre>
+
+      <div class="warn">高级分析的花样越多，假阳性的陷阱越多。细胞互作分析的配体-受体对是"表达共现"，并不等于真实的生物学通讯——必须用实验（如受体阻断、空间转录组共定位）验证。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">CellPhoneDB 推断"细胞 A 与细胞 B 存在互作"的依据是什么？</p>
+        <button class="opt" data-fb">物理距离需要空间转录组数据，普通 scRNA-seq 没有位置信息。">A 群和 B 群在 UMAP 图上靠得近</button>
+        <button class="opt" data-fb">同群共表达只说明细胞内调控，不构成细胞间互作。">A 群内部某信号通路活跃</button>
+        <button class="opt" data-fb="正确。配体在 A 群高表达、其受体在 B 群高表达，提示存在 A→B 通讯（仍需实验验证）。">配体在 A 群高表达且对应受体在 B 群高表达</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>10x 中区分细胞的条形码叫 <input data-answer="cell barcode|barcode|细胞条形码">，去除 PCR 重复的分子标签叫 <input data-answer="UMI">；R 中最常用的单细胞分析对象是 <input data-answer="Seurat|seurat"> 对象；2D 可视化常用 <input data-answer="UMAP|t-SNE|tsne">；当前最主流的图聚类算法是 <input data-answer="Leiden|leiden|Louvain|louvain">。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">恭喜！你已经走完单细胞分析的全旅程：从"为什么要单细胞"到"轨迹与互作"。下一步建议动手跑一个公开数据集（如 10x 的 PBMC 3k），把课程里的每一步变成自己的代码。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示1：Bulk vs 单细胞（稀有细胞被平均值掩盖）
+demo('#bulkScDemo', ({ rare }, ctx, cv, root) => {
+  let seed = 7;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const gauss = () => (rand() + rand() + rand() + rand() - 2) / 2; // 近似正态
+
+  const total = 90;
+  const nC = Math.max(2, Math.round(total * rare / 100));
+  const nA = Math.round((total - nC) / 2), nB = total - nC - nA;
+  // 三种细胞类型在 3 个 marker 基因上的表达
+  const profiles = { A: [9, 2, 2], B: [2, 9, 2], C: [2, 2, 9] };
+  const cells = [];
+  [['A', nA], ['B', nB], ['C', nC]].forEach(([t, n]) => {
+    for (let i = 0; i < n; i++) {
+      const expr = profiles[t].map(v => Math.max(0.3, v + gauss() * 1.2));
+      cells.push({ type: t, expr });
+    }
+  });
+
+  const midX = cv.width / 2;
+  const barColors = ['#059669', '#f59e0b', '#a855f7'];
+
+  // ===== 左面板：Bulk =====
+  ctx.textAlign = 'center';
+  ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 16px sans-serif';
+  ctx.fillText('Bulk RNA-seq：混在一起测', midX / 2, 30);
+  // 细胞散点（混在一起）
+  cells.forEach((c, i) => {
+    const x = 50 + (i % 10) * (midX - 100) / 9 + (rand() - 0.5) * 10;
+    const y = 55 + Math.floor(i / 10) * 16;
+    ctx.fillStyle = cssVar('--muted');
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+  });
+  // 平均表达条形图
+  const avg = [0, 1, 2].map(g => cells.reduce((s, c) => s + c.expr[g], 0) / cells.length);
+  const bBase = 250, bMaxH = 90, bW = 40;
+  avg.forEach((v, g) => {
+    const x = midX / 2 - 80 + g * 70;
+    ctx.fillStyle = barColors[g] + '55';
+    ctx.fillRect(x, bBase - v * bMaxH / 10, bW, v * bMaxH / 10);
+    ctx.strokeStyle = barColors[g]; ctx.lineWidth = 2;
+    ctx.strokeRect(x, bBase - v * bMaxH / 10, bW, v * bMaxH / 10);
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+    ctx.fillText('Gene' + (g + 1), x + bW / 2, bBase + 16);
+  });
+  ctx.fillStyle = cssVar('--bad'); ctx.font = '13px sans-serif';
+  ctx.fillText('平均后三条差不多高 → 分不清谁是谁', midX / 2, bBase + 40);
+
+  // ===== 右面板：单细胞 =====
+  ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 16px sans-serif';
+  ctx.fillText('scRNA-seq：逐个测 + 降维分群', midX + midX / 2, 30);
+  // 2D 嵌入：坐标来自表达差异（演示用线性组合）
+  const typeColor = { A: '#059669', B: '#f59e0b', C: '#a855f7' };
+  cells.forEach(c => {
+    const x = midX + 60 + ((c.expr[0] - c.expr[2]) / 10 + 1) * (midX - 140) / 2 + gauss() * 6;
+    const y = 60 + ((c.expr[1] - (c.expr[0] + c.expr[2]) / 2) / 10 + 1) * 130 + gauss() * 6;
+    ctx.fillStyle = typeColor[c.type]; ctx.globalAlpha = .85;
+    ctx.beginPath(); ctx.arc(x, Math.max(45, Math.min(195, y)), 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+  ctx.fillText('← 表达差异自动分成 3 群 →', midX + midX / 2, 210);
+  // 每群 marker 表达（3 行迷你条形）
+  ['A', 'B', 'C'].forEach((t, r) => {
+    const groupCells = cells.filter(c => c.type === t);
+    const gavg = [0, 1, 2].map(g => groupCells.reduce((s, c) => s + c.expr[g], 0) / (groupCells.length || 1));
+    const y0 = 232 + r * 42;
+    ctx.textAlign = 'left'; ctx.fillStyle = typeColor[t]; ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(t + ' 型 ×' + groupCells.length, midX + 50, y0 + 12);
+    gavg.forEach((v, g) => {
+      ctx.fillStyle = barColors[g];
+      ctx.fillRect(midX + 150 + g * 60, y0 + 4, v * 5, 12);
+    });
+  });
+  ctx.fillStyle = cssVar('--ok'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('每群各有标志性高表达基因（marker）', midX + midX / 2, 365);
+
+  // 分割线
+  ctx.strokeStyle = cssVar('--border'); ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(midX, 20); ctx.lineTo(midX, 370); ctx.stroke(); ctx.setLineDash([]);
+
+  const cSignal = avg[2];
+  root.querySelector('.readout').textContent =
+    `稀有 C 型细胞占 ${rare}%（${nC} 个）| Bulk 中 Gene3 平均表达仅 ${cSignal.toFixed(1)}，与噪音无异；` +
+    `单细胞中 ${nC} 个 C 型细胞独立成群、清晰可见 → 稀有细胞不会被平均值淹没`;
+});
+
+// 演示2：质控阈值（线粒体比例 + 最少基因数）
+demo('#qcDemo', ({ mito, ngene }, ctx, cv, root) => {
+  let seed = 13;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const gauss = () => (rand() + rand() + rand() + rand() - 2) / 2;
+
+  // 生成 400 个细胞：健康 / 濒死（高线粒体、低基因数）/ doublet（超高基因数）
+  const N = 400;
+  const cells = [];
+  for (let i = 0; i < N; i++) {
+    const r = rand();
+    let g, m;
+    if (r < 0.85) { g = 3000 + gauss() * 700; m = 5 + Math.abs(gauss()) * 4; }        // 健康
+    else if (r < 0.97) { g = 400 + Math.abs(gauss()) * 400; m = 25 + Math.abs(gauss()) * 10; } // 濒死
+    else { g = 5600 + Math.abs(gauss()) * 400; m = 6 + Math.abs(gauss()) * 4; }       // doublet
+    cells.push({ g: Math.max(50, g), m: Math.min(45, Math.max(0.5, m)) });
+  }
+
+  const x0 = 60, x1 = cv.width - 40, y0 = 40, y1 = cv.height - 60;
+  const xScale = g => x0 + (g / 6500) * (x1 - x0);
+  const yScale = m => y1 - (m / 45) * (y1 - y0);
+
+  // 轴
+  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  for (let g = 0; g <= 6000; g += 1500) { ctx.fillText(g >= 1000 ? (g / 1000) + 'k' : g, xScale(g), y1 + 18); }
+  for (let m = 0; m <= 40; m += 10) { ctx.fillText(m + '%', x0 - 25, yScale(m) + 4); ctx.textAlign = 'center'; }
+  ctx.fillText('检测基因数（nFeature）→', (x0 + x1) / 2, y1 + 38);
+  ctx.save(); ctx.translate(18, (y0 + y1) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('线粒体基因比例 →', 0, 0); ctx.restore();
+
+  // 阈值线
+  ctx.strokeStyle = cssVar('--bad'); ctx.setLineDash([6, 5]); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x0, yScale(mito)); ctx.lineTo(x1, yScale(mito)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xScale(ngene), y0); ctx.lineTo(xScale(ngene), y1); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = cssVar('--bad'); ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`线粒体上限 ${mito}%`, x1 - 130, yScale(mito) - 6);
+  ctx.fillText(`最少基因 ${ngene}`, xScale(ngene) + 6, y0 + 14);
+
+  // 细胞点
+  let kept = 0;
+  cells.forEach(c => {
+    const pass = c.m <= mito && c.g >= ngene;
+    if (pass) kept++;
+    ctx.fillStyle = pass ? cssVar('--ok') : cssVar('--bad');
+    ctx.globalAlpha = pass ? .7 : .35;
+    ctx.beginPath(); ctx.arc(xScale(c.g), yScale(c.m), 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // 图例与结论
+  ctx.textAlign = 'left'; ctx.font = '13px sans-serif';
+  ctx.fillStyle = cssVar('--ok'); ctx.fillRect(x0 + 10, y0 + 8, 10, 10);
+  ctx.fillStyle = cssVar('--text'); ctx.fillText('保留', x0 + 26, y0 + 17);
+  ctx.fillStyle = cssVar('--bad'); ctx.fillRect(x0 + 70, y0 + 8, 10, 10);
+  ctx.fillStyle = cssVar('--text'); ctx.fillText('过滤', x0 + 86, y0 + 17);
+
+  const pct = (kept / N * 100).toFixed(1);
+  ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = cssVar('--primary');
+  ctx.fillText(`保留 ${kept} / ${N} 细胞（${pct}%）`, cv.width / 2, y1 + 58);
+
+  root.querySelector('.readout').textContent =
+    `线粒体 ≤ ${mito}% 且 基因数 ≥ ${ngene} → 保留 ${kept}/${N}。` +
+    (kept < N * 0.7 ? ' 注意：过滤过狠可能丢掉真实的脆弱细胞类型！' : kept > N * 0.97 ? ' 注意：阈值太松，濒死细胞/doublet 可能混入下游分析。' : ' 过滤比例看起来合理。');
+});
+
+// 演示3：稀疏矩阵可视化
+demo('#sparseDemo', ({ minc }, ctx, cv, root) => {
+  let seed = 29;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const genes = 14, cellsN = 36;
+  const cellW = (cv.width - 140) / cellsN, cellH = 16;
+  const x0 = 120, y0 = 35;
+
+  let nonzero = 0, shown = 0, totalSum = 0, shownSum = 0;
+  for (let g = 0; g < genes; g++) {
+    for (let c = 0; c < cellsN; c++) {
+      // 92% 为零；非零值 1~14
+      const v = rand() < 0.92 ? 0 : 1 + Math.floor(rand() * 14);
+      const x = x0 + c * cellW, y = y0 + g * cellH;
+      if (v > 0) {
+        nonzero++; totalSum += v;
+        if (v >= minc) {
+          shown++; shownSum += v;
+          ctx.fillStyle = cssVar('--primary');
+          ctx.globalAlpha = .35 + .65 * v / 15;
+          ctx.beginPath(); ctx.arc(x + cellW / 2, y + cellH / 2, Math.min(6, 2 + v * .3), 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.fillStyle = cssVar('--border');
+          ctx.beginPath(); ctx.arc(x + cellW / 2, y + cellH / 2, 1.5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+  }
+  // 轴标签
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+  for (let g = 0; g < genes; g += 3) ctx.fillText('Gene' + (g + 1), x0 - 8, y0 + g * cellH + 11);
+  ctx.textAlign = 'center'; ctx.font = '12px sans-serif';
+  ctx.fillText('细胞 1 → 36', x0 + (cellsN * cellW) / 2, y0 + genes * cellH + 24);
+  ctx.textAlign = 'left'; ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = cssVar('--text');
+  ctx.fillText('行 = 基因（33694 个）', 10, 20);
+  ctx.textAlign = 'right';
+  ctx.fillText('列 = 细胞（成千上万）', cv.width - 10, 20);
+
+  const density = (nonzero / (genes * cellsN) * 100).toFixed(1);
+  root.querySelector('.readout').textContent =
+    `非零值占比仅 ${density}%（真实数据通常 < 10%）| 显示阈值 ≥ ${minc}：可见 ${shown} 个有效计数点，` +
+    `其余非零值因计数太低被淡显 → 这就是为什么需要稀疏存储 + 低计数过滤`;
+});
+
+// 演示4：UMAP 降维聚类模拟
+(() => {
+  const root = document.getElementById('umapDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const runBtn = document.getElementById('runUmap');
+  const resetBtn = document.getElementById('resetUmap');
+  const sepSlider = document.getElementById('sepSlider');
+  const sepVal = document.getElementById('sepVal');
+
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const gauss = () => (rand() + rand() + rand() + rand() - 2) / 2;
+
+  const N = 180;
+  const typeColor = ['#059669', '#f59e0b', '#a855f7'];
+  let animId = null;
+
+  function centers() {
+    const s = +sepSlider.value / 90;
+    return [
+      { x: 200, y: 130 }, { x: 200 + 230 * s, y: 240 }, { x: 200 + 440 * s, y: 120 }
+    ].map(c => ({ x: Math.min(c.x, cv.width - 70), y: c.y }));
+  }
+
+  // 每个细胞：类型、初始随机位置、目标簇位置
+  const cells = [];
+  for (let i = 0; i < N; i++) {
+    const t = i % 3;
+    cells.push({
+      t,
+      sx: 60 + rand() * (cv.width - 120),
+      sy: 60 + rand() * (cv.height - 120),
+      jx: gauss() * 42, jy: gauss() * 42 // 簇内 jitter
+    });
+  }
+
+  let t = 0; // 0 = 高维（散乱），1 = UMAP 完成
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const ct = centers();
+    const e = ease(t);
+    cells.forEach(c => {
+      const fin = { x: ct[c.t].x + c.jx, y: ct[c.t].y + c.jy };
+      const x = c.sx + (fin.x - c.sx) * e;
+      const y = c.sy + (fin.y - c.sy) * e;
+      ctx.fillStyle = typeColor[c.t]; ctx.globalAlpha = .85;
+      ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+    // 状态文字
+    ctx.textAlign = 'center'; ctx.font = 'bold 15px sans-serif';
+    if (t <= 0) {
+      ctx.fillStyle = cssVar('--muted');
+      ctx.fillText('高维空间（20000 维）中的细胞 —— 无法直接观察', cv.width / 2, 30);
+    } else if (t < 1) {
+      ctx.fillStyle = cssVar('--warn');
+      ctx.fillText('投影中… UMAP 保留高维空间的局部结构', cv.width / 2, 30);
+    } else {
+      ctx.fillStyle = cssVar('--ok');
+      ctx.fillText('✅ 3 个簇清晰分离 → 跑 Leiden 聚类 → 用 marker 基因命名', cv.width / 2, 30);
+      // 画簇圈
+      ct.forEach((c, i) => {
+        ctx.strokeStyle = typeColor[i]; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+        ctx.beginPath(); ctx.ellipse(c.x, c.y, 85, 62, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+    }
+  }
+
+  function animate() {
+    t += 0.02;
+    if (t >= 1) { t = 1; draw(); readout.textContent = '✅ UMAP 完成：分离度越高，簇间边界越清晰。现在可以做聚类和注释了。'; return; }
+    draw();
+    animId = requestAnimationFrame(animate);
+  }
+
+  runBtn.onclick = () => {
+    if (animId) cancelAnimationFrame(animId);
+    t = 0; draw();
+    readout.textContent = '正在从高维空间投影到 2D…';
+    animId = requestAnimationFrame(animate);
+  };
+  resetBtn.onclick = () => {
+    if (animId) cancelAnimationFrame(animId);
+    t = 0; readout.textContent = ''; draw();
+  };
+  sepSlider.oninput = () => { sepVal.textContent = sepSlider.value; draw(); };
+  sepVal.textContent = sepSlider.value;
+  draw();
+})();
+</script>
+</body>
+</html>

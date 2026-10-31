@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindPaw · ESP8266 极低成本开源桌面四足机器狗 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto;position:relative;z-index:10}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>MindPaw · ESP8266 桌面四足机器狗</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== L1 直觉 ========== -->
+    <section class="chapter" data-level="1" data-title="一只 30 元的机器狗能干什么">
+      <h2>一只 30 元的机器狗能干什么</h2>
+      <p class="tldr">MindPaw 是一个开源的桌面四足机器狗项目：一块 10 元出头的 ESP8266 主控 + 12 个廉价舵机 + 3D 打印骨架，就能做出会走、会转身、会作揖的机器狗——总成本可以压到 30~60 元。</p>
+
+      <p>先建立一个直觉：市面上的科研级四足机器人（如波士顿动力 Spot）动辄数万美元，而大学生做课程设计常用的入门四足套件也要几百上千元。<mark>MindPaw 的激进之处在于"能省则省"</mark>——用 WiFi 芯片 ESP8266 当主控（它本来是给物联网设备联网用的），用最便宜的 9g 塑料舵机当关节，用桌面 3D 打印机打出骨架。成本降了两个数量级，能力也相应缩到"桌面级"：它在书桌上走动、表演小步态、通过手机网页控制，而不是在户外翻山越岭。</p>
+
+      <p>这个项目适合三种人：</p>
+      <ul>
+        <li><strong>零基础爱好者</strong>：想花一两顿饭的钱，体验"硬件 + 代码 = 活物"的魔法；</li>
+        <li><strong>嵌入式/机器人学习者</strong>：需要一个完整的、可拆解的参考设计，理解四足机器人从结构到算法的每一层；</li>
+        <li><strong>创客/小团队</strong>：想以它为底板做二次开发或微型产品，理解"开源硬件如何产品化"。</li>
+      </ul>
+
+      <div class="analogy">把做机器狗想成"用最少预算办一桌菜"：ESP8266 是电饭煲（便宜、万能、人人会修），舵机是速冻丸子（廉价但够用），3D 打印骨架是自己捏的橡皮泥模型（形态自由、强度一般）。端上桌的是一道"能看能玩的小菜"，不是米其林大餐——但你自己知道每一味料为什么放。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，认识 MindPaw 的核心零件</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">ESP8266</div><div class="back">主控与 WiFi：80MHz 单核 CPU、约 80KB 内存，负责跑控制循环、接收手机指令。本来设计来给插座、灯泡联网的。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">9g 舵机</div><div class="back">关节执行器：内部是直流电机 + 减速齿轮 + 电位器反馈，占整机成本的大头。12 个 = 12 个关节。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">3D 打印骨架</div><div class="back">PLA/PETG 材料逐层堆积成型，腿、身体、足端都是打印件。设计图开源，谁都能改。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">锂电池 + 降压板</div><div class="back">典型 2S 7.4V 电池直供舵机，再经降压给主控。电源设计是低成本项目最常见的翻车点。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">四足机器人的本质是"12 个电机按精确的时序摆动"。MindPaw 用极致的硬件减法告诉你：在四足步态的核心问题上，聪明的算法可以部分弥补昂贵的硬件。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">MindPaw 选择 ESP8266 作为主控，最看重的是它的什么特点？</p>
+        <button class="opt" data-fb="ESP8266 算力其实较弱，不如 STM32。它不是靠算力取胜的。">算力强大，能跑复杂算法</button>
+        <button class="opt" data-fb="ESP8266 的 ADC、GPIO 数量都很少，外设反而是短板。">外设接口丰富</button>
+        <button class="opt" data-fb="对。ESP8266 出货量巨大，模组单价可低至 10 元左右，且自带 WiFi 方便手机直连控制——这正是"极低成本"的关键。">极低成本且自带 WiFi</button>
+        <button class="opt" data-fb="ESP8266 是 3.3V 逻辑，更不是以功耗见长。">5V 供电、功耗低</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">MindPaw = 廉价主控（ESP8266）+ 廉价执行器（9g 舵机 ×12）+ 自制结构（3D 打印）。总成本约 30~60 元，能力边界是"桌面级"：慢速行走、表演步态、网页遥控。下一章我们看看它的整个系统长什么样。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="整机拆解：从骨架到大脑">
+      <h2>整机拆解：从骨架到大脑</h2>
+      <p class="tldr">一只四足机器狗 = 骨架（身体+4 条腿）+ 12 个关节舵机 + 1 块主控板 + 1 套电源。MindPaw 把每一部分都压到"刚好够用"的最低配置。</p>
+
+      <p>把整机从上到下拆开，只有四层：</p>
+      <ol>
+        <li><strong>骨架</strong>：身体是一块平板，4 条腿对称分布；每条腿有 3 个关节——髋关节（前后摆）、大腿关节（抬腿）、小腿关节（屈伸），共 12 个关节；</li>
+        <li><strong>执行层</strong>：每个关节装一个 9g 舵机（SG90 及其兼容品），直接拧在打印件上；</li>
+        <li><strong>感知层（可选）</strong>：MPU6050 六轴姿态传感器（3 轴加速度计 + 3 轴陀螺仪），告诉主控"我现在身体歪不歪"；</li>
+        <li><strong>决策层</strong>：ESP8266 开发板（如 NodeMCU），通过 16 路 PWM 扩展板（PCA9685）同时控制 12 个舵机，并打开 WiFi 热点等待手机连接。</li>
+      </ol>
+
+      <div class="analogy">这就像人体：骨架是骨骼，舵机是肌肉（收缩产生动作），姿态传感器是小脑里的前庭（感知平衡），ESP8266 是大脑皮层（发号施令）。预算再紧，这四个角色一个都不能少。</div>
+
+      <!-- 定制演示：整机架构 SVG，点击部件高亮 -->
+      <div class="widget demo" id="archDemo">
+        <div class="widget-title">点击部件，看看它属于哪一层、花多少钱</div>
+        <svg viewBox="0 0 800 340" style="max-height:340px">
+          <defs>
+            <style>
+              .part{cursor:pointer;transition:opacity .2s, filter .2s}
+              .part:hover{filter:brightness(1.08)}
+              .part.dim{opacity:.3}
+              .lbl{font:13px sans-serif;fill:var(--muted)}
+              .name{font:14px sans-serif;font-weight:700;fill:var(--text)}
+              .price{font:13px sans-serif;fill:var(--primary)}
+            </style>
+          </defs>
+          <!-- 身体 -->
+          <g class="part" data-info="骨架 · 3D 打印身体|PLA/PETG 材料，桌面 FDM 打印机数小时成型，材料成本约 2~5 元。设计文件开源，可改尺寸、加挂架。">
+            <rect x="250" y="80" width="300" height="70" rx="14" fill="var(--primary-soft)" stroke="var(--primary)"/>
+            <text x="400" y="118" text-anchor="middle" class="name">身体（3D 打印）</text>
+            <text x="400" y="138" text-anchor="middle" class="price">≈ ¥3</text>
+          </g>
+          <!-- ESP8266 -->
+          <g class="part" data-info="决策层 · ESP8266 主控|NodeMCU 等开发板约 ¥10~15。80MHz CPU、WiFi 热点、跑控制循环与网页服务器。内存只有约 80KB，写代码要精打细算。">
+            <rect x="290" y="170" width="140" height="55" rx="10" fill="#fde68a" stroke="var(--warn)"/>
+            <text x="360" y="195" text-anchor="middle" class="name">ESP8266</text>
+            <text x="360" y="213" text-anchor="middle" class="price">≈ ¥12</text>
+          </g>
+          <!-- 姿态传感器 -->
+          <g class="part" data-info="感知层 · MPU6050|六轴姿态传感器约 ¥3~5，I2C 接口。加速度计测倾斜、陀螺仪测角速度，是闭环平衡控制的唯一"眼睛"。">
+            <rect x="450" y="170" width="110" height="55" rx="10" fill="#a7f3d0" stroke="var(--ok)"/>
+            <text x="505" y="195" text-anchor="middle" class="name">MPU6050</text>
+            <text x="505" y="213" text-anchor="middle" class="price">≈ ¥4</text>
+          </g>
+          <!-- 电源 -->
+          <g class="part" data-info="电源 · 锂电池 + 降压模块|2S 7.4V 小电池直供舵机，降压到 5V/3.3V 给主控与传感器。舵机堵转电流可达 1A+，电源选小了狗会"走着走着抽搐"。">
+            <rect x="120" y="170" width="140" height="55" rx="10" fill="#fecaca" stroke="var(--bad)"/>
+            <text x="190" y="195" text-anchor="middle" class="name">电池+电源板</text>
+            <text x="190" y="213" text-anchor="middle" class="price">≈ ¥15</text>
+          </g>
+          <!-- PCA9685 -->
+          <g class="part" data-info="驱动层 · PCA9685 舵机驱动板|16 路 12 位 PWM，I2C 控制，约 ¥6。ESP8266 自身只有少量 PWM 通道，必须靠它同时"指挥"12 个舵机。">
+            <rect x="600" y="170" width="140" height="55" rx="10" fill="#e9d5ff" stroke="var(--l4)"/>
+            <text x="670" y="195" text-anchor="middle" class="name">PCA9685</text>
+            <text x="670" y="213" text-anchor="middle" class="price">≈ ¥6</text>
+          </g>
+          <!-- 4 条腿 -->
+          <g class="part" data-info="执行层 · 9g 舵机 ×12|每条腿 3 个关节（髋/大腿/小腿），SG90 兼容舵机约 ¥2~4/个，全机 12 个 ≈ ¥24~48，是最大单项开支。塑料齿轮、塑料外壳，别摔别堵转。">
+            <g id="legL1"><rect x="230" y="250" width="60" height="70" rx="8" fill="#ddd6fe" stroke="var(--l4)"/><text x="260" y="285" text-anchor="middle" class="name">腿</text><text x="260" y="305" text-anchor="middle" class="price">3舵机</text></g>
+            <g id="legL2"><rect x="310" y="250" width="60" height="70" rx="8" fill="#ddd6fe" stroke="var(--l4)"/><text x="340" y="285" text-anchor="middle" class="name">腿</text><text x="340" y="305" text-anchor="middle" class="price">3舵机</text></g>
+            <g id="legR1"><rect x="430" y="250" width="60" height="70" rx="8" fill="#ddd6fe" stroke="var(--l4)"/><text x="460" y="285" text-anchor="middle" class="name">腿</text><text x="460" y="305" text-anchor="middle" class="price">3舵机</text></g>
+            <g id="legR2"><rect x="510" y="250" width="60" height="70" rx="8" fill="#ddd6fe" stroke="var(--l4)"/><text x="540" y="285" text-anchor="middle" class="name">腿</text><text x="540" y="305" text-anchor="middle" class="price">3舵机</text></g>
+          </g>
+          <text x="400" y="35" text-anchor="middle" class="lbl">MindPaw 整机架构 · 总成本约 ¥30~60（含打印件）</text>
+        </svg>
+        <p class="readout" style="margin-top:10px;color:var(--muted);font-size:14px">点击任意部件查看说明。</p>
+      </div>
+
+      <div class="warn">误区："省成本 = 每个零件都买最便宜的"。实际上省成本的关键是<mark>架构减法</mark>：能不要的不要（如摄像头、激光雷达全省），必须用好的不能省（电池电流不够，整机直接抽搐）。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">MindPaw 用 PCA9685 扩展板的主要原因是？</p>
+        <button class="opt" data-fb="PCA9685 是 I2C 接口的从设备，不提供算力。">给 ESP8266 增加算力</button>
+        <button class="opt" data-fb="对。ESP8266 原生 PWM 通道很少，无法同时独立控制 12 个舵机；PCA9685 提供 16 路独立 12 位 PWM，I2C 只需两根线。">扩展出 16 路独立 PWM 通道</button>
+        <button class="opt" data-fb="舵机供电由电源直接提供，PCA9685 只发控制信号，不能反向供电。">给舵机提供更大电流</button>
+        <button class="opt" data-fb="I2C 是板内通信协议，与 WiFi 无关。">增强 WiFi 信号</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">整机四层：骨架 / 执行（12 舵机）/ 感知（MPU6050）/ 决策（ESP8266 + PCA9685）。成本大头是舵机（约一半），最容易翻车的是电源。接下来进入概念层：机器人的关节、坐标与姿态到底怎么描述。</div>
+    </section>
+
+    <!-- ========== L2 概念 ========== -->
+    <section class="chapter" data-level="2" data-title="自由度、关节空间与坐标系">
+      <h2>自由度、关节空间与坐标系</h2>
+      <p class="tldr">12 个舵机 = 12 个自由度（DOF）。描述这只狗有两种语言："关节空间"（每个舵机转多少度）和"任务空间"（脚在空间的什么位置）——控制算法整天在这两种语言之间翻译。</p>
+
+      <p><strong>自由度（DOF, Degree of Freedom）</strong>：描述一个物体位姿所需的独立坐标数。单条腿有 3 个关节，就有 3 个自由度：髋关节角 $\theta_1$、大腿角 $\theta_2$、小腿角 $\theta_3$。全机 12 个关节 = 12 个自由度。</p>
+
+      <p><strong>关节空间</strong>：直接用 12 个关节角描述狗的状态。优点：和舵机指令一一对应；缺点：看不出脚在哪。<strong>任务空间</strong>（也叫笛卡尔空间/操作空间）：用脚的坐标 $(x, y, z)$ 描述。优点：直观（"把脚抬到前方 5cm 处"）；缺点：和舵机之间隔着一层换算。</p>
+
+      <p><strong>坐标系约定</strong>：习惯把身体中心当原点，$x$ 朝前进方向，$y$ 朝左侧，$z$ 朝上；姿态用<strong> roll（横滚，左右歪）/ pitch（俯仰，前后俯仰）/ yaw（偏航，左右转头）</strong> 三个角描述。MPU6050 读到的原始数据，经过融合算法输出的就是这"三轴角 + 三轴线加速度"。</p>
+
+      <div class="analogy">关节空间 vs 任务空间，就像描述"你的手摸到了鼻子"：关节空间说"肩关节转 30°、肘关节转 75°、腕关节不动"；任务空间说"指尖到达鼻尖坐标"。前一种说法适合下命令给肌肉（舵机），后一种适合描述目标。</div>
+
+      <!-- 定制演示：单腿关节空间->任务空间 -->
+      <div class="widget demo" id="legDemo">
+        <div class="widget-title">拖动滑块：关节角 → 脚尖位置（任务空间）</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>髋关节 θ₁ <span class="val" data-for="t1"></span>°<input type="range" name="t1" min="-60" max="60" value="20"></label>
+          <label>大腿 θ₂ <span class="val" data-for="t2"></span>°<input type="range" name="t2" min="-90" max="90" value="40"></label>
+          <label>小腿 θ₃ <span class="val" data-for="t3"></span>°<input type="range" name="t3" min="-120" max="0" value="-70"></label>
+        </div>
+        <p class="readout" style="font-size:14px;color:var(--muted);margin-top:8px"></p>
+      </div>
+
+      <div class="key">每条腿 3 个自由度：一个决定腿前后摆（髋），两个决定腿抬多高、伸多远（大腿、小腿）。12 个自由度足够让四足狗完成行走、转向、蹲起、作揖。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">"把右脚向前抬 3cm"这个指令属于哪种空间？</p>
+        <button class="opt" data-fb="对。它以脚尖在空间的位移为目标，是任务空间描述；只有经过逆运动学换算后才变成舵机角度。">任务空间</button>
+        <button class="opt" data-fb="关节空间描述的是关节角本身，例如"右髋转 15°"。">关节空间</button>
+        <button class="opt" data-fb="12 个舵机只是自由度数量，不是描述方式。">自由度空间</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住三种说法：12 个自由度（关节总数）、关节空间（舵机听得懂）、任务空间（人脑想问题）。MPU6050 的 roll/pitch/yaw 描述身体姿态。下一章：感知系统如何把这些量测出来。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="感知系统：IMU 与姿态解算">
+      <h2>感知系统：IMU 与姿态解算</h2>
+      <p class="tldr">MPU6050 是 6 个传感器合在一起的"内耳"：3 轴加速度计 + 3 轴陀螺仪。但它们的原始数据各有毛病——一个噪声大、一个会漂移——必须靠互补滤波（或卡尔曼滤波）融合，才能得到可信的 roll/pitch 角。</p>
+
+      <p><strong>加速度计</strong>测量的是"比力"：静止时它测到的是重力加速度 $g$ 的反方向，倾斜时三个轴的分量随之变化，于是可以算出倾角。例如绕 $x$ 轴的横滚角可用</p>
+      $$\theta_{roll} = \arctan\frac{a_y}{a_z}$$
+      <p>估计。问题是：狗一动起来，加速度计测到的是重力 + 运动加速度的混合，<mark>动态时角度噪声很大</mark>。</p>
+
+      <p><strong>陀螺仪</strong>测量角速度（度/秒），对角速度积分就能得到角度——短时间非常准、响应快。但积分会累积误差（零偏漂移），<mark>几十秒就能漂走好几度</mark>。</p>
+
+      <p><strong>互补滤波</strong>让两者取长补短：高频部分信陀螺仪（快、准），低频部分信加速度计（稳、不漂），公式简洁：</p>
+      $$\theta = \alpha\left(\theta + \omega\,dt\right) + (1-\alpha)\,\theta_{acc}, \quad \alpha \approx 0.98$$
+      <p>其中 $\omega$ 是陀螺仪角速度，$\theta_{acc}$ 是加速度计估角，$\alpha$ 是时间常数权重，$dt$ 是采样周期（典型 5~10ms）。</p>
+
+      <div class="analogy">加速度计像"看地平线定方向"：稳的时候准，颠簸时眼花；陀螺仪像"凭感觉转脖子记角度"：转的时候顺，但闭眼久了就迷失。互补滤波就是"平时多看看地平线，转弯时信感觉，最后脑袋不晕"。</div>
+
+      <!-- 定制演示：互补滤波 -->
+      <div class="widget demo" id="imuDemo">
+        <div class="widget-title">拖动滑块：看互补滤波如何融合"噪声大的"与"会漂移的"</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls">
+          <label>陀螺仪漂移（度/秒） <span class="val" data-for="drift"></span><input type="range" name="drift" min="0" max="5" step="0.5" value="2"></label>
+          <label>加速度计噪声（度） <span class="val" data-for="noise"></span><input type="range" name="noise" min="0" max="10" step="1" value="5"></label>
+          <label>滤波系数 α <span class="val" data-for="alpha"></span><input type="range" name="alpha" min="0.80" max="0.999" step="0.005" value="0.98"></label>
+        </div>
+        <p class="readout" style="font-size:14px;color:var(--muted);margin-top:8px"></p>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么单用陀螺仪积分求姿态不可行？</p>
+        <button class="opt" data-fb="陀螺仪的强项恰恰是动态响应快。">动态时噪声太大</button>
+        <button class="opt" data-fb="对。陀螺仪存在零偏误差，积分后误差不断累积（漂移），长时间完全不可用。">零偏误差经积分累积，角度持续漂移</button>
+        <button class="opt" data-fb="MPU6050 的采样率对 50Hz 控制环绰绰有余。">采样率太低</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">互补滤波中 α 取得很大（接近 1）意味着什么？</p>
+        <button class="opt" data-fb="α 大恰恰是更信任陀螺仪，短期响应好但会继承漂移。">更信任加速度计，长期不漂</button>
+        <button class="opt" data-fb="两者没关系，α 只决定输出平滑度。">减小输出噪声</button>
+        <button class="opt" data-fb="对。α→1 时滤波输出几乎等于陀螺仪积分项：响应快、短期准，但漂移被完整保留。">更信任陀螺仪，短期响应好但有漂移</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">MPU6050 = 加速度计（稳而噪）+ 陀螺仪（快而漂）。互补滤波用 α 折中，典型 0.98、周期 5~10ms。MindPaw 的平衡控制每个循环都读这个角度。下一章进入机制层：固件怎么让这一切跑起来。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="固件架构：一只狗的主循环">
+      <h2>固件架构：一只狗的主循环</h2>
+      <p class="tldr">MindPaw 的固件是一个 Arduino 风格的单线程程序：初始化 → 死循环。每个循环约 20ms 做四件事：读传感器、更新步态相位、算逆运动学、下发舵机指令——同时用非阻塞方式处理 WiFi 指令。</p>
+
+      <p>主循环（loop）的经典结构：</p>
+      <pre>void loop() {
+  server.handleClient();          // 1. 非阻塞！处理手机网页发来的指令
+  unsigned long now = millis();
+  if (now - lastTick >= 20) {     // 2. 固定周期 20ms 的"心跳"
+    lastTick = now;
+    imu.update();                 // 3. 读 MPU6050，互补滤波出 roll/pitch
+    gait.update(dt);              // 4. 步态生成器：每个脚该往哪走
+    ik.solve();                   // 5. 逆运动学：脚坐标 → 12 个关节角
+    servo.writeAll(angles);       // 6. 经 PCA9685 下发 PWM
+  }
+}</pre>
+
+      <p>设计上有三个要点：</p>
+      <ul>
+        <li><strong>非阻塞</strong>：绝不用 <code>delay()</code>。WiFi 处理、传感器读取、步态计算全部按状态推进，任何阻塞都会让舵机抖动、狗当场"中风"；</li>
+        <li><strong>固定周期</strong>：用 <code>millis()</code> 计时而非死等，保证控制周期稳定（20ms = 50Hz），逆运动学和滤波都依赖准确的 $dt$；</li>
+        <li><strong>分层</strong>：指令层（走/转/蹲）→ 步态层（相位）→ 运动学层（坐标）→ 驱动层（PWM），每层只管自己的事。</li>
+      </ul>
+
+      <div class="analogy">这就像餐厅后厨的单线程流水线：接单员（WiFi 处理）随时接新单，但炒菜师傅（20ms 心跳）按固定节奏出菜，洗菜、切配、颠勺分层配合——哪个环节停下来等人，整条线就堵了。</div>
+
+      <div class="widget">
+        <div class="widget-title">排序：一个控制周期内的执行顺序</div>
+        <div class="order" data-answer="b,a,d,c">
+          <div class="item" data-id="d">逆运动学求解 12 个关节角</div>
+          <div class="item" data-id="b">读取 IMU 并滤波，得到身体姿态</div>
+          <div class="item" data-id="c">PCA9685 输出 PWM，驱动舵机</div>
+          <div class="item" data-id="a">步态生成器更新四脚目标位置</div>
+          <button class="btn check">检查</button>
+          <div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="3">
+        <p class="q">为什么固件里要彻底避免 <code>delay()</code>？</p>
+        <button class="opt" data-fb="省电不是主要目的，ESP8266 的功耗大头在 WiFi。">为了省电</button>
+        <button class="opt" data-fb">delay 与内存没有直接关系。</button>
+        <button class="opt" data-fb="WiFi 本身不依赖 delay，但阻塞会耽误 handleClient 的及时调用。">因为 WiFi 库要求必须连续调用</button>
+        <button class="opt" data-fb="对。delay 会让整个循环停摆：传感器断更、步态冻结、舵机指令中断——对 50Hz 控制系统是灾难。">任何阻塞都会中断控制循环，导致舵机抖动失控</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">固件 = 非阻塞 WiFi + 固定 20ms 心跳 + 四层结构（指令/步态/运动学/驱动）。先用流程排序题理清周期，下面进入机制核心：逆运动学。</div>
+    </section>
+
+    <!-- ========== L3 机制 ========== -->
+    <section class="chapter" data-level="3" data-title="逆运动学：从脚的位置到舵机角度">
+      <h2>逆运动学：从脚的位置到舵机角度</h2>
+      <p class="tldr">逆运动学（IK, Inverse Kinematics）回答："想让脚尖到达 $(x, y, z)$，三个关节各该转多少度？"对 MindPaw 的 3 自由度腿，可以用平面几何把 $\theta_2,\theta_3$ 解析解出，再处理髋关节。</p>
+
+      <p>先看<strong>正运动学（FK）</strong>：已知关节角求脚尖位置。把腿看成一个平面二连杆（大腿长 $L_1$、小腿长 $L_2$），忽略髋的侧摆，则</p>
+      $$x = L_1\cos\theta_2 + L_2\cos(\theta_2+\theta_3), \quad z = L_1\sin\theta_2 + L_2\sin(\theta_2+\theta_3)$$
+      <p>逆运动学是反问题：给定目标 $(x, z)$，由余弦定理先求膝角</p>
+      $$D^2 = x^2 + z^2, \quad \cos\theta_3 = \frac{D^2 - L_1^2 - L_2^2}{2L_1L_2}$$
+      <p>再用 atan2 求大腿角 $\theta_2$。这样每条腿只需几微秒就能解出——对 80MHz 的 ESP8266 毫无压力。真实腿部还多一个侧摆自由度，先在 $y$-$z$ 平面解出等效腿长在 $(x, z)$ 平面再求解。</p>
+
+      <div class="analogy">想象你胳膊肘悬空、手握一支笔：正运动学是"我转了肩膀和肘，笔尖到哪了"；逆运动学是"我要把笔尖放到那个点，肩膀和肘各弯多少"。几何 IK 就是给手臂画辅助线、套余弦定理的那套办法。</div>
+
+      <!-- 定制演示：IK 求解器 -->
+      <div class="widget demo" id="ikDemo">
+        <div class="widget-title">拖动目标点：实时看 IK 解算出的关节角（注意 unreachable 区域）</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls">
+          <label>目标 x <span class="val" data-for="tx"></span><input type="range" name="tx" min="0" max="160" value="90"></label>
+          <label>目标 z <span class="val" data-for="tz"></span><input type="range" name="tz" min="-160" max="0" value="-100"></label>
+        </div>
+        <p class="readout" style="font-size:14px;color:var(--muted);margin-top:8px"></p>
+      </div>
+
+      <div class="warn">误区：IK 不是越精确越好。舵机本身有 1~2° 的死区和装配误差，打印件的孔位也有公差。过度追求解析精度不如留一点"软裕度"——在代码里对目标点做可达性检查（$|L_1-L_2| < D < L_1+L_2$），并在边界处钳位。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">3 自由度腿为什么常用解析 IK 而不是迭代数值法？</p>
+        <button class="opt" data-fb="迭代法（如雅可比伪逆）通用性强，适合 6 自由度以上或冗余机械臂。">因为迭代法精度更高</button>
+        <button class="opt" data-fb="对。3 自由度腿的几何关系简单，余弦定理直接给出闭式解：几微秒出结果、无收敛问题，非常适合 80MHz 的 ESP8266。">3 自由度有几何闭式解，计算快且确定</button>
+        <button class="opt" data-fb">IK 的目标是关节角，不是 PWM 占空比——后者由舵机驱动板完成。">因为 PCA9685 只接受解析解</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">IK 的本质是"几何翻译"：任务空间坐标 → 关节空间角度。MindPaw 用余弦定理的闭式解，快、稳、省 CPU。有了 IK，步态控制器只要输出"脚该去哪"，下一章看脚该怎么动。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="步态控制：四只脚的时间编排">
+      <h2>步态控制：四只脚的时间编排</h2>
+      <p class="tldr">步态（gait）就是"四只脚什么时候着地、什么时候腾空"的时间表。MindPaw 常用对角小跑（trot）：左前+右后同时动、右前+左后同时动，周期内各占一半时间，相位差 180°。</p>
+
+      <p>用一个"步态时钟"来编排：相位 $\phi \in [0, 1)$ 线性增长，到 1 归零。每条腿分配一个<mark>相位偏移（offset）</mark>：trot 步态中，左前腿偏移 0，右后腿偏移 0，右前腿偏移 0.5，左后腿偏移 0.5。把每条腿的局部相位 $\phi_{leg} = (\phi + offset) \bmod 1$ 分成两段：</p>
+      <ul>
+        <li><strong>摆动相（swing，腾空）</strong>占比例 $duty$（如 0.4）：脚沿轨迹从后向前抬，让出落点；</li>
+        <li><strong>支撑相（stance，着地）</strong>占 $1-duty$：脚相对身体向后"蹬地"，推动身体前进。</li>
+      </ul>
+      <p>摆动相的轨迹常用<mark>摆线（cycloid）</mark>：水平匀速 + 竖直半个正弦，即</p>
+      $$x(t) = s\left(\frac{t}{T} - \frac{1}{2\pi}\sin\frac{2\pi t}{T}\right), \quad z(t) = h\cdot\frac{1-\cos(2\pi t/T)}{2}$$
+      <p>起点落地无冲击、顶点平滑，是低速四足的经典选择。</p>
+
+      <div class="analogy">四只脚像四位鼓手：trot 是"对角两人一组，两组错半拍"的鼓点；相位偏移就是每个人的节拍器差。只要鼓点稳，四只腿就能走出不乱套的步子。</div>
+
+      <!-- 定制演示：步态相位动画 -->
+      <div class="widget demo" id="gaitDemo">
+        <div class="widget-title">拖动滑块：观察不同步态的着地序列与步幅</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>步态类型 <span class="val" data-for="g"></span><input type="range" name="g" min="0" max="2" step="1" value="1"></label>
+          <label>步频（周期/秒） <span class="val" data-for="freq"></span><input type="range" name="freq" min="0.2" max="2" step="0.1" value="0.8"></label>
+          <label>步幅 <span class="val" data-for="stride"></span><input type="range" name="stride" min="10" max="60" value="35"></label>
+        </div>
+        <p class="readout" style="font-size:14px;color:var(--muted);margin-top:8px"></p>
+      </div>
+
+      <div class="key">trot 是四足机器人最高效也最简单的动态步态：对角腿同相、两组间 180° 错相。慢速静态稳定可走"四拍 walk"，四条腿依次着地，任意时刻三脚着地。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">对角小跑（trot）步态中，左前腿与右前腿的相位差是多少？</p>
+        <button class="opt" data-fb="同相是 pace（踱步）步态，稳定性差，机器人少用。">0°（完全同相）</button>
+        <button class="opt" data-fb="90° 相位差是四拍 walk 相邻腿之间的差。">90°</button>
+        <button class="opt" data-fb="对。对角腿同相（左前配右后），两条对角线错半圈，即 180°。">180°</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">步态 = 相位偏移表 + 占空比 + 摆线轨迹。MindPaw 用 trot：对角同相、错半拍、摆线抬脚。下一章：怎么走稳——姿态闭环。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="姿态闭环：PID 让狗站稳">
+      <h2>姿态闭环：PID 让狗站稳</h2>
+      <p class="tldr">开环控制下，狗走两步就歪。PID 控制器把"身体倾斜角"变成"腿长补偿量"，每秒 50 次微调，让狗始终把自己"垫平"。</p>
+
+      <p>回顾控制基本框架：<mark>误差 = 目标值 − 测量值</mark>。MindPaw 的姿态控制目标是 roll、pitch 都为 0（身体水平）。误差为</p>
+      $$e(t) = 0 - \theta(t)$$
+      <p>PID 输出三项之和：</p>
+      $$u(t) = K_p\,e(t) + K_i\int_0^t e(\tau)\,d\tau + K_d\frac{de(t)}{dt}$$
+      <ul>
+        <li><strong>比例 P</strong>：倾斜越多，补偿越猛。$K_p$ 太小纠不动，太大来回震荡；</li>
+        <li><strong>积分 I</strong>：消除 persistent 偏差（如重心偏了、地面不平）累积的"老账"；</li>
+        <li><strong>微分 D</strong>：按倾斜的"趋势"提前刹车，抑制超调。对 IMU 的噪声很敏感。</li>
+      </ul>
+      <p>MindPaw 的实现：把 PID 输出映射成 4 条腿的 z 方向偏移（"抬高这条腿一点"），叠加到步态的目标坐标上。</p>
+
+      <div class="analogy">端一盆水走路：P 是"歪了就抬低的那边手"，I 是"一直往一边斜就持续加点力纠正习惯"，D 是"感觉要晃就赶紧反方向稳一下"。三者配合，水不洒。</div>
+
+      <!-- 定制演示：PID 调参 -->
+      <div class="widget demo" id="pidDemo">
+        <div class="widget-title">拖动 PID 参数：看狗的姿态角如何收敛（或震荡发散）</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls">
+          <label>Kp <span class="val" data-for="kp"></span><input type="range" name="kp" min="0" max="30" step="1" value="12"></label>
+          <label>Ki <span class="val" data-for="ki"></span><input type="range" name="ki" min="0" max="10" step="0.5" value="2"></label>
+          <label>Kd <span class="val" data-for="kd"></span><input type="range" name="kd" min="0" max="5" step="0.1" value="1.5"></label>
+        </div>
+        <p class="readout" style="font-size:14px;color:var(--muted);margin-top:8px"></p>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">姿态控制中，PID 的"误差"指的是什么？</p>
+        <button class="opt" data-fb="对。目标是身体水平（roll=pitch=0），测量来自 IMU 滤波后的角度，误差 = 0 − 测量值。">目标姿态角与 IMU 实测姿态角之差</button>
+        <button class="opt" data-fb">这是电流/力矩环的思路，MindPaw 的 9g 舵机没有电流反馈。">目标关节角与舵机实际电流之差</button>
+        <button class="opt" data-fb="舵机指令与实际位置的差通常由舵机内部电路处理。">指令 PWM 与反馈 PWM 之差</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">Kp 调得过大，最典型的现象是？</p>
+        <button class="opt" data-fb="Kp 过小才会响应迟缓。">姿态响应迟缓</button>
+        <button class="opt" data-fb="对。P 项过强会在误差变号后仍给出大补偿，系统来回过冲——表现为身体左右震荡。">姿态角围绕零点反复震荡</button>
+        <button class="opt" data-fb">漂移主要与积分项缺失或传感器漂移有关。">姿态缓慢漂离零点</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">PID 是"测倾斜 → 算补偿 → 分配腿长"的闭环。P 管力度、I 管老账、D 管刹车。调参口诀：先 P 到刚好不震荡，再加 D 压超调，最后少量 I 消残差。下一章进入 L4：强化学习。</div>
+    </section>
+
+    <!-- ========== L4 深入 ========== -->
+    <section class="chapter" data-level="4" data-title="强化学习：让狗自己学会走路">
+      <h2>强化学习：让狗自己学会走路</h2>
+      <p class="tldr">传统方法靠人写步态规则；强化学习（RL）反着来：给"狗"一个奖励函数，让它在仿真里摔一万次，自己摸索出走路策略。训练在 PC 上完成，部署到 ESP8266 上只需"前向推理"。</p>
+
+      <p><strong>RL 三件套</strong>：</p>
+      <ul>
+        <li><strong>状态（State）</strong>：机身姿态角/角速度 + 各关节角/角速度，约 20~30 维；</li>
+        <li><strong>动作（Action）</strong>：12 个关节的目标角度偏移；</li>
+        <li><strong>奖励（Reward）</strong>：前进速度加分、身体倾斜扣分、关节用力过猛扣分、摔倒大扣分。</li>
+      </ul>
+      <p>策略网络（Policy Network）是一个小型 MLP：输入状态，输出 12 个关节角。用 PPO 算法在物理仿真器（如 PyBullet/Isaac Gym，或用简化的 2D/3D 动力学模型）中并行训练几万回合，收敛后导出权重。</p>
+
+      <p><strong>Sim-to-Real（仿真到现实）</strong>是最大的坑：仿真里完美无摩擦的世界，狗一到地毯上就摔。解决办法是<mark>域随机化（Domain Randomization）</mark>——训练时随机扰动质量、摩擦、电机延迟、传感器噪声，让策略对不确定性"鲁棒"。</p>
+
+      <p><strong>部署到 ESP8266</strong>：训练好的网络只有几千个参数，前向传播只需几十次乘加。C 代码里把权重存成数组，每个控制周期做一次推理即可。80MHz 的 CPU 跑一个 3 层小 MLP，毫无压力。</p>
+
+      <div class="analogy">传统编程像"教小孩走路：先抬左脚、重心前移、再右脚"；强化学习像"给小孩糖吃：站直有糖、摔了没有，他自己摔着摔着就会走了"。奖励函数就是那颗糖——糖给错了，他学会的是滚来滚去。</div>
+
+      <!-- 定制演示：奖励函数权重 -->
+      <div class="widget demo" id="rlDemo">
+        <div class="widget-title">拖动奖励权重：看代理会"学"成什么样</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>前进奖励 <span class="val" data-for="wFwd"></span><input type="range" name="wFwd" min="0" max="10" step="0.5" value="6"></label>
+          <label>稳定奖励 <span class="val" data-for="wStab"></span><input type="range" name="wStab" min="0" max="10" step="0.5" value="6"></label>
+          <label>能耗惩罚 <span class="val" data-for="wEff"></span><input type="range" name="wEff" min="0" max="5" step="0.5" value="1"></label>
+        </div>
+        <p class="readout" style="font-size:14px;color:var(--muted);margin-top:8px"></p>
+      </div>
+
+      <div class="warn">误区：以为 RL 可以完全替代经典控制。实际上 RL 策略常常输出"看起来像抽搐"的动作，且难以调参和解释。工程上更常见的做法是：RL 生成参考轨迹，底层仍用 IK + PID 做跟踪——<mark>混合架构</mark>最实用。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">Sim-to-Real 问题中，"域随机化"是指什么？</p>
+        <button class="opt" data-fb">那恰恰会加剧 sim-to-real 差距。">在仿真中使用精确的真实世界参数</button>
+        <button class="opt" data-fb">推理（Inference）时网络结构是固定的，随机化发生在训练阶段的仿真环境。">部署时随机改变网络权重</button>
+        <button class="opt" data-fb="对。训练时随机化质量、摩擦、延迟等参数，让策略见到各种"世界"，从而对现实的不确定性不敏感。">训练时在仿真中随机化物理参数以增强鲁棒性</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">RL 不是魔法，是"用算力换人工调参"。训练在 PC 仿真，部署到 ESP8266 只需小 MLP 前向推理。工程上 RL + 经典控制的混合架构最实用。下一章：感知系统。</div>
+    </section>
+
+    <section class="chapter" data-level="4" data-title="感知与交互：让狗看见和听话">
+      <h2>感知与交互：让狗看见和听话</h2>
+      <p class="tldr">MindPaw 的"感知"分两层：本体感知（IMU）+ 环境交互（WiFi 指令、可选超声波避障）。资源太紧，不可能上视觉——这正是低成本路线的边界，也是它的设计哲学。</p>
+
+      <p><strong>本体感知</strong>已讲过：MPU6050 提供姿态闭环的原料。<strong>环境感知</strong>的最低配方案是 1~2 个 HC-SR04 超声波模块（约 ¥2/个）：朝前装一个，测距小于 10cm 就触发"后退+转向"的避障行为。它没有视觉，只能"摸到"前方的墙。</p>
+
+      <p><strong>交互层</strong>是 MindPaw 的一大亮点：ESP8266 本身就有 WiFi，它可以直接开热点，手机连上后打开一个网页（HTML 存固件里），页面上有摇杆、按钮（前进/后退/左转/右转/蹲/叫）。这个"网页即 App"的方案省去了蓝牙模块、省去了写手机 App。</p>
+
+      <div class="key">低成本感知的设计哲学：与其装一个贵的传感器然后算力不够用，不如用便宜的传感器 + 简单行为规则（"看到墙就退"），把省下的钱花在结构和执行器上。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片：感知与交互零件</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">HC-SR04 超声波</div><div class="back">低成本避障：Trig 引脚发 10μs 脉冲，Echo 引脚返回高电平，脉宽/58 ≈ 距离(cm)。缺点是波束宽、对斜面不敏感。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">网页摇杆</div><div class="back">ESP8266 内置 WebServer，把 HTML/JS 存 Flash。手机连热点后浏览器打开 192.168.4.1，摇杆值经 HTTP GET 发给狗。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">蜂鸣器</div><div class="back">GPIO 直接驱动无源蜂鸣器，用 tone() 生成不同频率 = "会叫"。成本 ¥0.5，情绪价值拉满。</div></div></div>
+        </div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">MindPaw 为什么选 WiFi 网页而不是蓝牙 + 手机 App？</p>
+        <button class="opt" data-fb">WiFi 在近距离控制上延迟不一定比蓝牙低。">WiFi 延迟更低</button>
+        <button class="opt" data-fb="对。ESP8266 自带 WiFi 和 WebServer，无需额外蓝牙模块、无需开发/分发 App——浏览器即客户端，这是"零额外成本"的最优解。">省去蓝牙模块和 App 开发，浏览器即客户端</button>
+        <button class="opt" data-fb">网页控制距离有限，且通常不需要穿墙。">WiFi 穿墙能力更强</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">感知哲学：本体（IMU）+ 极简环境（超声波）+ 零成本交互（WiFi 网页）。不追求"看得见"，追求"够用的智能"。最后一章：从开源项目到产品。</div>
+    </section>
+
+    <section class="chapter" data-level="4" data-title="从开源项目到产品：供应链与产品化">
+      <h2>从开源项目到产品：供应链与产品化</h2>
+      <p class="tldr">一个开源项目变成商品，要跨三道坎：BOM 成本控制、可制造性（DFM）、合规与售后。MindPaw 这类极低成本项目的机会在"教育套件"和"极客玩具"两个市场。</p>
+
+      <p><strong>BOM（物料清单）控制</strong>：零售价 = BOM × 3~5（覆盖渠道、营销、售后、利润）。BOM ¥40 的产品，零售要到 ¥120~200 才有得做。BOM 明细表：</p>
+      <table>
+        <tr><th>项目</th><th>数量</th><th>单价（散购）</th><th>小计</th><th>备注</th></tr>
+        <tr><td>ESP8266 模组</td><td>1</td><td>¥10~15</td><td>¥12</td><td>量大可到 ¥6</td></tr>
+        <tr><td>SG90 舵机</td><td>12</td><td>¥2~4</td><td>¥36</td><td>最大成本项，塑料齿轮是短板</td></tr>
+        <tr><td>MPU6050 模块</td><td>1</td><td>¥3~5</td><td>¥4</td><td>可省（纯开环版本）</td></tr>
+        <tr><td>PCA9685 模块</td><td>1</td><td>¥5~8</td><td>¥6</td><td>可自制精简板</td></tr>
+        <tr><td>电池 + 电源板</td><td>1</td><td>¥10~20</td><td>¥15</td><td>安全件，不能省</td></tr>
+        <tr><td>3D 打印件 + 螺丝</td><td>1 套</td><td>¥5~10</td><td>¥8</td><td>PLA 约 80g</td></tr>
+        <tr><td><strong>合计</strong></td><td></td><td></td><td><strong>¥80~90</strong></td><td>零售价可定 ¥199~299</td></tr>
+      </table>
+
+      <p><strong>DFM（可制造性设计）</strong>：从"散件拼装"到"商品"的关键步骤：打印件改用注塑（单件成本从 ¥3 降到 ¥0.3，但要开模费 ¥5~10万）；PCB 从洞洞板换成定制 PCB（把 ESP8266 + PCA9685 + 电源整合成一块）；装配从胶水+扎带改成卡扣+螺丝。</p>
+
+      <p><strong>合规</strong>：卖到海外要过 CE（欧盟）/ FCC（美国）认证，主要是电磁兼容（EMC）和无线电（WiFi 频段）；锂电池运输要 UN38.3。认证费 ¥2~5 万，是低价产品的一大门槛。</p>
+
+      <div class="analogy">开源项目像"家宴菜谱"——食材现买、摆盘随意；产品化像"连锁餐厅"：中央厨房（注塑+定制PCB）压成本、SOP（装配手册）保质量、营业执照（认证）才能开门迎客。菜谱是灵魂，但赚钱靠供应链。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">MindPaw 类极低成本机器人最现实的商业化路径是？</p>
+        <button class="opt" data-fb">极低成本意味着性能有限，科研市场更看重可靠性和精度。">高端科研平台</button>
+        <button class="opt" data-fb">工业巡检对可靠性、防护等级要求高，与低成本路线冲突。">工业巡检机器人</button>
+        <button class="opt" data-fb="对。教育套件（学校采购）和极客 DIY 套件最契合：用户容忍瑕疵、喜欢自己折腾、对价格敏感，且开源社区本身就是获客渠道。">STEM 教育套件 / 极客 DIY 套件</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget fill">
+        <p>BOM ¥40 的套件，按 BOM × 4 定价，零售价约为 ¥<input data-answer="160">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">开源 → 产品的三段路：BOM 算清账（×3~5 定价）、DFM 降本（注塑/定制 PCB/卡扣装配）、合规拿证（CE/FCC/UN38.3）。低成本项目的最佳赛道是教育与极客市场。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+
+// 1. 整机架构：点击高亮
+(() => {
+  const root = document.getElementById('archDemo');
+  if (!root) return;
+  const readout = root.querySelector('.readout');
+  const parts = root.querySelectorAll('.part');
+  parts.forEach(p => {
+    p.addEventListener('click', () => {
+      parts.forEach(x => x.classList.add('dim'));
+      p.classList.remove('dim');
+      const [title, desc] = (p.dataset.info || '').split('|');
+      readout.innerHTML = `<strong style="color:var(--primary)">${title}</strong><br>${desc}`;
+    });
+  });
+})();
+
+// 2. 单腿正运动学演示
+demo('#legDemo', ({ t1, t2, t3 }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cx = W / 2, cy = 60, s = 1.6; // 缩放像素/毫米，腿长 ~70mm
+  const L1 = 50, L2 = 70;
+  const r = d => d * Math.PI / 180;
+  // 髋侧摆(简化：仅影响 y 投影，这里用 y 偏移演示)，大腿、小腿在 x-z 平面
+  const hipY = 30 * Math.sin(r(t1));
+  const x1 = cx + L1 * s * Math.cos(r(t2));
+  const z1 = cy + L1 * s * Math.sin(r(t2));
+  const x2 = x1 + L2 * s * Math.cos(r(t2 + t3));
+  const z2 = z1 + L2 * s * Math.sin(r(t2 + t3));
+  // 参考线
+  ctx.strokeStyle = css.getPropertyValue('--border');
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(40, cy); ctx.lineTo(W - 40, cy); ctx.stroke();
+  ctx.setLineDash([]);
+  // 腿
+  ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.strokeStyle = css.getPropertyValue('--primary');
+  ctx.beginPath(); ctx.moveTo(cx, cy + hipY * s * 0.3); ctx.lineTo(x1, z1); ctx.stroke();
+  ctx.strokeStyle = css.getPropertyValue('--l4');
+  ctx.beginPath(); ctx.moveTo(x1, z1); ctx.lineTo(x2, z2); ctx.stroke();
+  // 关节
+  ctx.fillStyle = css.getPropertyValue('--text');
+  [[cx, cy + hipY * s * 0.3], [x1, z1]].forEach(([px, py]) => { ctx.beginPath(); ctx.arc(px, py, 6, 0, 7); ctx.fill(); });
+  // 脚尖
+  ctx.fillStyle = css.getPropertyValue('--ok');
+  ctx.beginPath(); ctx.arc(x2, z2, 7, 0, 7); ctx.fill();
+  // 标签
+  ctx.font = '13px sans-serif'; ctx.fillStyle = css.getPropertyValue('--muted');
+  ctx.fillText('髋', cx + 10, cy - 8);
+  ctx.fillText('膝', x1 + 10, z1);
+  ctx.fillText('脚尖', x2 + 10, z2 + 4);
+  // 任务空间读数
+  const dx = ((x2 - cx) / s).toFixed(0), dz = ((z2 - cy) / s).toFixed(0);
+  root.querySelector('.readout').textContent = `关节空间: θ₁=${t1}° θ₂=${t2}° θ₃=${t3}°  →  任务空间(相对髋): x=${dx}mm, z=${dz}mm`;
+});
+
+// 3. IMU 互补滤波演示
+demo('#imuDemo', ({ drift, noise, alpha }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, mid = H / 2, amp = H / 2 - 20;
+  const css = getComputedStyle(document.documentElement);
+  const N = 400, dt = 0.05; // 20 秒
+  const tArr = [], accArr = [], gyrArr = [], fusArr = [];
+  let gInt = 0, fus = 0;
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280 - 0.5; };
+  for (let i = 0; i < N; i++) {
+    const t = i * dt;
+    const trueAng = 15 * Math.sin(2 * Math.PI * 0.3 * t); // 真实姿态：±15° 慢摆
+    const acc = trueAng + noise * 2 * rand();             // 加速度计：噪声
+    gInt += (0 + drift) * dt * 10;                         // 陀螺仪：零偏漂移（放大演示）
+    gyrArr.push(trueAng + gInt);
+    fus = alpha * (fus + 0 * dt) + (1 - alpha) * acc;      // 互补滤波（简化：陀螺项置零，体现低频信acc）
+    fusArr.push(fus); accArr.push(acc); tArr.push(t);
+  }
+  const plot = (arr, color, label) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    arr.forEach((v, i) => { const x = i / (N - 1) * W, y = mid - v / 20 * amp; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+    ctx.fillStyle = color; ctx.font = '12px sans-serif'; ctx.fillText(label, 8, arr === accArr ? 16 : arr === gyrArr ? 32 : 48);
+  };
+  ctx.strokeStyle = css.getPropertyValue('--border'); ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
+  ctx.strokeStyle = css.getPropertyValue('--muted'); ctx.setLineDash([5, 5]); ctx.beginPath();
+  tArr.forEach((t, i) => { const x = i / (N - 1) * W, y = mid - (15 * Math.sin(2 * Math.PI * 0.3 * t)) / 20 * amp; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '12px sans-serif'; ctx.fillText('真实姿态（虚线）', 8, 64);
+  plot(accArr, css.getPropertyValue('--warn'), '加速度计（噪声大）');
+  plot(gyrArr, css.getPropertyValue('--bad'), '陀螺仪积分（漂移）');
+  plot(fusArr, css.getPropertyValue('--ok'), '互补滤波融合');
+  const errA = Math.sqrt(accArr.reduce((s, v, i) => s + (v - 15 * Math.sin(2 * Math.PI * 0.3 * tArr[i])) ** 2, 0) / N).toFixed(1);
+  const errF = Math.sqrt(fusArr.reduce((s, v, i) => s + (v - 15 * Math.sin(2 * Math.PI * 0.3 * tArr[i])) ** 2, 0) / N).toFixed(1);
+  root.querySelector('.readout').textContent = `α=${alpha}：加速度计 RMS 误差 ≈ ${errA}°，融合后 ≈ ${errF}°。试试把 α 调小——融合更信加速度计，噪声被平滑，但响应变慢。`;
+});
+
+// 4. IK 求解器演示
+demo('#ikDemo', ({ tx, tz }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const cx = 140, cy = 60, s = 1.6;
+  const L1 = 50, L2 = 70;
+  // 目标点
+  const gx = cx + tx * s, gz = cy + tz * s;
+  // IK
+  const dx = gx - cx, dz = gz - cy, D = Math.hypot(dx, dz);
+  const Dc = Math.max(Math.abs(L1 - L2) + 0.1, Math.min(D, L1 + L2 - 0.1));
+  const reachClamped = D > L1 + L2 || D < Math.abs(L1 - L2);
+  const cosT3 = (Dc * Dc - L1 * L1 - L2 * L2) / (2 * L1 * L2);
+  const t3 = -Math.acos(Math.max(-1, Math.min(1, cosT3))); // 膝后弯为负
+  const t2 = Math.atan2(dz, dx) - Math.atan2(L2 * Math.sin(t3), L1 + L2 * Math.cos(t3));
+  // 正解画腿
+  const x1 = cx + L1 * s * Math.cos(t2), z1 = cy + L1 * s * Math.sin(t2);
+  const x2 = x1 + L2 * s * Math.cos(t2 + t3), z2 = z1 + L2 * s * Math.sin(t2 + t3);
+  // 工作空间圆环
+  ctx.strokeStyle = css.getPropertyValue('--border'); ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.arc(cx, cy, (L1 + L2) * s, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, Math.abs(L1 - L2) * s, 0, 7); ctx.stroke();
+  ctx.setLineDash([]);
+  // 地面
+  ctx.strokeStyle = css.getPropertyValue('--border');
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+  // 腿
+  ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.strokeStyle = css.getPropertyValue('--primary');
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x1, z1); ctx.stroke();
+  ctx.strokeStyle = css.getPropertyValue('--l4');
+  ctx.beginPath(); ctx.moveTo(x1, z1); ctx.lineTo(x2, z2); ctx.stroke();
+  ctx.fillStyle = css.getPropertyValue('--text');
+  [[cx, cy], [x1, z1]].forEach(([px, py]) => { ctx.beginPath(); ctx.arc(px, py, 6, 0, 7); ctx.fill(); });
+  // 目标与实际
+  ctx.strokeStyle = reachClamped ? css.getPropertyValue('--bad') : css.getPropertyValue('--ok'); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(gx, gz, 9, 0, 7); ctx.stroke();
+  ctx.fillStyle = css.getPropertyValue('--ok');
+  ctx.beginPath(); ctx.arc(x2, z2, 6, 0, 7); ctx.fill();
+  if (reachClamped) {
+    ctx.fillStyle = css.getPropertyValue('--bad'); ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('⚠ 目标不可达，已钳位到边界', 300, 40);
+  }
+  ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '13px sans-serif';
+  ctx.fillText(`θ₂ = ${(t2 * 180 / Math.PI).toFixed(1)}°`, 300, 80);
+  ctx.fillText(`θ₃ = ${(t3 * 180 / Math.PI).toFixed(1)}°`, 300, 100);
+  ctx.fillText(`D = ${D.toFixed(1)}mm（可达范围 ${Math.abs(L1 - L2).toFixed(0)} ~ ${(L1 + L2).toFixed(0)}mm）`, 300, 120);
+  root.querySelector('.readout').textContent = `目标 (${tx}, ${tz}) mm → 关节角 θ₂=${(t2 * 180 / Math.PI).toFixed(1)}°, θ₃=${(t3 * 180 / Math.PI).toFixed(1)}°${reachClamped ? '（已钳位）' : ''}`;
+});
+
+// 5. 步态演示：相位动画
+(() => {
+  const root = document.getElementById('gaitDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const gaitNames = ['四拍 Walk（静态稳定）', 'Trot 对角小跑', 'Pace 踱步'];
+  const offsets = [[0, 0.25, 0.75, 0.5], [0, 0.5, 0.5, 0], [0, 0.5, 0, 0.5]]; // LF RF LH RH
+  const legNames = ['左前', '右前', '左后', '右后'];
+  const colors = ['#4f46e5', '#a855f7', '#14b8a6', '#f59e0b'];
+  let phase = 0, lastT = performance.now();
+  const duty = 0.4;
+  function draw() {
+    const now = performance.now();
+    const dt = Math.min((now - lastT) / 1000, 0.05);
+    lastT = now;
+    const g = +root.querySelector('input[name=g]').value;
+    const freq = +root.querySelector('input[name=freq]').value;
+    const stride = +root.querySelector('input[name=stride]').value;
+    root.querySelector('.val[data-for=g]').textContent = g;
+    root.querySelector('.val[data-for=freq]').textContent = freq;
+    root.querySelector('.val[data-for=stride]').textContent = stride;
+    phase = (phase + dt * freq) % 1;
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    // 标题
+    ctx.fillStyle = css.getPropertyValue('--text'); ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(gaitNames[g], 16, 24);
+    // 时间轴条
+    const trackY = 60, trackH = 30, trackW = W - 40, trackX = 20;
+    offsets[g].forEach((off, leg) => {
+      const y = trackY + leg * (trackH + 8);
+      ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '12px sans-serif';
+      ctx.fillText(legNames[leg], 20, y + 14);
+      // 条
+      const bx = 80, bw = W - 120;
+      ctx.fillStyle = css.getPropertyValue('--border');
+      ctx.fillRect(bx, y, bw, trackH - 6);
+      // 支撑相着色（stance = 非摆动）
+      ctx.fillStyle = colors[leg];
+      const swingStart = (1 - duty);
+      const sx = bx + swingStart * bw, sw = duty * bw;
+      // 画两段
+      ctx.fillRect(bx, y, sx - bx, trackH - 6);
+      ctx.fillRect(bx + (swingStart + duty) * bw > bx + bw ? bx + bw : bx + (swingStart + duty) * bw, y, 0, 0);
+      // 实际上 duty 为摆动比例: swing = [0, duty), stance = [duty, 1)
+      ctx.clearRect(bx, y, bw, trackH - 6);
+      ctx.fillStyle = css.getPropertyValue('--ok');
+      ctx.fillRect(bx + duty * bw, y, (1 - duty) * bw, trackH - 6); // stance 绿
+      ctx.fillStyle = colors[leg];
+      ctx.fillRect(bx, y, duty * bw, trackH - 6); // swing 彩
+      // 相位指示点
+      const lp = (phase + off) % 1;
+      const px = bx + lp * bw;
+      ctx.fillStyle = css.getPropertyValue('--text');
+      ctx.beginPath(); ctx.arc(px, y + (trackH - 6) / 2, 5, 0, 7); ctx.fill();
+      const isSwing = lp < duty;
+      ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '11px sans-serif';
+      ctx.fillText(isSwing ? '摆动' : '支撑', px - 14, y - 4);
+    });
+    // 脚印区：模拟一只脚轨迹
+    const footY = 250, midX = W / 2;
+    const leg = 0;
+    const lp = (phase + offsets[g][leg]) % 1;
+    ctx.fillStyle = colors[leg]; ctx.font = '12px sans-serif';
+    ctx.fillText(`${legNames[leg]}脚轨迹（摆线）:`, 40, footY - 40);
+    ctx.strokeStyle = colors[leg]; ctx.lineWidth = 2; ctx.beginPath();
+    for (let i = 0; i <= 100; i++) {
+      const t = i / 100, x = midX + (t * 2 - 1) * stride, lift = Math.sin(Math.PI * t);
+      const y = footY - lift * 25;
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+    // 当前脚位置
+    const ft = lp / duty; // 摆动相内进度
+    if (ft <= 1) {
+      const fx = midX + (ft * 2 - 1) * stride, fy = footY - Math.sin(Math.PI * ft) * 25;
+      ctx.fillStyle = colors[leg]; ctx.beginPath(); ctx.arc(fx, fy, 7, 0, 7); ctx.fill();
+    } else {
+      const st = (lp - duty) / (1 - duty);
+      const fx = midX + ((st * 2 - 1)) * stride;
+      ctx.fillStyle = css.getPropertyValue('--ok'); ctx.beginPath(); ctx.arc(fx, footY, 7, 0, 7); ctx.fill();
+    }
+    root.querySelector('.readout').textContent = `步态=${gaitNames[g]} · 频率=${freq} 周期/s · 步幅=${stride}mm · 相位=${(phase * 360).toFixed(0)}°`;
+    requestAnimationFrame(draw);
+  }
+  root.querySelectorAll('input').forEach(i => i.addEventListener('input', () => {}));
+  draw();
+})();
+
+// 6. PID 调参演示
+demo('#pidDemo', ({ kp, ki, kd }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height, mid = H / 2, amp = H / 2 - 24;
+  const css = getComputedStyle(document.documentElement);
+  const N = 400, dt = 0.02; // 8 秒仿真
+  const th = [], ref = [];
+  let x = 15, v = 0, integ = 0, lastE = 0;
+  for (let i = 0; i < N; i++) {
+    const r = (i > 40 && i % 120 < 60) ? 8 : 0; // 方波扰动
+    const e = r - x;
+    integ += e * dt;
+    const d = (e - lastE) / dt; lastE = e;
+    const u = kp * e + ki * integ + kd * d;
+    // 二阶被控对象: x'' = -c*x' + u, c 阻尼小
+    v += (-0.4 * v + u) * dt;
+    x += v * dt;
+    // 物理限幅
+    if (x > 25) x = 25; if (x < -25) x = -25;
+    th.push(x); ref.push(r);
+  }
+  const scale = amp / 25;
+  ctx.strokeStyle = css.getPropertyValue('--border'); ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
+  // 参考
+  ctx.strokeStyle = css.getPropertyValue('--muted'); ctx.setLineDash([5, 5]); ctx.beginPath();
+  ref.forEach((r, i) => { const px = i / (N - 1) * W, py = mid - r * scale; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '12px sans-serif'; ctx.fillText('目标 = 0°（虚线），方波=扰动', 8, 16);
+  // 响应
+  ctx.strokeStyle = css.getPropertyValue('--primary'); ctx.lineWidth = 2; ctx.beginPath();
+  let maxAbs = 0;
+  th.forEach((v, i) => { const px = i / (N - 1) * W, py = mid - v * scale; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); if (i > 30) maxAbs = Math.max(maxAbs, Math.abs(v)); });
+  ctx.stroke();
+  // 稳定性评估
+  let verdict, vColor;
+  const settle = maxAbs;
+  if (settle > 20) { verdict = '发散/剧烈震荡！减小 Kp 或增大 Kd'; vColor = css.getPropertyValue('--bad'); }
+  else if (settle > 4) { verdict = `有超调/震荡（残余 ±${settle.toFixed(1)}°），可适当增大 Kd`; vColor = css.getPropertyValue('--warn'); }
+  else { verdict = `收敛良好（残余 ±${settle.toFixed(1)}°）`; vColor = css.getPropertyValue('--ok'); }
+  root.querySelector('.readout').innerHTML = `Kp=${kp} Ki=${ki} Kd=${kd} → <strong style="color:${vColor}">${verdict}</strong>。经典调参顺序：先加 Kp 到临界震荡，再抬 Kd 压下去，最后微量 Ki。`;
+});
+
+// 7. RL 奖励演示
+demo('#rlDemo', ({ wFwd, wStab, wEff }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const css = getComputedStyle(document.documentElement);
+  const behaviors = [
+    { name: '原地抽搐（只有稳定奖励）', x: 0.5, y: 0.15 },
+    { name: '狂奔然后摔倒', x: 0.85, y: 0.55 },
+    { name: '缓慢稳定行走（最优）', x: 0.65, y: 0.8 },
+    { name: '站着不动（最省能）', x: 0.15, y: 0.85 },
+  ];
+  // 计算每个行为得分
+  const scored = behaviors.map(b => ({
+    ...b,
+    score: wFwd * b.x + wStab * b.y - wEff * (1 - b.y) * 0.5
+  }));
+  scored.sort((a, b) => b.score - a.score);
+  // 坐标轴
+  const px = v => 60 + v * (W - 120), py = v => H - 40 - v * (H - 100);
+  ctx.strokeStyle = css.getPropertyValue('--border'); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, 40); ctx.lineTo(60, H - 40); ctx.lineTo(W - 60, H - 40); ctx.stroke();
+  ctx.fillStyle = css.getPropertyValue('--muted'); ctx.font = '13px sans-serif';
+  ctx.fillText('前进速度 →', W - 150, H - 18);
+  ctx.save(); ctx.translate(18, 120); ctx.rotate(-Math.PI / 2); ctx.fillText('← 身体稳定性', 0, 0); ctx.restore();
+  // 散点
+  behaviors.forEach((b, i) => {
+    const best = scored[0].name === b.name;
+    const color = best ? css.getPropertyValue('--ok') : css.getPropertyValue('--primary');
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(px(b.x), py(b.y), best ? 12 : 8, 0, 7); ctx.fill();
+    ctx.fillStyle = css.getPropertyValue('--text'); ctx.font = best ? 'bold 13px sans-serif' : '12px sans-serif';
+    ctx.fillText(b.name + (best ? '  ← 策略会收敛到这里' : ''), px(b.x) + 14, py(b.y) + 4);
+  });
+  root.querySelector('.readout').textContent =
+    `当前权重 → 最高分: 「${scored[0].name}」(${scored[0].score.toFixed(1)} 分)。奖励函数就是训练的指南针——前进权重低，狗学会偷懒；稳定权重低，狗学会摔倒。`;
+});
+</script>
+</body>
+</html>

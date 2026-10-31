@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>基因组变异检测实战：从 BAM 到 VCF · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto;font-size:14px}
+pre .c{color:#9ca3af}
+pre .k{color:#f472b6}
+pre .s{color:#a5f3fc}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:130px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>基因组变异检测实战：从 BAM 到 VCF</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="什么是变异检测">
+      <h2>什么是变异检测</h2>
+      <p class="tldr">变异检测（Variant Calling）就是从测序 reads 中找出"你的基因组和参考基因组不一样的地方"，核心两类是 SNP 和 Indel。</p>
+
+      <p>每个人的基因组约 30 亿个碱基，与参考基因组（如 GRCh38）相比有大约 500 万个差异位点。变异检测的任务就是把这些位点逐个找出来，并判断基因型（纯合/杂合）。</p>
+
+      <h3>两大类变异</h3>
+      <ul>
+        <li><strong>SNP（单核苷酸多态性）</strong>：单个碱基变了，如 A → G。占绝大多数，是 GWAS 的主要研究对象。</li>
+        <li><strong>Indel（插入缺失）</strong>：少了一个或几个碱基，或多了几个碱基。比 SNP 难检测，因为会影响比对。</li>
+      </ul>
+
+      <h3>生殖系 vs 体细胞突变</h3>
+      <table>
+        <tr><th></th><th>生殖系变异（germline）</th><th>体细胞突变（somatic）</th></tr>
+        <tr><td>存在于</td><td>全身所有细胞，可遗传</td><td>仅肿瘤细胞，后天获得</td></tr>
+        <tr><td>样本</td><td>血液/口腔拭子（单个样本）</td><td>肿瘤-正常配对样本</td></tr>
+        <tr><td>典型工具</td><td>GATK HaplotypeCaller、DeepVariant</td><td>Mutect2、Strelka2</td></tr>
+        <tr><td>预期频率</td><td>0%、50%（杂合）、100%</td><td>任意低频率（如 5% 亚克隆）</td></tr>
+      </table>
+
+      <div class="analogy">参考基因组像"标准答案"，你的 reads 是"考生的答卷"。变异检测就是批改答卷：哪里写错了（SNP），哪里多写/漏写了几个字（Indel）。杂合变异像答卷上涂改了一半的字——一半的 reads 说 A，一半的 reads 说 G。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，分清 4 个易混概念</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">SNP vs 突变</div><div class="back">SNP 强调"群体中常见的序列差异"（频率 ≥1%）；突变（mutation）强调"致病或罕见改变"。同一改变可以是 SNP 也可以是突变，取决于频率和后果。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">杂合（Heterozygous）</div><div class="back">两条染色体上碱基不同（如 A/G），变异 reads 约占 50%。VCF 中记为 0/1。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">纯合（Homozygous）</div><div class="back">两条染色体碱基相同。可以是纯合参考（0/0）或纯合变异（1/1，~100% reads 支持）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">VAF（变异等位基因频率）</div><div class="back">支持变异的 reads 数 / 总覆盖 reads 数。生殖系杂合约 50%，体细胞突变可为任意值，是判断克隆比例的关键。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">变异检测的本质是统计问题：在某位点观察到 k 条 reads 支持变异、n 条总覆盖，判断"这是真变异还是测序/比对错误"。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">一个位点总覆盖 30 条 reads，其中 28 条支持 G（参考是 A），2 条支持 A。最可能的基因型是什么？</p>
+        <button class="opt" data-fb="28/30 ≈ 93% 支持变异，且几乎都一致，最可能是纯合变异。">杂合 A/G</button>
+        <button class="opt" data-fb="正确。VAF ≈ 93%，接近 100%，是纯合变异 1/1；少数支持 A 的 reads 是测序错误。">纯合 G/G</button>
+        <button class="opt" data-fb="参考型位点应几乎所有 reads 支持 A，与观察相反。">纯合参考 A/A</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">SNP、Indel、生殖系、体细胞——这四个词是变异检测的基本词汇。接下来看它们怎么从 BAM 文件里被"call"出来。</div>
+    </section>
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="变异检测流程概览">
+      <h2>变异检测流程概览</h2>
+      <p class="tldr">标准流程：BAM → 预处理 → calling → VCF。两大主流工具是 GATK（规则+统计模型）和 DeepVariant（深度学习）。</p>
+
+      <div class="widget order" data-answer="a,b,c,d,e">
+        <div class="widget-title">动手排一排：变异检测的正确顺序</div>
+        <div class="item" data-id="c">变异 calling（HaplotypeCaller）</div>
+        <div class="item" data-id="a">比对生成 BAM（BWA-mem2）</div>
+        <div class="item" data-id="e">过滤与质控（VQSR / hard filter）</div>
+        <div class="item" data-id="b">BAM 预处理（标记重复 + BQSR）</div>
+        <div class="item" data-id="d">合并样本 &amp; 基因型判定（GenotypeGVCFs）</div>
+        <button class="btn check">检查</button><div class="feedback"></div>
+      </div>
+
+      <h3>GATK vs DeepVariant</h3>
+      <table>
+        <tr><th></th><th>GATK（Best Practices）</th><th>DeepVariant</th></tr>
+        <tr><td>原理</td><td>局部单倍型组装 + 贝叶斯基因型似然</td><td>把比对区域编码成"图像"，用 CNN 识别变异</td></tr>
+        <tr><td>优势</td><td>行业标准、文档生态全、VQSR 成熟</td><td>精确度更高（尤其 Indel）、无需 BQSR</td></tr>
+        <tr><td>劣势</td><td>步骤繁琐、参数多</td><td>计算量大、可解释性差</td></tr>
+        <tr><td>适用</td><td>大队列、临床规范流程</td><td>追求最高精度、小规模项目</td></tr>
+      </table>
+
+      <h3>输出：VCF 文件</h3>
+      <pre>#CHROM  POS     ID  REF  ALT   QUAL  FILTER  INFO          FORMAT  SAMPLE
+chr1    123456  .   A    G     542   PASS    DP=32;AF=0.47  GT:AD:DP:GQ  0/1:17,15:32:99
+chr1    234567  .   C    CT    128   q10     DP=8;AF=0.5    GT:AD:DP:GQ  0/1:4,4:8:45</pre>
+
+      <p>关键字段：<code>GT</code>（基因型，0/1=杂合）、<code>AD</code>（参考/变异 reads 数）、<code>DP</code>（总深度）、<code>GQ</code>（基因型质量，错误率的 -10log10）、<code>FILTER</code>（是否通过质控）。</p>
+
+      <div class="analogy">VCF 就是变异检测的"成绩单"：每行是一个位点（考点），REF/ALT 是标准答案和你的答案，QUAL 是阅卷置信度，FILTER=PASS 才算及格。</div>
+
+      <div class="key">WGS（全基因组）覆盖均一但数据量大；WES（全外显子）只测 1-2% 基因组、深度高（100x+），适合找编码区致病变异。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">VCF 中某位点 GT=0/1、AD=20,18、DP=38，说明什么？</p>
+        <button class="opt" data-fb="GT=0/1 明确表示杂合。">纯合变异</button>
+        <button class="opt" data-fb="AD 显示 20 条参考 reads，不是纯合参考。">纯合参考</button>
+        <button class="opt" data-fb="正确。38 条 reads 中 18 条支持变异（VAF≈47%），符合杂合特征。">杂合变异，VAF 约 50%</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">流程是骨架：比对 → 预处理 → calling → VCF。工具可以换，但思路不变。下面深入每一步的机制。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="比对结果预处理">
+      <h2>比对结果预处理：让 BAM 更干净</h2>
+      <p class="tldr">Calling 之前必须做三件事：标记 PCR 重复、碱基质量校正（BQSR）、Indel 局部重比对。目的是去掉系统性误差，否则 caller 会把假信号当真变异。</p>
+
+      <h3>① 标记重复（MarkDuplicates）</h3>
+      <p>PCR 扩增会让同一片段被复制多份，这些"双胞胎 reads"并不提供独立证据。标记重复后，caller 只把重复 reads 算作一次观测，避免虚假的高深度支持假变异。</p>
+
+      <h3>② BQSR（Base Quality Score Recalibration）</h3>
+      <p>测序仪报告的碱基质量（Q 值）往往有系统性偏差：某些循环位置、某些碱基组合的质量被高估或低估。BQSR 用已知的 dbSNP 变异位点做"训练集"，建立 观测错误率 → 真实错误率 的校正模型：</p>
+      <p>$$ Q_{\text{recal}} = Q_{\text{reported}} + f(\text{read group}, \text{cycle}, \text{context}) $$</p>
+
+      <h3>③ Indel 局部重比对（LeftAlignIndels / IndelRealigner）</h3>
+      <p>同一个 Indel 可能被比对到多个等价位置（比对模糊性），导致同一变异在不同 reads 中"看起来不一样"。局部重比对把附近 reads 重新组装，统一 Indel 位置。</p>
+
+      <div class="analogy">预处理像"考试前的考场整顿"：标记重复是把抄袭答案只算一份（防止一个人投 30 张雷同答卷干扰判卷），BQSR 是校准阅卷老师的评分尺度（有的老师手松手紧），重比对是把写在格线外的答案誊回格子里。</div>
+
+      <div class="warn">跳过标记重复会怎样？一个 PCR 错误被复制 20 份，caller 看到"20/40 支持变异"会误判为真实杂合变异。实际独立证据只有 1 条！</div>
+
+      <div class="widget steps">
+        <div class="widget-title">GATK 预处理命令流（点击展开）</div>
+        <div class="step"><strong>① 排序 + 标记重复</strong><br><code>gatk MarkDuplicates -I sorted.bam -O dedup.bam -M metrics.txt</code></div>
+        <div class="step"><strong>② 建立比对索引</strong><br><code>samtools index dedup.bam</code></div>
+        <div class="step"><strong>③ BQSR（分析 + 应用）</strong><br><code>gatk BaseRecalibrator -I dedup.bam --known-sites dbsnp.vcf -O recal.table</code><br><code>gatk ApplyBQSR -I dedup.bam --bqsr-recal-file recal.table -O recal.bam</code></div>
+        <div class="step"><strong>④ 得到干净的 recal.bam，进入 calling</strong></div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">为什么标记重复对变异检测很重要？</p>
+        <button class="opt" data-fb="正确。重复 reads 来自同一 DNA 片段，不是独立证据；不标记会把 PCR 错误当成高深度支持。">重复 reads 不是独立证据，会虚增变异可信度</button>
+        <button class="opt" data-fb">标记重复不会删除 reads，只是加标签让 caller 忽略其冗余性。">重复 reads 全是错的，必须删除</button>
+        <button class="opt" data-fb">重复标记后深度统计更准确，但这不是主要目的。">重复 reads 会浪费磁盘空间</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">预处理不"产生"变异，只"净化"证据。垃圾进垃圾出——预处理马虎，后面所有结果都是沙滩上的城堡。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="变异 Calling 原理">
+      <h2>变异 Calling 原理：HaplotypeCaller 如何思考</h2>
+      <p class="tldr">HaplotypeCaller 不逐位点独立判断，而是把活跃区域重新组装成单倍型（haplotype），再通过 PairHMM 计算每条 reads 来自各单倍型的概率，最后用贝叶斯公式算基因型似然。</p>
+
+      <h3>三步拆解</h3>
+      <div class="widget steps">
+        <div class="widget-title">HaplotypeCaller 内部机制</div>
+        <div class="step"><strong>① 识别活跃区域</strong>：某区域有 reads 与参考不一致，标记为"活跃"，进入局部组装。</div>
+        <div class="step"><strong>② 局部单倍型组装</strong>：用 de Bruijn 图把该区域 reads 组装成几条候选单倍型（如 参考型、SNP 型、Indel 型）。</div>
+        <div class="step"><strong>③ PairHMM 比对</strong>：把每条 read 与每条候选单倍型做带质量值的比对，得到似然 $P(\text{read} \mid \text{haplotype})$。</div>
+        <div class="step"><strong>④ 基因型似然与判定</strong>：对三种基因型（0/0、0/1、1/1）汇总似然，取最大者，并用 GQ 表示置信度。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <h3>基因型似然的贝叶斯框架</h3>
+      <p>对基因型 $G$（如 0/1），其似然为所有 reads 似然的乘积：</p>
+      <p>$$ P(D \mid G) = \prod_{i} P(r_i \mid G) \approx \prod_{i} \frac{P(r_i \mid H_1) + P(r_i \mid H_2)}{2} $$</p>
+      <p>其中 $H_1, H_2$ 是基因型对应的两条单倍型。最终用贝叶斯后验比较各基因型，并输出质量值 $GQ = -10\log_{10} P(\text{错误基因型})$。</p>
+
+      <div class="analogy">逐位点 caller 像"只看一个字母判对错"，HaplotypeCaller 像"把整段句子重新读一遍再判断"。Indel 之所以难，是因为缺失会让后面的 reads"整体移位"，只有联系上下文（单倍型组装）才能对齐。</div>
+
+      <div class="key">HaplotypeCaller 的革命性在于：先组装、后判断。这把 Indel 检测从"比对的噩梦"变成"组装的问题"，大幅提升 Indel 精确度。</div>
+
+      <!-- 定制演示 2：变异 calling 演示 -->
+      <div class="widget demo" id="callDemo">
+        <div class="widget-title">变异 Calling 演示：点击"运行 caller"，看 HaplotypeCaller 如何识别 SNP 和 Indel</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runCaller">▶ 运行 caller</button>
+          <button class="btn" id="resetCaller">↺ 重置</button>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么 HaplotypeCaller 对 Indel 的检测比传统逐位点方法更准？</p>
+        <button class="opt" data-fb">逐位点方法恰恰容易被 Indel 的移位效应误导，这正是它的问题所在。">因为它逐位点检查，更仔细</button>
+        <button class="opt" data-fb="正确。组装成单倍型后再比对，消除了 Indel 引起的坐标移位歧义。">它先把 reads 组装成单倍型，再整体比对</button>
+        <button class="opt" data-fb">两者使用的测序错误模型类似，这不是关键差异。">它用了更严格的测序错误模型</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">"先组装后判断"是 HaplotypeCaller 的核心思想。理解了这个，就理解了为什么它对 Indel 更鲁棒、为什么深度和碱基质量都进入似然计算。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="VCF 过滤与质控">
+      <h2>VCF 过滤与质控：去伪存真</h2>
+      <p class="tldr">Calling 输出的原始 VCF 含大量假阳性。两条过滤路线：VQSR（用机器学习按特征打分，适合大样本）和 hard filtering（设固定阈值，适合小样本/低深度）。</p>
+
+      <h3>常用过滤维度</h3>
+      <table>
+        <tr><th>指标</th><th>含义</th><th>典型问题信号</th></tr>
+        <tr><td>QUAL</td><td>位点存在变异的后验质量</td><td>QUAL &lt; 30 → 可能是假位点</td></tr>
+        <tr><td>QD</td><td>QUAL / 深度</td><td>QD &lt; 2 → 高深度低质量，疑似重复区</td></tr>
+        <tr><td>MQ</td><td>比对质量均值</td><td>MQ &lt; 40 → 比对不可靠（重复/低复杂度）</td></tr>
+        <tr><td>GQ</td><td>基因型置信度</td><td>GQ &lt; 20 → 基因型判断错误率 &gt; 1%</td></tr>
+        <tr><td>DP</td><td>总深度</td><td>过低（&lt;10）→ 证据不足；过高 → 重复区</td></tr>
+        <tr><td>FS / SOR</td><td>链偏倚</td><td>变异只出现在一条链 → 疑似测序假象</td></tr>
+      </table>
+
+      <h3>VQSR vs Hard Filtering</h3>
+      <div class="analogy">Hard filtering 像"一刀切分数线"（QUAL≥30 且 QD≥2 且 MQ≥40）；VQSR 像"综合考评"：用大量高可信变异（HapMap、OMNI）做训练集，用 Gaussian 混合模型学出"真变异在特征空间长什么样"，给每个变异打 VQSLOD 分。</div>
+
+      <div class="warn">VQSR 需要足够数量的变异做训练（通常建议 ≥30 个样本联合 calling）。小样本强行跑 VQSR 会因训练集不足而失败或产生误导性结果，此时应退回到 hard filtering。</div>
+
+      <h3>低深度的麻烦</h3>
+      <p>深度是变异检测的命根子。杂合位点只有约一半的 reads 携带变异，所以在深度 $D$ 下，恰好观察到 0 条变异 reads 的概率是 $0.5^D$：</p>
+      <p>$$ P(\text{漏检杂合位点}) = 0.5^D $$</p>
+      <p>5x 时漏检率约 3%，10x 时约 0.1%，30x 时约十亿分之一。但低深度不仅漏检，还会把基因型判错（把纯合参考误判为杂合的"假阳性"也很多）。</p>
+
+      <!-- 定制演示 1：测序深度模拟器 -->
+      <div class="widget demo" id="depthDemo">
+        <div class="widget-title">测序深度模拟器：拖动滑块看杂合位点的检测可靠性</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls">
+          <label>测序深度 <span class="val" data-for="depth"></span><input type="range" name="depth" min="5" max="50" step="1" value="30"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">"看不到变异 reads" ≠ "没有变异"。在低深度下，杂合位点很容易被漏掉——阴性结果的可信度取决于深度。</div>
+
+      <!-- 定制演示 3：过滤阈值演示 -->
+      <div class="widget demo" id="filterDemo">
+        <div class="widget-title">过滤阈值演示：拖动 QUAL / GQ 阈值滑块，看多少变异被保留或过滤</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls">
+          <label>QUAL 阈值 <span class="val" data-for="qual"></span><input type="range" name="qual" min="0" max="200" step="5" value="30"></label>
+          <label>GQ 阈值 <span class="val" data-for="gq"></span><input type="range" name="gq" min="0" max="99" step="1" value="20"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">一个肿瘤样本在 8x 深度下某基因"未检出变异"，能否排除该基因突变？</p>
+        <button class="opt" data-fb="正确。8x 下若突变为杂合，约 0.4% 概率完全看不到变异 reads；若突变频率更低（亚克隆）漏检率更高。">不能，低深度下杂合/低频变异可能漏检</button>
+        <button class="opt" data-fb">现代 caller 的敏感性仍受深度限制，无法突破 0.5^D 的抽样本质。">能，现代 caller 敏感性接近 100%</button>
+        <button class="opt" data-fb">过滤器影响的是假阳性，不是深度不足导致的假阴性。">能，只要过滤参数设得宽松</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">VQSR 相比 hard filtering 的主要优势是什么？</p>
+        <button class="opt" data-fb">VQSR 用 GMM 建模，反而比固定阈值更灵活。">阈值固定，结果更稳定</button>
+        <button class="opt" data-fb">两者计算量都取决于变异数量，VQSR 还多了训练步骤。">计算更快</button>
+        <button class="opt" data-fb="正确。VQSR 学习高可信变异的特征分布，可保留"质量略低但特征模式像真变异"的位点，精确度更高。">基于数据自适应，能保留 borderline 真变异</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">过滤是精确度与召回率的权衡：阈值严 → 假阳性少但真变异被误杀；阈值松 → 反之。理解每个指标在量什么，才能设出合理的阈值。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="联合 Calling 与大队列分析">
+      <h2>联合 Calling 与大队列分析</h2>
+      <p class="tldr">GVCF 模式（HaplotypeCaller -ERC GVCF → GenotypeGVCFs）先对每个样本输出非参考块（NON_REF），再联合判定，保证大队列中"没 call 到变异"和"没有覆盖"不被混为一谈。</p>
+
+      <h3>为什么需要联合 Calling</h3>
+      <p>单个样本 calling 后合并 VCF 有两个问题：① 某样本在某位点没有变异记录，到底是"纯合参考"还是"没测到"？② 不同样本用不同参考置信度，合并时无法统一。GVCF 模式为每个样本记录<strong>所有位点</strong>（包括纯合参考）的基因型似然，合并时重新联合判定。</p>
+
+      <pre><span class="c"># ① 每个样本单独跑（-ERC GVCF）</span>
+gatk HaplotypeCaller -I sample1.recal.bam -O sample1.g.vcf -ERC GVCF
+<span class="c"># ② 合并所有 gVCF</span>
+gatk GenomicsDBImport -V sample1.g.vcf -V sample2.g.vcf ... --genomicsdb-workspace-path db
+<span class="c"># ③ 联合基因型判定</span>
+gatk GenotypeGVCFs -R ref.fa -V gendb://db -O cohort.vcf</pre>
+
+      <h3>队列级质控指标</h3>
+      <table>
+        <tr><th>指标</th><th>健康范围（WGS）</th><th>异常提示</th></tr>
+        <tr><td>Ti/Tv（转换/颠换比）</td><td>~2.0-2.1</td><td>明显偏低 → 假阳性多</td></tr>
+        <tr><td>het/hom 比</td><td>~1.5-2.0</td><td>过高 → 杂合假阳性；过低 → 近亲/污染</td></tr>
+        <tr><td>单样本变异数</td><td>~4-5M（WGS）</td><td>离群样本 → 质量问题或污染</td></tr>
+        <tr><td>SNP 一致性（重复样本）</td><td>&gt;99%</td><td>低于此 → 样本搞混或污染</td></tr>
+      </table>
+
+      <div class="analogy">联合 calling 像"全班统一阅卷"：每个学生的答卷先扫描存档（gVCF，含所有题目的作答置信度），最后统一批卷（GenotypeGVCFs）。这样"某题空白"能被区分是"没答"还是"答案与标准一致所以没记录"。</div>
+
+      <div class="key">Ti/Tv 是变异检测的"体温计"：人类基因组真实变异的 Ti/Tv ≈ 2.1，纯随机错误的 Ti/Tv ≈ 0.5。结果偏离 2.0 太多，说明 VCF 里混入了大量假阳性。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">队列质控发现某样本的 Ti/Tv = 1.2，明显低于其他人的 2.0，最可能的原因？</p>
+        <button class="opt" data-fb">污染通常导致 het/hom 比异常，而非 Ti/Tv 偏低。">样本被污染</button>
+        <button class="opt" data-fb="正确。随机测序错误的 Ti/Tv ≈ 0.5，大量错误混入会拉低整体比值。">该样本 VCF 含大量假阳性</button>
+        <button class="opt" data-fb">测序深度影响敏感性，但不直接改变已检出变异的 Ti/Tv。">该样本测序深度太高</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">机制自测</div>
+        <div class="widget fill">
+          <p>HaplotypeCaller 先把活跃区域组装成 <input data-answer="单倍型|haplotype|单倍体">；大队列分析中每个样本先输出 <input data-answer="gvcf|GVCF|g.vcf"> 文件，再用 <input data-answer="GenotypeGVCFs|joint genotyping|联合"> 联合判定；人类基因组健康变异集的 Ti/Tv 约 <input data-answer="2|2.0|2.1|~2">。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">GVCF + 联合 calling 是大队列（GnomAD、UK Biobank 级别）的标准做法。记住 Ti/Tv ≈ 2.0 这个"体温计"，它是你判断 VCF 质量的第一道防线。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="变异注释与致病性评估">
+      <h2>变异注释与致病性评估</h2>
+      <p class="tldr">Calling 找到变异只是开始。注释工具（VEP/ANNOVAR）叠加基因、转录本、频率、功能预测等数据库信息，再用 ACMG 指南综合判读致病性。</p>
+
+      <h3>注释工具：VEP vs ANNOVAR</h3>
+      <table>
+        <tr><th></th><th>VEP（Ensembl）</th><th>ANNOVAR</th></tr>
+        <tr><td>输出</td><td>变异后果（consequence）分级</td><td>基因型/区域/过滤三种注释</td></tr>
+        <tr><td>数据库</td><td>Ensembl/GENCODE 转录本</td><td>RefGene、dbNSFP 等广泛整合</td></tr>
+        <tr><td>特点</td><td>标准、更新快、插件生态强</td><td>灵活、支持自定义数据库</td></tr>
+      </table>
+
+      <h3>功能与致病性预测</h3>
+      <ul>
+        <li><strong>SIFT</strong>：基于序列保守性，预测错义突变是否有害（D=有害，T=耐受）。</li>
+        <li><strong>PolyPhen-2</strong>：基于结构域和序列特征预测错义突变影响（D=可能有害，P=可能，B=良性）。</li>
+        <li><strong>CADD</strong>：整合多维度证据的综合性评分，CADD ≥ 20 表示位于全基因组有害变异前 1%。</li>
+        <li><strong>ClinVar</strong>：变异-疾病关联数据库，标记 Pathogenic / Likely pathogenic / VUS / Benign。</li>
+        <li><strong>gnomAD</strong>：大规模人群频率数据库，频率高 → 大概率良性（纯合致死变异不可能在人群中有 1% 频率）。</li>
+      </ul>
+
+      <h3>ACMG 指南：五条"非常强"证据</h3>
+      <div class="widget">
+        <div class="widget-title">点击卡片，记住 ACMG 判读的核心证据类型</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">PVS1</div><div class="back">Very Strong 致病证据：无义/移码/剪接位点变异，导致基因功能丧失，且该基因与疾病机制一致（功能缺失型）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">PS4</div><div class="back">Strong 致病证据：患者组中变异频率显著高于对照组（病例富集）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">PM2</div><div class="back">Moderate 致病证据：人群数据库中缺失或频率极低（&lt;0.0001）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">BP7</div><div class="back">Supporting 良性证据：同义变异，且预测不影响剪接，且人群频率较高。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">VUS 陷阱</div><div class="back">证据不足 = VUS（意义未明）。VUS 不能用于临床诊断，需要功能实验或更多病例积累后重评估。</div></div></div>
+        </div>
+      </div>
+
+      <div class="analogy">注释像"查档案"：变异是嫌疑人，VEP 查出他住哪个基因（住址）、改没改蛋白质（作案手法），ClinVar 查他有没有前科，gnomAD 查他在人群中的口碑。ACMG 像法官，按证据清单（28 条规则）综合量刑：Pathogenic / Likely pathogenic / VUS / Likely benign / Benign。</div>
+
+      <h3>从 VCF 到临床报告</h3>
+      <pre><span class="c"># 用 VEP 注释（示例）</span>
+vep -i cohort.vcf -o annotated.vcf --cache --assembly GRCh38 \
+    --sift b --polyphen b --af_gnomade -- ClinVar</pre>
+
+      <div class="warn">数据库版本会更新：同一个变异去年是 VUS，今年可能因新证据升级为 Likely pathogenic。临床报告必须注明所用数据库版本，并定期重评估 VUS。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">某错义变异在 gnomAD 中人群频率为 0（未观察到），SIFT=D，ClinVar 无记录。按 ACMG 最合理的初步判读是？</p>
+        <button class="opt" data-fb="正确。PM2（频率极低）+ 支持性计算预测有害，通常判为 VUS；没有更强证据（如 PVS1 或病例富集）不能升级。">VUS（意义未明）</button>
+        <button class="opt" data-fb="错义变异不适用 PVS1（PVS1 针对功能丧失型变异），且无 ClinVar 记录。">Pathogenic（致病）</button>
+        <button class="opt" data-fb="SIFT=D 表示预测有害，且频率为 0 不支持良性。">Benign（良性）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么高人群频率（如 gnomAD AF = 5%）的变异通常被判为良性？</p>
+        <button class="opt" data-fb">显性遗传病的致病变异频率受选择压力限制，但"良性"的核心逻辑是频率与严重疾病不兼容。">因为测序错误率高</button>
+        <button class="opt" data-fb="正确。若变异导致严重早发疾病，它在人群中不可能维持 5% 的高频率（携带者会有明显表型或被选择淘汰）。">严重致病变异不可能在人群中有高频率</button>
+        <button class="opt" data-fb">罕见变异也可能是良性的；良性判断的核心是频率-疾病严重度不兼容。">因为罕见变异都是良性的</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>杂合位点在深度 $D$ 下完全漏检的概率约 <input data-answer="0.5^D|0.5的D次方|1/2^D">；大队列中人类基因组变异的 Ti/Tv 约 <input data-answer="2.0|2|2.1">；ACMG 中"无义/移码导致功能丧失"的非常强证据编号是 <input data-answer="PVS1">；基因型质量 GQ=30 对应基因型错误率约 <input data-answer="0.001|千分之一|10^-3|1/1000">。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">你已走完变异检测的完整链条：BAM → 预处理 → calling → VCF → 过滤 → 联合 calling → 注释 → ACMG 判读。从"找到差异"到"解读意义"，这是生信分析走向临床与科研价值的关键一跃。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// 演示1：测序深度模拟器（杂合位点检测可靠性）
+demo('#depthDemo', ({ depth }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const x1 = 60, x2 = W - 60, yAxis = H - 70, yTop = 40;
+
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+
+  // 模拟 reads：杂合位点，约一半支持变异
+  const reads = [];
+  for (let i = 0; i < depth; i++) {
+    reads.push(rand() < 0.5 ? 'alt' : 'ref');
+  }
+  const altCount = reads.filter(r => r === 'alt').length;
+  const vaf = altCount / depth;
+
+  // 绘制 reads 堆叠（PILEUP）
+  const pileY = 55;
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = cssVar('--muted');
+  ctx.fillText(`位点 chr7:55174702  基因型: A/G (杂合)  模拟 ${depth} 条 reads`, x1, pileY - 10);
+
+  const rectW = Math.min(26, (W - 120) / depth - 2);
+  reads.forEach((r, i) => {
+    const x = x1 + i * (rectW + 2);
+    if (x + rectW > x2) return; // 超出区域不画
+    ctx.fillStyle = r === 'alt' ? '#dc2626' : cssVar('--primary');
+    ctx.fillRect(x, pileY, rectW, 22);
+  });
+  // 标注
+  ctx.fillStyle = '#dc2626'; ctx.fillRect(x1, pileY + 32, 14, 14);
+  ctx.fillStyle = cssVar('--muted'); ctx.fillText(`变异 reads (${altCount})`, x1 + 20, pileY + 44);
+  ctx.fillStyle = cssVar('--primary'); ctx.fillRect(x1 + 160, pileY + 32, 14, 14);
+  ctx.fillStyle = cssVar('--muted'); ctx.fillText(`参考 reads (${depth - altCount})`, x1 + 180, pileY + 44);
+
+  // 可靠性曲线：P(至少1条alt) = 1 - 0.5^D（针对单个杂合位点）
+  const curveY1 = pileY + 90, curveY2 = yAxis;
+  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, curveY1); ctx.lineTo(x1, curveY2); ctx.lineTo(x2, curveY2); ctx.stroke();
+
+  ctx.textAlign = 'center'; ctx.fillStyle = cssVar('--muted'); ctx.font = '12px sans-serif';
+  for (let d = 5; d <= 50; d += 5) {
+    const x = x1 + (x2 - x1) * (d - 5) / 45;
+    ctx.fillText(String(d), x, curveY2 + 18);
+  }
+  ctx.fillText('测序深度 (x)', (x1 + x2) / 2, curveY2 + 36);
+  ctx.save();
+  ctx.translate(20, (curveY1 + curveY2) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('至少看到 1 条变异 reads 的概率', 0, 0);
+  ctx.restore();
+
+  // 绘制曲线
+  ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let d = 5; d <= 50; d += 0.5) {
+    const p = 1 - Math.pow(0.5, d);
+    const x = x1 + (x2 - x1) * (d - 5) / 45;
+    const y = curveY2 - (curveY2 - curveY1) * p;
+    d === 5 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // 当前深度标记
+  const px = x1 + (x2 - x1) * (depth - 5) / 45;
+  const py = curveY2 - (curveY2 - curveY1) * (1 - Math.pow(0.5, depth));
+  ctx.fillStyle = '#dc2626';
+  ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill();
+
+  // 结果文本
+  const missProb = Math.pow(0.5, depth);
+  const genoOk = altCount >= 3; // 至少3条alt reads才比较可信地判定杂合
+  ctx.textAlign = 'center'; ctx.font = 'bold 15px sans-serif';
+  ctx.fillStyle = cssVar('--text');
+  ctx.fillText(
+    `当前深度 ${depth}x | 变异 reads: ${altCount}/${depth} (VAF=${(vaf * 100).toFixed(0)}%) | ` +
+    `漏检概率: ${(missProb * 100).toFixed(4)}% | ${genoOk ? '✅ 可判定杂合' : '⚠️ 变异 reads 太少，判定不可靠'}`,
+    W / 2, H - 12
+  );
+
+  root.querySelector('.readout').textContent =
+    `深度 ${depth}x：若该位点真是杂合，有 ${(missProb * 100).toFixed(4)}% 概率完全看不到变异 reads（漏检）；` +
+    `本次模拟看到 ${altCount} 条变异 reads。低深度时即使看到少量变异 reads，也可能是测序错误。`;
+});
+
+// 演示2：变异 calling 演示（HaplotypeCaller 流程可视化）
+(() => {
+  const root = document.getElementById('callDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+
+  // 参考序列与 reads（包含 1 个 SNP + 1 个 Indel）
+  const ref =    'ATGCGTACGTTAGCCGATCGTACGATCG';
+  const reads = [
+    { seq: 'ATGCGTACGTTAGCCGATCGTACGATCG', label: 'ref-like' },
+    { seq: 'ATGCGTACGTTAGCCGATCGTACGATCG', label: 'ref-like' },
+    { seq: 'ATGCGTACGTTAGCCGATCGTACGATCG', label: 'ref-like' },
+    { seq: 'ATGCGTACGTTAGCCTATCGTACGATCG', label: 'snp' },      // pos 13: G>T
+    { seq: 'ATGCGTACGTTAGCCTATCGTACGATCG', label: 'snp' },
+    { seq: 'ATGCGTACGTTAGCCTATCGTACGATCG', label: 'snp' },
+    { seq: 'ATGCGTACGTTAGCCGA-CGTACGATCG', label: 'indel' },   // del at pos 17
+    { seq: 'ATGCGTACGTTAGCCGA-CGTACGATCG', label: 'indel' },
+    { seq: 'ATGCGTACGTTAGCCGATGTCGTACGATCG', label: 'seq-err' }, // seq error pos 17
+    { seq: 'ATGCGTACGTTAGCCGATCGTACGATCG', label: 'ref-like' },
+  ];
+
+  let phase = 0; // 0: reads, 1: aligned pileup, 2: haplotypes, 3: VCF output
+
+  function drawRef(y) {
+    ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = cssVar('--muted');
+    ctx.fillText('REF', 10, y + 14);
+    for (let i = 0; i < ref.length; i++) {
+      const isSnp = i === 13, isIndel = i === 17;
+      ctx.fillStyle = isSnp ? '#f59e0b' : isIndel ? '#a855f7' : cssVar('--muted');
+      ctx.fillText(ref[i], 50 + i * 24, y + 14);
+    }
+  }
+
+  function drawReads(startY) {
+    ctx.font = '13px monospace';
+    reads.forEach((r, idx) => {
+      const y = startY + idx * 18;
+      r.seq.split('').forEach((ch, i) => {
+        let color = cssVar('--muted');
+        if (phase >= 1) {
+          if (i === 13 && ch === 'T') color = '#dc2626'; // SNP alt
+          if (i === 17 && ch === '-') color = '#a855f7'; // deletion
+          if (i === 17 && ch === 'G' && r.label === 'seq-err') color = '#f59e0b'; // seq error
+          if (r.label === 'ref-like') color = cssVar('--primary');
+        }
+        ctx.fillStyle = color;
+        ctx.fillText(ch, 50 + i * 24, y);
+      });
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    drawRef(10);
+    drawReads(50);
+
+    if (phase >= 2) {
+      // 单倍型组装结果
+      const hy = 50 + reads.length * 18 + 20;
+      ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('局部组装出的候选单倍型:', 10, hy);
+      ctx.font = '13px monospace';
+      const haps = [
+        { seq: 'ATGCGTACGTTAGCCGATCGTACGATCG', name: 'Hap-REF', color: cssVar('--primary') },
+        { seq: 'ATGCGTACGTTAGCCTATCGTACGATCG', name: 'Hap-SNP', color: '#dc2626' },
+        { seq: 'ATGCGTACGTTAGCCGA-CGTACGATCG', name: 'Hap-DEL', color: '#a855f7' },
+      ];
+      haps.forEach((h, i) => {
+        const y = hy + 25 + i * 20;
+        ctx.fillStyle = h.color; ctx.font = 'bold 12px monospace';
+        ctx.fillText(h.name, 10, y);
+        ctx.font = '13px monospace';
+        h.seq.split('').forEach((ch, j) => {
+          let c = cssVar('--muted');
+          if (i === 1 && j === 13) c = '#dc2626';
+          if (i === 2 && j === 17) c = '#a855f7';
+          ctx.fillStyle = c;
+          ctx.fillText(ch, 90 + j * 24, y);
+        });
+      });
+    }
+
+    if (phase >= 3) {
+      // VCF 输出
+      const vy = 50 + reads.length * 18 + 115;
+      ctx.fillStyle = cssVar('--text'); ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('输出 VCF:', 10, vy);
+      ctx.font = '11px monospace';
+      const vcfLines = [
+        '#CHROM  POS      REF  ALT  QUAL  FILTER  INFO              GT:AD:DP:GQ',
+        'chr1    55174702 G    T    285   PASS    DP=10;VAF=0.30    0/1:7,3:10:85',
+        'chr1    55174706 T    <DEL> 152   PASS    DP=10;VAF=0.20    0/1:8,2:10:60',
+      ];
+      vcfLines.forEach((line, i) => {
+        ctx.fillStyle = i === 0 ? cssVar('--muted') : cssVar('--text');
+        ctx.fillText(line, 10, vy + 18 + i * 15);
+      });
+    }
+
+    // 标注 SNP/Indel 位置（竖线）
+    if (phase >= 1) {
+      ctx.strokeStyle = 'rgba(220,38,38,.3)'; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(50 + 13 * 24 + 6, 40); ctx.lineTo(50 + 13 * 24 + 6, 50 + reads.length * 18); ctx.stroke();
+      ctx.strokeStyle = 'rgba(168,85,247,.3)';
+      ctx.beginPath(); ctx.moveTo(50 + 17 * 24 + 6, 40); ctx.lineTo(50 + 17 * 24 + 6, 50 + reads.length * 18); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  const phases = [
+    '原始 reads（上方为参考序列，10 条 reads 比对到同一区域）',
+    '✅ 发现活跃区域：位置 13 有 3/10 reads 为 T（SNP），位置 17 有 2/10 reads 缺失（Indel）',
+    '✅ 组装出 3 条候选单倍型：参考型、SNP 型、缺失型',
+    '✅ 输出 VCF：2 个变异位点，genotype 判定为杂合（0/1），测序错误被过滤'
+  ];
+
+  document.getElementById('runCaller').onclick = () => {
+    if (phase < phases.length - 1) phase++;
+    readout.textContent = phases[phase];
+    draw();
+  };
+  document.getElementById('resetCaller').onclick = () => {
+    phase = 0;
+    readout.textContent = phases[0];
+    draw();
+  };
+  readout.textContent = phases[0];
+  draw();
+})();
+
+// 演示3：过滤阈值演示（QUAL / GQ 阈值滑块）
+demo('#filterDemo', ({ qual, gq }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const x1 = 60, x2 = W - 60, y1 = 40, y2 = H - 120;
+
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+
+  // 生成变异：真变异（高 QUAL/GQ）+ 假阳性（低 QUAL/GQ）+ borderline
+  const variants = [];
+  for (let i = 0; i < 80; i++) {
+    const isTrue = rand() < 0.55;
+    const q = isTrue ? 100 + rand() * 150 : rand() * 120;
+    const g = isTrue ? 60 + rand() * 39 : rand() * 70;
+    variants.push({ qual: q, gq: g, isTrue });
+  }
+  // 加几个 borderline
+  for (let i = 0; i < 8; i++) {
+    variants.push({ qual: 40 + rand() * 50, gq: 25 + rand() * 20, isTrue: rand() < 0.5 });
+  }
+
+  const kept = variants.filter(v => v.qual >= qual && v.gq >= gq);
+  const filtered = variants.length - kept.length;
+  const tp = kept.filter(v => v.isTrue).length;
+  const fp = kept.length - tp;
+  const fn = variants.filter(v => v.isTrue && (v.qual < qual || v.gq < gq)).length;
+
+  // 散点图
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(`QUAL 阈值 = ${qual}`, W / 2, 18);
+  ctx.fillText(`GQ 阈值 = ${gq}`, W / 2, 34);
+
+  // 坐标轴
+  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1, y2); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.textAlign = 'center'; ctx.font = '11px sans-serif';
+  for (let q = 0; q <= 300; q += 50) {
+    const x = x1 + (x2 - x1) * q / 300;
+    ctx.fillText(String(q), x, y2 + 15);
+  }
+  ctx.fillText('QUAL', (x1 + x2) / 2, y2 + 30);
+  ctx.save(); ctx.translate(18, (y1 + y2) / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('GQ', 0, 0); ctx.restore();
+  for (let g = 0; g <= 100; g += 20) {
+    const y = y2 - (y2 - y1) * g / 100;
+    ctx.fillText(String(g), x1 - 15, y + 4);
+  }
+
+  // 阈值线
+  const qx = x1 + (x2 - x1) * Math.min(qual, 300) / 300;
+  const gy = y2 - (y2 - y1) * gq / 100;
+  ctx.strokeStyle = '#dc2626'; ctx.setLineDash([6,4]); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(qx, y1); ctx.lineTo(qx, y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x1, gy); ctx.lineTo(x2, gy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 变异点
+  variants.forEach(v => {
+    const x = x1 + (x2 - x1) * Math.min(v.qual, 300) / 300;
+    const y = y2 - (y2 - y1) * v.gq / 100;
+    const isKept = v.qual >= qual && v.gq >= gq;
+    ctx.fillStyle = !isKept ? cssVar('--border') : v.isTrue ? cssVar('--primary') : '#dc2626';
+    ctx.globalAlpha = isKept ? 1 : 0.35;
+    ctx.beginPath(); ctx.arc(x, y, isKept ? 5 : 4, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // 图例
+  ctx.textAlign = 'left'; ctx.font = '12px sans-serif';
+  let lx = x1 + 10, ly = y1 + 12;
+  ctx.fillStyle = cssVar('--primary'); ctx.fillRect(lx, ly, 12, 12);
+  ctx.fillStyle = cssVar('--text'); ctx.fillText('真变异 (TP)', lx + 18, ly + 11);
+  ctx.fillStyle = '#dc2626'; ctx.fillRect(lx + 110, ly, 12, 12);
+  ctx.fillStyle = cssVar('--text'); ctx.fillText('假阳性 (FP)', lx + 128, ly + 11);
+  ctx.fillStyle = cssVar('--border'); ctx.fillRect(lx + 220, ly, 12, 12);
+  ctx.fillStyle = cssVar('--muted'); ctx.fillText('被过滤', lx + 238, ly + 11);
+
+  // 统计
+  const precision = kept.length ? tp / kept.length : 0;
+  const recall = variants.filter(v => v.isTrue).length ? tp / variants.filter(v => v.isTrue).length : 0;
+  ctx.textAlign = 'center'; ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = cssVar('--text');
+  ctx.fillText(
+    `保留 ${kept.length} / 过滤 ${filtered} | TP=${tp} FP=${fp} FN=${fn} | 精确度 ${(precision * 100).toFixed(1)}% | 召回率 ${(recall * 100).toFixed(1)}%`,
+    W / 2, H - 55
+  );
+  ctx.font = '13px sans-serif'; ctx.fillStyle = cssVar('--muted');
+  const advice = qual < 30 || gq < 20 ? '⚠️ 阈值过低：大量假阳性混入' :
+                 qual > 150 && gq > 60 ? '⚠️ 阈值过高：可能误杀 borderline 真变异' :
+                 '✅ 阈值合理区域';
+  ctx.fillText(advice, W / 2, H - 32);
+
+  root.querySelector('.readout').textContent =
+    `QUAL≥${qual} 且 GQ≥${gq}：保留 ${kept.length} 个变异（${tp} 真 + ${fp} 假），过滤 ${filtered} 个（含 ${fn} 个真变异被误杀）。精确度 ${(precision * 100).toFixed(1)}%，召回率 ${(recall * 100).toFixed(1)}%。`;
+});
+</script>
+</body>
+</html>

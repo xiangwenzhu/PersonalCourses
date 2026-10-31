@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蛋白质结构预测入门：从序列到三维形状 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#059669;--primary-soft:#d1fae5;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#34d399;--primary-soft:#06301f;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto;font-size:14px}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:130px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+.demo canvas,.demo svg{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* 序列块 */
+.seq{display:flex;flex-wrap:wrap;gap:3px;margin:10px 0;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.seq .res{width:26px;height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card)}
+.seq .res b{font-size:14px;line-height:1.2}
+.seq .res small{font-size:9px;color:var(--muted);line-height:1}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+</style>
+</head>
+<body data-mode="paged">
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>蛋白质结构预测入门：从序列到三维形状</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- L1 -->
+    <section class="chapter" data-level="1" data-title="蛋白质折叠问题">
+      <h2>蛋白质折叠问题</h2>
+      <p class="tldr">蛋白质的一维序列（氨基酸顺序）完全决定了它的三维形状，而三维形状又决定了功能。这一"序列 → 结构 → 功能"的因果链，就是整个结构生物学的基石。</p>
+
+      <p>一个蛋白质在细胞里合成出来时，只是一串线性的氨基酸链。但它会在毫秒到秒级的时间内自发地盘绕、折叠成一个精确的、近乎唯一的三维构象——就像一根绳子自己找到了打结的唯一正确方式。</p>
+
+      <p><strong>Anfinsen 实验（1973）</strong>为这个观点提供了决定性证据：他把核糖核酸酶（RNase）用尿素和巯基乙醇"拆掉"（去折叠），破坏其二硫键；然后撤去变性剂，酶竟然<mark>自发恢复到了原来的三维结构，并且活性完全恢复</mark>。这说明折叠所需的全部信息都写在序列里，不需要任何"模板"或外部指导。</p>
+
+      <div class="analogy">序列像折纸图纸上的折痕顺序，结构是折完的纸鹤。只要图纸（序列）不变，不管你怎么揉皱重来，最终都能折出同一只纸鹤。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，记住 4 个核心概念</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">序列空间</div><div class="back">20 种氨基酸组成的链，长度 300 的蛋白就有 $20^{300}$ 种可能序列——而自然界只"采样"了极小一部分。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">折叠漏斗</div><div class="back">蛋白质折叠像沿一个漏斗滚下：能量从高处（未折叠）单调降低到底部（天然构象），沿途不需要精确"导航"。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">Levinthal 佯谬</div><div class="back">若逐一探索所有构象，300 个残基的蛋白需要 $10^{47}$ 年才能找到正确折叠——而实际只需毫秒级，说明折叠走的是"漏斗"捷径。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">天然态</div><div class="back">蛋白质在生理条件下最稳定的构象。Anfinsen 实验表明：天然态 = 全局能量最低的构象。</div></div></div>
+        </div>
+      </div>
+
+      <div class="key">蛋白质折叠问题（Protein Folding Problem）：给定一段氨基酸序列，预测它在原子分辨率下的三维结构。这是 50 年来生物学"圣杯"级难题，直到 2020 年 AlphaFold2 才被基本解决。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">Anfinsen 实验说明了什么？</p>
+        <button class="opt" data-fb="去折叠 + 复性是实验手段，不是结论。">蛋白质只能折叠一次，不可重复</button>
+        <button class="opt" data-fb="正确。RNase 去折叠后自发复性并恢复活性，证明序列包含全部折叠信息。">序列决定结构，折叠是自发过程</button>
+        <button class="opt" data-fb">实验用的 RNase 是单一蛋白，与多样性无关。">蛋白质折叠需要多种酶协同</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住因果链：序列（1D）→ 结构（3D）→ 功能。只要拿到序列，原则上就能推出结构——这就是结构预测的全部意义。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="结构层级：从序列到组装">
+      <h2>结构层级：从序列到组装</h2>
+      <p class="tldr">蛋白质结构分四级：一级是氨基酸序列；二级是 α 螺旋、β 折叠等局部规则结构；三级是整条链的三维折叠；四级是多条链的组装。预测方法常按层级逐层处理。</p>
+
+      <p>理解层级是理解预测算法的前提——很多经典方法（如同源建模）直接预测三级结构，而神经网络时代的方法则同时利用二级结构和共进化信息。</p>
+
+      <table>
+        <tr><th>层级</th><th>内容</th><th>化学键驱动力</th></tr>
+        <tr><td>一级 (Primary)</td><td>氨基酸序列</td><td>肽键（共价）</td></tr>
+        <tr><td>二级 (Secondary)</td><td>α 螺旋、β 折叠、无规卷曲</td><td>主链氢键</td></tr>
+        <tr><td>三级 (Tertiary)</td><td>整条链的折叠构象</td><td>疏水作用、盐桥、二硫键、范德华力</td></tr>
+        <tr><td>四级 (Quaternary)</td><td>多条链的空间组装</td><td>链间疏水/静电作用</td></tr>
+      </table>
+
+      <div class="analogy">盖房子：一级是砖的清单，二级是砖砌成的墙（墙砖=螺旋/折叠），三级是房间格局（整套户型），四级是整个小区（多栋楼组合）。</div>
+
+      <!-- 互动演示：二级结构预测器 -->
+      <div class="widget demo" id="ssDemo">
+        <div class="widget-title">二级结构预测器：选择序列，用简化 Chou-Fasman 规则预测 α螺旋 / β折叠 / 无规卷曲</div>
+        <canvas width="800" height="280"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <select id="ssSeqSel" class="btn" style="min-width:220px">
+            <option value="MKKLLLAALLAVAALLAAGG">α 螺旋富集（疏水多）</option>
+            <option value="VTVTVTVTVTVTVTVTVTVT">β 折叠富集（交替亲水）</option>
+            <option value="MADQAPTFDVDKSGKQGEGT">混合片段（接近真实蛋白）</option>
+            <option value="GGGGSSSSGGGGSSSSGGGG">无规卷曲富集（小侧链）</option>
+          </select>
+          <button class="btn primary" id="ssPredict">▶ 预测</button>
+          <button class="btn" id="ssReset">↺ 重置</button>
+        </div>
+        <div class="legend">
+          <span><i style="background:#a855f7"></i> α 螺旋（Helix）</span>
+          <span><i style="background:#f59e0b"></i> β 折叠（Strand）</span>
+          <span><i style="background:#9ca3af"></i> 无规卷曲（Coil）</span>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="key">α 螺旋靠主链 $i \to i+4$ 氢键稳定（每圈 3.6 个残基），β 折叠靠链间/链内主链氢键形成"片层"。疏水残基倾向埋在螺旋和折叠核心内部。</div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">维持 α 螺旋稳定的主要作用力是什么？</p>
+        <button class="opt" data-fb">疏水作用主要决定三级结构的内部堆积，不是螺旋的直接稳定力。">疏水作用</button>
+        <button class="opt" data-fb">二硫键是侧链间的共价键，只在部分蛋白中出现。">二硫键</button>
+        <button class="opt" data-fb="正确。α 螺旋由主链羰基 O 与 i+4 残基酰胺 H 之间的氢键稳定。">主链氢键（i 与 i+4 之间）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">结构层级是预测算法的"工作语言"：二级结构快速可预测，三级结构是终极目标，四级结构决定复合物功能。</div>
+    </section>
+
+    <!-- L2 -->
+    <section class="chapter" data-level="2" data-title="实验测定方法">
+      <h2>实验测定方法：三大支柱</h2>
+      <p class="tldr">结构预测之前，先要知道"标准答案"怎么来。X 射线晶体学、冷冻电镜（Cryo-EM）、核磁共振（NMR）是三大实验测定方法，各有精度、通量、尺寸上的取舍。</p>
+
+      <p>三大方法覆盖不同场景：X 射线适合小而稳定的蛋白，分辨率最高；Cryo-EM 革命性地解决了超大复合物；NMR 能在溶液中看动态，但仅限小蛋白。</p>
+
+      <table>
+        <tr><th>方法</th><th>原理</th><th>分辨率</th><th>尺寸上限</th><th>局限</th></tr>
+        <tr><td>X 射线晶体学</td><td>晶体衍射，电子密度重建</td><td>0.5–2 Å（最高）</td><td>很大</td><td>需要长出晶体；结晶构象偏"静态"</td></tr>
+        <tr><td>Cryo-EM</td><td>速冻单颗粒成像，图像重建</td><td>2–4 Å（近年接近原子级）</td><td>极大（病毒/核糖体）</td><td>设备昂贵；柔性区域成像模糊</td></tr>
+        <tr><td>NMR</td><td>溶液中原子核自旋信号</td><td>相对低</td><td>~25–40 kDa（小蛋白）</td><td>上限严格；数据解析繁琐</td></tr>
+      </table>
+
+      <!-- 互动演示：方法选型决策图 -->
+      <div class="widget demo" id="methodDemo">
+        <div class="widget-title">测定方法选型：拖动两个滑块，看推荐哪种实验方法</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>复合物分子量 (kDa) <span class="val" data-for="mw"></span><input type="range" name="mw" min="5" max="5000" step="5" value="50"></label>
+          <label>是否需要溶液动态信息 <span class="val" data-for="dyn"></span><input type="range" name="dyn" min="0" max="1" step="1" value="0"></label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="analogy">三方法像三种照相机：X 射线是"摆拍棚拍"（要求晶体摆好姿势，照片最清晰）；Cryo-EM 是"抓拍"（速冻住各种瞬间再拼起来）；NMR 是"录像"（在溶液里连续拍，但镜头像素低）。</div>
+
+      <div class="warn">PDB 里的结构 ≠ 生理状态的全部真相。晶体堆积可能造成假象；Cryo-EM 柔性区可能分辨率骤降；NMR 的系综构象只是采样而非快照。</div>
+
+      <div class="key">结构预测的准确性由 PDB 实验结构"标定"。PDB 里 X 射线结构占比最高，这也是同源建模在 X 射线友好的折叠家族上表现最好的原因之一。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">要解析一个 2000 kDa 的病毒衣壳（复合物），首选哪种方法？</p>
+        <button class="opt" data-fb="正确。Cryo-EM 没有尺寸上限的硬性限制，单颗粒分析特别适合超大复合物。">Cryo-EM（冷冻电镜）</button>
+        <button class="opt" data-fb">X 射线晶体学理论上可行，但超大复合物极难结晶。">X 射线晶体学</button>
+        <button class="opt" data-fb">NMR 有严格尺寸上限（~25–40 kDa），远不能满足 2000 kDa。">NMR（核磁共振）</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">实验测定给出"金标准"，但成本高、周期长。这催生了一个现实问题：能不能不算实验，直接计算？——下一章讲计算预测的三代方法。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="计算预测方法的三代演进">
+      <h2>计算预测：同源建模、穿线法、ab initio</h2>
+      <p class="tldr">AlphaFold 之前，计算预测分三代：同源建模（有模板最准）、穿线法/折叠识别（远缘模板）、ab initio 物理折叠（无模板最难）。CASP 竞赛是检验这些方法的天梯。</p>
+
+      <p>三代方法的核心区别在于"用了多少进化信息"和"模板依赖程度"：</p>
+
+      <div class="widget steps">
+        <div class="widget-title">点"下一步"，按准确度从高到低看三代方法</div>
+        <div class="step"><strong>① 同源建模（Homology Modeling）</strong>：在 PDB 找到序列相似度 &gt;30% 的模板，按模板骨架搭建。精度最高（1–2 Å RMSD），覆盖率最广。</div>
+        <div class="step"><strong>② 穿线法（Threading / Fold Recognition）</strong>：序列相似度低（&lt;25%），但折叠模式可能保守——把序列"穿"到不同折叠骨架上试配，挑能量最低的。</div>
+        <div class="step"><strong>③ Ab initio（从头折叠）</strong>：无模板，用物理力场模拟折叠过程。最难，历史上只能处理小蛋白，精度有限。</div>
+        <div class="step"><strong>④ 评估指标：RMSD / GDT_TS</strong>：RMSD = 预测与实验结构的均方根偏差（Å）；GDT_TS = 结构重叠百分比（0–100），CASP 的官方指标。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <div class="key">"30% 序列相似度"是同源建模的经验分界线。超过 30% 的蛋白对几乎必然共享折叠（Rost, 1999），模板好找；低于 30% 就进入"暗物质区"，需要穿线或 ab initio。</div>
+
+      <div class="analogy">同源建模像"照抄学霸作业"（有标准答案）；穿线法像"看题型猜解法"（答案不全但有套路）；ab initio 像"无师自通解题"（完全靠第一性原理，最难也最慢）。</div>
+
+      <p>CASP（Critical Assessment of Structure Prediction）每两年一次，盲测预测方法。AlphaFold2 在 CASP14（2020）以中位 GDT_TS ≈ 92.4 的惊人成绩，宣告单链预测问题基本解决——此前最好方法也只有 ~60–70。</p>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">为什么同源建模在 30% 序列相似度以上表现特别好？</p>
+        <button class="opt" data-fb">相似度高并不代表模板实验结构质量低，两者无因果关系。">模板实验结构通常质量较低</button>
+        <button class="opt" data-fb="正确。进化上序列保守意味着结构保守，模板与目标几乎共享同一折叠，骨架可直接复用。">序列相似 ⇒ 折叠保守，可直接借用模板骨架</button>
+        <button class="opt" data-fb">计算速度不是精度高的原因。">计算方法运行速度快</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测：按难度给方法排序（从易到难）</div>
+        <div class="widget order" data-answer="homo,thread,abinitio">
+          <div class="item" data-id="thread">穿线法 / 折叠识别</div>
+          <div class="item" data-id="homo">同源建模</div>
+          <div class="item" data-id="abinitio">Ab initio 从头折叠</div>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">三代方法构成了一条完整的"难度光谱"：模板好找用同源，难找用穿线，完全没有才用 ab initio。AlphaFold 的独特之处在于——它把这三代方法中最难的无模板情况也做到了近原子精度。</div>
+    </section>
+
+    <!-- L3 -->
+    <section class="chapter" data-level="3" data-title="AlphaFold 原理">
+      <h2>AlphaFold：深度学习 + 共进化信息</h2>
+      <p class="tldr">AlphaFold2 的核心洞察：MSA（多序列比对）中"一起变异的残基对"暗示它们在三维空间上靠近。Transformer 从 MSA + 模板提取残基间几何约束，迭代精修出结构。PAE/pLDDT 给出每个区域的可信度。</p>
+
+      <h3>第一步：MSA 与共变异信号</h3>
+      <p>将目标序列在序列数据库中搜索，找到数千到数万条同源序列，对齐成 MSA（多序列比对）。如果残基 $i$ 和 $j$ 在进化中<mark>共同突变</mark>（共变异，co-variation），说明它们很可能空间相邻、通过接触互相约束——这是 AlphaFold 最重要的信息源。</p>
+
+      <div class="analogy">MSA 像"进化考卷"：同一道题（同一蛋白家族），不同物种的答案一起呈现。两道题总是"同对同错"，说明它们互相依赖、在三维空间里是"邻居"。</div>
+
+      <!-- 互动演示：折叠模拟（2D 疏水向内） -->
+      <div class="widget demo" id="foldDemo">
+        <div class="widget-title">蛋白质折叠模拟（简化 2D）：点"开始折叠"，看链从直线坍缩成疏水在内、亲水在外的稳定构象</div>
+        <canvas width="800" height="380"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runFold">▶ 开始折叠</button>
+          <button class="btn" id="resetFold">↺ 重置</button>
+        </div>
+        <div class="legend">
+          <span><i style="background:#f59e0b"></i> 疏水残基（H）</span>
+          <span><i style="background:#3b82f6"></i> 亲水残基（P）</span>
+          <span><i style="background:#16a34a"></i> 已折叠核心</span>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>第二步：Evoformer 与结构模块</h3>
+      <p>AlphaFold2 的网络分两部分：<strong>EvoFormer</strong>（基于 Transformer 的编码器，同时处理 MSA 表示和成对残基表示，从共变异中提取几何约束）和 <strong>Structure Module</strong>（将抽象的残基表示逐步转化为具体的原子坐标，含 8 次三角乘法更新 + IPA 不变点注意力）。</p>
+
+      <p>对残基 $i$ 和 $j$，网络本质上学习一个分布 $p(x_i, x_j \mid \text{MSA})$，训练目标是让预测的残基对距离分布逼近真实结构。</p>
+
+      <h3>第三步：置信度评估</h3>
+      <table>
+        <tr><th>指标</th><th>含义</th><th>判断阈值</th></tr>
+        <tr><td>pLDDT（局部）</td><td>每个残基的局部分布置信度（0–100）</td><td>&gt;70 基本可信；&lt;50 基本是乱猜</td></tr>
+        <tr><td>PAE（残基对）</td><td>残基对相对位置误差的预期值（Å）</td><td>&lt;5 Å 说明相对摆放正确</td></tr>
+        <tr><td>pTM / ipTM</td><td>整体拓扑/界面置信度（0–1）</td><td>&gt;0.5（ipTM&gt;0.8 对复合物关键）</td></tr>
+      </table>
+
+      <div class="warn">不要"裸用" AlphaFold 结构！预测时务必看 pLDDT 和 PAE。pLDDT &lt; 50 的长段无规区、PAE 高的域间连接区，很可能是漂亮但错误的"幻觉"。</div>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">AlphaFold2 利用 MSA 中"残基共变异"的核心假设是什么？</p>
+        <button class="opt" data-fb="正确。共变异暗示功能/结构偶联，统计上最可能是空间接触导致的进化约束。">共变异 ⇒ 残基对在空间上靠近（接触）</button>
+        <button class="opt" data-fb">共变异与链上相邻没有必然关系。">共变异 ⇒ 残基在序列上相邻</button>
+        <button class="opt" data-fb">共变异反映的是结构接触约束，不是表达量。">共变异 ⇒ 残基表达量相似</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">AlphaFold2 是"进化信息 + 深度学习"的胜利：MSA 提供几何约束，Transformer 学习解读约束，置信度指标告诉你哪里能信。AlphaFold3 进一步扩展到了蛋白质-配体/核酸复合物。</div>
+    </section>
+
+    <!-- L4 -->
+    <section class="chapter" data-level="4" data-title="应用、局限与失败案例">
+      <h2>应用、局限与失败案例</h2>
+      <p class="tldr">AlphaFold 已产出 2 亿+ 预测结构（AlphaFold DB），改变了药物设计（靶点结构）、功能注释（结构域识别）等领域。但它不是万能的：低 pLDDT 区、新奇折叠、复合物界面、构象动态、与配体/离子的相互作用都是已知软肋。</p>
+
+      <h3>主要应用场景</h3>
+      <ul>
+        <li><strong>药物设计</strong>：未知实验结构的靶点（尤其 GPCR 同源物）可直接用预测结构做分子对接，缩短前期周期</li>
+        <li><strong>功能注释</strong>：通过预测结构识别远缘同源（结构比序列更保守），推断未知蛋白的功能</li>
+        <li><strong>蛋白质设计</strong>：与生成模型结合，反向设计具有目标折叠的新蛋白（如 RFdiffusion）</li>
+      </ul>
+
+      <!-- 互动演示：AlphaFold 置信度（pLDDT） -->
+      <div class="widget demo" id="afDemo">
+        <div class="widget-title">AlphaFold 置信度演示：点击"重新预测"，看 pLDDT 颜色编码（蓝=高可信，红=低可信）</div>
+        <canvas width="800" height="360"></canvas>
+        <div class="controls" style="align-items:center;gap:10px">
+          <button class="btn primary" id="runAF">▶ 重新预测</button>
+          <label style="flex-direction:row;align-items:center;gap:8px;min-width:auto">显示 PAE 热图 <input type="checkbox" id="showPae"></label>
+        </div>
+        <div class="legend">
+          <span><i style="background:#3b82f6"></i> pLDDT &gt; 90（最高置信）</span>
+          <span><i style="background:#22c55e"></i> 70–90（可信）</span>
+          <span><i style="background:#f59e0b"></i> 50–70（低置信）</span>
+          <span><i style="background:#dc2626"></i> &lt; 50（疑似错误）</span>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>典型失败模式</h3>
+      <table>
+        <tr><th>失败场景</th><th>原因</th><th>典型信号</th></tr>
+        <tr><td>内在无序区（IDR）</td><td>天然无固定构象，不该有单一预测</td><td>pLDDT &lt; 50 的长段</td></tr>
+        <tr><td>无 MSA 孤儿蛋白</td><td>共变异信号缺失</td><td>pLDDT 整体偏低</td></tr>
+        <tr><td>全新折叠（novel fold）</td><td>训练集里没有参照</td><td>pLDDT 中等但 PAE 高</td></tr>
+        <tr><td>复合物界面</td><td>界面预测比链内预测难</td><td>ipTM &lt; 0.8，界面 PAE 高</td></tr>
+        <tr><td>配体/金属离子环境</td><td>AF2 不预测配体位置</td><td>活性口袋周围残基异常</td></tr>
+      </table>
+
+      <div class="key">结构预测 ≠ 功能解释。pLDDT 低的区域可能恰好是重要调控区（如固有无序区），只是它们本来就不"折叠成单一形状"——这是预测方法的边界，不是蛋白质的错误。</div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">一段预测结构 pLDDT = 35 的 80 残基长无规区，最合理的解释是？</p>
+        <button class="opt" data-fb">AF2 不直接建模配体，但低 pLDDT 本身不说明配体结合。">该区域一定是配体结合口袋</button>
+        <button class="opt" data-fb="正确。固有无序区没有单一稳定构象，AF2 对它们输出低置信度是预期行为。">它很可能是天然无序区，本就不存在单一构象</button>
+        <button class="opt" data-fb">pLDDT 是置信度指标，与"多余"无关。">AlphaFold 错误地把该段折叠了，应直接删除</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">毕业自测</div>
+        <div class="widget fill">
+          <p>Anfinsen 实验证明序列决定 <input data-answer="结构|三维结构|构象">；AlphaFold2 最重要的信息源是 <input data-answer="MSA|多序列比对|共进化|共变异">；局部置信度指标是 <input data-answer="pLDDT|plddt">；残基对相对位置误差指标是 <input data-answer="PAE|pae">。</p>
+          <button class="btn check">检查</button><div class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="tip">你已经掌握了蛋白质结构预测的完整逻辑链：折叠问题（L1）→ 结构层级（L1）→ 实验测定（L2）→ 计算预测（L2）→ AlphaFold 原理（L3）→ 应用与局限（L4）。面对任何预测结构，先问 pLDDT 和 PAE——这是科学使用 AlphaFold 的第一原则。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.nextElementSibling);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+</script>
+
+<script>
+/* ================= 课程定制演示 ================= */
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- 演示1：二级结构预测器（简化 Chou-Fasman） ---------- */
+(() => {
+  const root = document.getElementById('ssDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const sel = document.getElementById('ssSeqSel');
+  const readout = root.querySelector('.readout');
+  let phase = 0; // 0 idle, 1 predicted
+
+  // 简化 Chou-Fasman 倾向值（P_helix, P_strand）
+  const P = {
+    A:[1.42,0.83], R:[0.98,0.93], N:[0.67,0.89], D:[1.01,0.54], C:[0.70,1.19],
+    Q:[1.11,1.10], E:[1.51,0.37], G:[0.57,0.75], H:[1.00,0.87], I:[1.08,1.60],
+    L:[1.21,1.30], K:[1.16,0.74], M:[1.45,1.05], F:[1.13,1.38], P:[0.57,0.55],
+    S:[0.77,0.75], T:[0.83,1.19], W:[1.08,1.37], Y:[0.69,1.47], V:[1.06,1.70]
+  };
+  const H_T = 1.05, E_T = 1.00; // 简化阈值
+
+  function predict(seq) {
+    const n = seq.length;
+    const h = seq.split('').map(a => (P[a]||[1,1])[0]);
+    const e = seq.split('').map(a => (P[a]||[1,1])[1]);
+    const ss = new Array(n).fill('C');
+    let i = 0;
+    while (i < n) {
+      if (h[i] > H_T) {
+        let j = i; while (j < n && h[j] > H_T) j++;
+        if (j - i >= 4) for (let k = i; k < j; k++) ss[k] = 'H';
+        i = j;
+      } else i++;
+    }
+    i = 0;
+    while (i < n) {
+      if (e[i] > E_T) {
+        let j = i; while (j < n && e[j] > E_T) j++;
+        if (j - i >= 3) for (let k = i; k < j; k++) if (ss[k] === 'C') ss[k] = 'E';
+        i = j;
+      } else i++;
+    }
+    return { ss, h, e };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const seq = sel.value;
+    const n = seq.length;
+    const cellW = Math.min(34, (cv.width - 60) / n);
+    const startX = 30, aaY = 70, ssY = 130, plotY = 210;
+    const { ss, h, e } = predict(seq);
+    const colors = { H: '#a855f7', E: '#f59e0b', C: '#9ca3af' };
+    const names = { H: 'H', E: 'E', C: 'C' };
+
+    ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = cssVar('--muted');
+    ctx.fillText('氨基酸序列（上） / 二级结构预测（中） / 倾向值折线（下：紫=螺旋，橙=折叠）', cv.width/2, 30);
+
+    for (let i = 0; i < n; i++) {
+      const x = startX + i * cellW + cellW/2;
+      // 氨基酸
+      ctx.fillStyle = cssVar('--text');
+      ctx.font = 'bold 15px ui-monospace,monospace';
+      ctx.fillText(seq[i], x, aaY);
+      ctx.strokeStyle = cssVar('--border');
+      ctx.strokeRect(startX + i * cellW, aaY - 16, cellW - 2, 24);
+      // 二级结构块
+      const s = phase >= 1 ? ss[i] : 'C';
+      ctx.fillStyle = phase >= 1 ? colors[s] : cssVar('--border');
+      ctx.fillRect(startX + i * cellW, ssY, cellW - 2, 26);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(names[s], x, ssY + 18);
+    }
+
+    // 倾向值折线（平滑 4 窗口均值）
+    const smooth = arr => arr.map((_, i) => {
+      const seg = arr.slice(Math.max(0, i-1), Math.min(arr.length, i+3));
+      return seg.reduce((a,b)=>a+b,0) / seg.length;
+    });
+    const hs = smooth(h), es = smooth(e);
+    const mapY = v => plotY - v * 55;
+    ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2; ctx.beginPath();
+    hs.forEach((v, i) => { const x = startX + i*cellW + cellW/2; i ? ctx.lineTo(x, mapY(v)) : ctx.moveTo(x, mapY(v)); });
+    ctx.stroke();
+    ctx.strokeStyle = '#f59e0b'; ctx.beginPath();
+    es.forEach((v, i) => { const x = startX + i*cellW + cellW/2; i ? ctx.lineTo(x, mapY(v)) : ctx.moveTo(x, mapY(v)); });
+    ctx.stroke();
+    // 阈值线
+    ctx.strokeStyle = cssVar('--border'); ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(startX, mapY(1.0)); ctx.lineTo(startX + n*cellW, mapY(1.0)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    if (phase >= 1) {
+      const cnt = { H: 0, E: 0, C: 0 };
+      ss.forEach(s => cnt[s]++);
+      readout.textContent = `✅ 预测完成（简化 Chou-Fasman）：α螺旋 ${cnt.H}/${n} 残基，β折叠 ${cnt.E}/${n}，无规卷曲 ${cnt.C}/${n}。真实算法（PSIPRED 等）会结合 MSA 与神经网络。`;
+    } else {
+      readout.textContent = '选择一条序列，点击「预测」。';
+    }
+  }
+
+  document.getElementById('ssPredict').onclick = () => { phase = 1; draw(); };
+  document.getElementById('ssReset').onclick = () => { phase = 0; draw(); };
+  sel.onchange = () => { phase = 0; draw(); };
+  draw();
+})();
+
+/* ---------- 演示2：2D 蛋白质折叠模拟（疏水向内） ---------- */
+(() => {
+  const root = document.getElementById('foldDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+
+  // H-P 简化模型序列：H=疏水，P=亲水
+  const seq = 'PHHHPHPPHHPPHHPHHPPH'.split('');
+  const N = seq.length;
+  const restDist = 22, margin = 60;
+  const W = cv.width, H = cv.height;
+
+  // 初始化直线构象
+  function initChain() {
+    const pts = [];
+    const totalW = (N - 1) * restDist;
+    const startX = (W - totalW) / 2, y = H / 2;
+    for (let i = 0; i < N; i++) pts.push({ x: startX + i * restDist, y, tx: startX + i * restDist, ty: y });
+    return pts;
+  }
+  let pts = initChain();
+  let folding = false, folded = false, frame = 0;
+  let seed = 7;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+
+  function step() {
+    frame++;
+    // 目标构象：把疏水残基拉向质心，亲水残基推向外部圆环
+    const cx = W/2, cy = H/2;
+    const R = Math.min(W, H) * 0.32;
+    const hIdx = seq.map((s,i)=>s==='H'?i:-1).filter(i=>i>=0);
+    const nH = hIdx.length;
+    // 每个疏水残基目标：质心周围紧凑螺旋；亲水：外圈
+    pts.forEach((p, i) => {
+      if (seq[i] === 'H') {
+        const k = hIdx.indexOf(i);
+        const ang = (k / nH) * Math.PI * 2.3 + frame * 0.002;
+        const r = R * 0.4;
+        p.tx = cx + Math.cos(ang) * r;
+        p.ty = cy + Math.sin(ang) * r;
+      } else {
+        const ang = (i / N) * Math.PI * 2 + Math.PI / 3;
+        p.tx = cx + Math.cos(ang) * R * (0.85 + rand()*0.05);
+        p.ty = cy + Math.sin(ang) * R * (0.85 + rand()*0.05);
+      }
+    });
+    // 弹簧 + 向目标移动
+    pts.forEach((p, i) => {
+      p.x += (p.tx - p.x) * 0.04;
+      p.y += (p.ty - p.y) * 0.04;
+    });
+    // 链长约束（松弛几次）
+    for (let it = 0; it < 4; it++) {
+      for (let i = 0; i < N - 1; i++) {
+        const a = pts[i], b = pts[i+1];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const diff = (d - restDist) / d * 0.5;
+        a.x += dx * diff; a.y += dy * diff;
+        b.x -= dx * diff; b.y -= dy * diff;
+      }
+    }
+    if (frame > 220) { folding = false; folded = true; }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // 背景
+    ctx.fillStyle = cssVar('--bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // 链（线）
+    ctx.strokeStyle = cssVar('--muted'); ctx.lineWidth = 2;
+    ctx.beginPath();
+    pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.stroke();
+
+    // 残基点
+    pts.forEach((p, i) => {
+      const isH = seq[i] === 'H';
+      // 疏水：折叠后标绿核
+      const cx = W/2, cy = H/2;
+      const nearCore = Math.hypot(p.x - cx, p.y - cy) < Math.min(W,H)*0.3;
+      ctx.fillStyle = folded && isH && nearCore ? '#16a34a' : (isH ? '#f59e0b' : '#3b82f6');
+      ctx.beginPath(); ctx.arc(p.x, p.y, isH ? 8 : 6.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(seq[i], p.x, p.y + 3.5);
+    });
+
+    // 状态
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(folded ? '✅ 稳定构象：疏水残基（绿）埋入核心，亲水残基（蓝）暴露在外' :
+                 folding ? '折叠中… 疏水残基被拉向内部，亲水残基被推向外部' :
+                 '初始：完全伸展的线性链。点击「开始折叠」。', 20, 30);
+  }
+
+  function loop() {
+    if (folding) step();
+    draw();
+    if (folding || !folded) requestAnimationFrame(loop);
+    if (folded) {
+      const hIn = pts.filter((p,i)=>seq[i]==='H' && Math.hypot(p.x-W/2,p.y-H/2) < Math.min(W,H)*0.3).length;
+      const hTotal = seq.filter(s=>s==='H').length;
+      readout.textContent = `✅ 折叠完成：${hTotal} 个疏水残基中 ${hIn} 个成功埋入核心（${Math.round(hIn/hTotal*100)}%）。这就是"疏水坍缩"（hydrophobic collapse）的简化图景。`;
+    }
+  }
+
+  document.getElementById('runFold').onclick = () => {
+    if (!folding && !folded) { folding = true; readout.textContent = '折叠中…'; loop(); }
+    else if (folded) { // 重新折叠
+      pts = initChain(); folding = true; folded = false; frame = 0; loop();
+    }
+  };
+  document.getElementById('resetFold').onclick = () => {
+    pts = initChain(); folding = false; folded = false; frame = 0;
+    readout.textContent = '';
+    draw();
+  };
+  draw();
+})();
+
+/* ---------- 演示3：AlphaFold 置信度（pLDDT）演示 ---------- */
+(() => {
+  const root = document.getElementById('afDemo');
+  if (!root) return;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const readout = root.querySelector('.readout');
+  const showPae = document.getElementById('showPae');
+
+  const N = 120;
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+
+  // 生成一条"预测蛋白"：3 个结构域（高 pLDDT）+ 2 个低置信连接区/尾部
+  let plddt = [], pae = [];
+  function generate() {
+    seed = Math.floor(rand() * 9000) + 1000;
+    plddt = []; pae = [];
+    for (let i = 0; i < N; i++) {
+      let v;
+      if (i < 35) v = 88 + rand()*8;            // 域1：高置信
+      else if (i < 48) v = 38 + rand()*14;      // 连接区1：低置信（IDR）
+      else if (i < 82) v = 92 + rand()*6;       // 域2：最高置信
+      else if (i < 92) v = 55 + rand()*15;      // 连接区2：中低
+      else v = 45 + rand()*20;                  // 尾部：低-中
+      plddt.push(v);
+    }
+    for (let i = 0; i < N; i++) {
+      pae.push([]);
+      for (let j = 0; j < N; j++) {
+        const sameDom = (i<35&&j<35)||(i>=48&&i<82&&j>=48&&j<82)||(i>=92&&j>=92);
+        let v = sameDom ? 1 + rand()*4 : 12 + rand()*18;
+        if ((i<48)!==(j<48) || (i<82)!==(j<82) || (i<92)!==(j<92)) v = 20 + rand()*15;
+        pae[i].push(v);
+      }
+    }
+  }
+  generate();
+
+  function plddtColor(v) {
+    return v >= 90 ? '#3b82f6' : v >= 70 ? '#22c55e' : v >= 50 ? '#f59e0b' : '#dc2626';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (showPae.checked) { drawPae(); return; }
+
+    // 卡通折叠带（3 个域的简化形状）
+    const cx = cv.width/2, cy = 150;
+    const domains = [
+      { x: cx-220, y: cy,    w: 130, h: 70, rot: -0.15, range: [0,35] },
+      { x: cx,     y: cy+10, w: 160, h: 80, rot:  0.08, range: [48,82] },
+      { x: cx+230, y: cy,    w: 100, h: 60, rot: -0.1,  range: [92,120] }
+    ];
+    // 连线（低置信区用虚线）
+    ctx.setLineDash([5,5]);
+    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx-155, cy+5); ctx.lineTo(cx-82, cy+8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+82, cy+12); ctx.lineTo(cx+178, cy+5); ctx.stroke();
+    ctx.setLineDash([]);
+
+    domains.forEach(d => {
+      ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.rot);
+      // 用域内平均 pLDDT 上色：为演示，逐列涂色条带
+      const [a, b] = d.range;
+      const segW = d.w / (b - a);
+      for (let i = a; i < b; i++) {
+        ctx.fillStyle = plddtColor(plddt[i]);
+        ctx.fillRect(-d.w/2 + (i-a)*segW, -d.h/2, segW + 0.5, d.h);
+      }
+      ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1.5;
+      ctx.strokeRect(-d.w/2, -d.h/2, d.w, d.h);
+      ctx.restore();
+    });
+
+    // 低置信区标注
+    ctx.fillStyle = '#dc2626'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('IDR / 连接区（pLDDT < 50）', cx-118, cy+60);
+    ctx.fillText('低置信尾部', cx+230, cy+55);
+
+    // 底部 pLDDT 折线
+    const plotY = 320, plotH = 60;
+    ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1;
+    ctx.strokeRect(40, plotY - plotH, cv.width - 80, plotH);
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('pLDDT →', 45, plotY - plotH - 5);
+    [50, 70, 90].forEach(t => {
+      const y = plotY - (t/100) * plotH;
+      ctx.strokeStyle = cssVar('--border'); ctx.setLineDash([2,3]);
+      ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(cv.width-40, y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = cssVar('--muted'); ctx.fillText(String(t), 18, y+4);
+    });
+    const stepX = (cv.width - 80) / N;
+    ctx.strokeStyle = cssVar('--primary'); ctx.lineWidth = 2; ctx.beginPath();
+    plddt.forEach((v, i) => {
+      const x = 40 + i*stepX, y = plotY - (v/100)*plotH;
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    });
+    ctx.stroke();
+
+    const low = plddt.filter(v => v < 50).length;
+    readout.textContent = `预测完成（${N} 残基）：高置信区（蓝/绿）约 ${N - low} 残基，低置信区（红）${low} 残基——红色区域不应被解释为可靠结构。`;
+  }
+
+  function drawPae() {
+    const size = 280, x0 = (cv.width - size)/2, y0 = 40;
+    const cell = size / N;
+    let max = 0;
+    pae.forEach(r => r.forEach(v => max = Math.max(max, v)));
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+      const v = pae[i][j] / max;
+      const r = Math.round(255 * v), b = Math.round(255 * (1 - v));
+      ctx.fillStyle = `rgb(${r},80,${b})`;
+      ctx.fillRect(x0 + j*cell, y0 + i*cell, cell+0.3, cell+0.3);
+    }
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('PAE 热图（残基 i vs 残基 j，蓝=相对位置误差小，红=误差大）', cv.width/2, 25);
+    ctx.fillText('对角线明亮 = 结构域内部可信；域间大片暗红 = 域间相对位置不确定', cv.width/2, y0 + size + 22);
+    readout.textContent = 'PAE 高的区域（如两个结构域之间）意味着：单个域的结构可信，但域与域的相对摆放不可信。';
+  }
+
+  document.getElementById('runAF').onclick = () => { generate(); draw(); };
+  showPae.onchange = draw;
+  draw();
+})();
+
+/* ---------- 演示4（L2）：实验测定方法选型 ---------- */
+demo('#methodDemo', ({ mw, dyn }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const methods = ['X 射线晶体学', 'Cryo-EM（冷冻电镜）', 'NMR（核磁共振）'];
+  let rec;
+  if (dyn === 1) rec = 2;                                    // 要动态 → NMR
+  else if (mw > 60) rec = 1;                                 // 大复合物 → Cryo-EM
+  else rec = 0;                                              // 小稳定蛋白 → X 射线
+
+  // 坐标轴区
+  ctx.fillStyle = cssVar('--muted'); ctx.font = '14px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('方法对比（推荐项高亮）：', 40, 40);
+
+  methods.forEach((m, i) => {
+    const y = 80 + i * 60;
+    const isRec = i === rec;
+    ctx.fillStyle = isRec ? cssVar('--primary-soft') : 'transparent';
+    ctx.fillRect(30, y - 26, W - 60, 48);
+    ctx.strokeStyle = isRec ? cssVar('--primary') : cssVar('--border');
+    ctx.lineWidth = isRec ? 2 : 1;
+    ctx.strokeRect(30, y - 26, W - 60, 48);
+
+    ctx.fillStyle = cssVar('--text'); ctx.font = (isRec ? 'bold ' : '') + '16px sans-serif';
+    ctx.fillText(m, 48, y);
+    ctx.fillStyle = isRec ? cssVar('--primary') : cssVar('--muted');
+    ctx.font = '13px sans-serif';
+    const notes = [
+      '精度最高（可达 0.5 Å）· 需结晶 · 适合小-大稳定蛋白',
+      '无严格尺寸上限 · 近年接近原子级 · 适合超大复合物',
+      '溶液中看动态 · 尺寸上限 ~25–40 kDa · 解析繁琐'
+    ];
+    ctx.fillText(notes[i], 260, y);
+    if (isRec) {
+      ctx.fillStyle = cssVar('--primary'); ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText('✅ 推荐', W - 46, y);
+      ctx.textAlign = 'left';
+    }
+  });
+
+  const dynText = dyn === 1 ? '需要溶液动态信息' : '只需要静态高分辨率结构';
+  root.querySelector('.readout').textContent =
+    `分子量 ${mw} kDa | ${dynText} → 推荐：${methods[rec]}` +
+    (rec === 2 && mw > 40 ? '（注意：NMR 尺寸上限约 25–40 kDa，此尺寸可能不适用，考虑 Cryo-EM）' : '');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英伟达 GPU、CUDA 与机器人 AI 平台 · 互动课程</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+<style>
+:root{
+  --bg:#f7f7fb;--card:#fff;--text:#1f2330;--muted:#6b7280;--border:#e5e7eb;
+  --primary:#4f46e5;--primary-soft:#eef2ff;--ok:#16a34a;--ok-soft:#dcfce7;--bad:#dc2626;--bad-soft:#fee2e2;
+  --l1:#22c55e;--l2:#14b8a6;--l3:#3b82f6;--l4:#a855f7;--warn:#f59e0b;
+  --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--border:#2a2f3c;
+  --primary:#818cf8;--primary-soft:#1e1b4b;--ok-soft:#14321f;--bad-soft:#3b1414;--shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+/* layout */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.progress{position:absolute;left:0;bottom:-1px;height:3px;background:var(--primary);transition:width .3s}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:57px;align-self:flex-start;width:270px;height:calc(100vh - 57px);overflow:auto;padding:20px 12px;border-right:1px solid var(--border)}
+nav.toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.toc a:hover{background:var(--primary-soft)}
+nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+nav.toc a.done::after{content:"✓";margin-left:auto;color:var(--ok)}
+nav.toc .lv-head{font-size:12px;color:var(--muted);margin:14px 10px 4px;letter-spacing:.05em}
+main{flex:1;min-width:0;padding:28px 32px 80px}
+@media(max-width:860px){nav.toc{display:none}nav.toc.open{display:block;position:fixed;left:0;top:57px;background:var(--card);z-index:30;box-shadow:var(--shadow)}main{padding:20px 16px 80px}}
+/* chapters */
+.chapter{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 36px;margin-bottom:28px;max-width:860px;margin-inline:auto}
+body[data-mode="paged"] .chapter{display:none}
+body[data-mode="paged"] .chapter.current{display:block;animation:fade .35s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chapter h2{margin:.2em 0 .6em;font-size:26px}
+.chapter h3{margin-top:1.6em}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;color:#fff;font-weight:600}
+.badge.l1{background:var(--l1)}.badge.l2{background:var(--l2)}.badge.l3{background:var(--l3)}.badge.l4{background:var(--l4)}
+.tldr{font-size:17px;padding:12px 16px;border-left:4px solid var(--primary);background:var(--primary-soft);border-radius:0 10px 10px 0;margin:12px 0 20px}
+.pager{display:none;justify-content:space-between;max-width:860px;margin:0 auto}
+body[data-mode="paged"] .pager{display:flex}
+.pager button{padding:10px 20px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer}
+.pager button:disabled{opacity:.35;cursor:default}
+/* callouts */
+.key,.analogy,.warn,.tip{padding:14px 18px;border-radius:12px;margin:16px 0}
+.key{background:var(--primary-soft);border:1px solid var(--primary)}
+.key::before{content:"💡 要点  ";font-weight:700}
+.analogy{background:#fef9c3;color:#3f3a10;border:1px solid #fde047}
+.analogy::before{content:"🧩 打个比方  ";font-weight:700}
+.warn{background:var(--bad-soft);border:1px solid var(--bad)}
+.warn::before{content:"⚠️ 常见误区  ";font-weight:700}
+.tip{background:var(--ok-soft);border:1px solid var(--ok)}
+.tip::before{content:"✅ 小结  ";font-weight:700}
+mark{background:#fde68a;color:inherit;padding:0 3px;border-radius:4px}
+code{background:var(--primary-soft);padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{background:#111827;color:#e5e7eb;padding:14px;border-radius:10px;overflow:auto}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--primary-soft)}
+/* interactive: shared */
+.widget{border:1px dashed var(--border);border-radius:12px;padding:18px;margin:20px 0;background:var(--bg)}
+.widget-title{font-weight:700;margin-bottom:10px}
+.widget-title::before{content:"🎮 ";}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--primary);background:var(--card);color:var(--primary);cursor:pointer;font-size:14px}
+.btn.primary{background:var(--primary);color:#fff}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+/* quiz */
+.quiz .q{font-weight:600;margin:0 0 10px}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15px}
+.quiz .opt:hover:not(:disabled){border-color:var(--primary)}
+.quiz .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+/* flip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:16px 0}
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .inner{transform:rotateY(180deg)}
+.flip .front,.flip .back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--border)}
+.flip .front{background:var(--primary-soft);font-weight:700;font-size:18px}
+.flip .back{background:var(--card);transform:rotateY(180deg);font-size:14px}
+/* steps */
+.steps .step{display:none;padding:10px 14px;border-left:3px solid var(--l3);margin:8px 0;background:var(--card);border-radius:0 8px 8px 0}
+.steps .step.shown{display:block;animation:fade .3s}
+/* reveal */
+details.reveal{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0;background:var(--card)}
+details.reveal summary{cursor:pointer;font-weight:600;color:var(--primary)}
+/* fill */
+.fill input{border:none;border-bottom:2px solid var(--primary);background:transparent;color:var(--text);width:110px;text-align:center;font-size:15px;padding:2px}
+.fill input.ok{border-color:var(--ok);color:var(--ok)}
+.fill input.bad{border-color:var(--bad);color:var(--bad)}
+/* order */
+.order .item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.order .item span{flex:1}
+.order .item button{border:none;background:var(--primary-soft);color:var(--primary);border-radius:6px;cursor:pointer;width:28px;height:28px}
+/* demo */
+.demo canvas{width:100%;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.demo .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px}
+.demo label{display:flex;flex-direction:column;font-size:14px;min-width:180px;flex:1}
+.demo input[type=range]{width:100%;accent-color:var(--primary)}
+.score{position:fixed;right:18px;bottom:18px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);padding:8px 14px;border-radius:99px;font-size:14px}
+/* course specific */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+.pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0}
+@media(max-width:700px){.pipe{grid-template-columns:repeat(2,1fr)}}
+.pstep{border:1px solid var(--border);background:var(--card);border-radius:10px;padding:12px;cursor:pointer;text-align:left;color:var(--text);font:inherit}
+.pstep b{display:block;font-size:15px;margin-bottom:4px}
+.pstep small{color:var(--muted)}
+.pstep.active{border-color:var(--primary);background:var(--primary-soft)}
+.pipe-desc{margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--card);border:1px solid var(--border);font-size:14.5px;min-height:70px}
+.stack{display:flex;flex-direction:column;gap:8px}
+.srow{display:flex;gap:10px;align-items:center;border:1px solid var(--border);background:var(--card);border-radius:10px;padding:10px 12px;cursor:pointer;color:var(--text);font:inherit;text-align:left}
+.srow:hover{border-color:var(--primary)}
+.srow.active{border-color:var(--primary);background:var(--primary-soft)}
+.srow .lv{font-size:12px;color:var(--muted);min-width:72px}
+.srow b{font-size:14.5px}
+.stack-desc{margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--card);border:1px solid var(--border);font-size:14.5px;min-height:56px}
+.meter{height:14px;border-radius:99px;background:var(--border);overflow:hidden;margin:8px 0 10px}
+.meterfill{height:100%;background:var(--primary);width:0;transition:width .2s}
+.readout{font-size:14.5px;margin-top:8px}
+.readout b{color:var(--primary)}
+.dev tr.pick td{background:var(--ok-soft);font-weight:600}
+.ref{font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body data-mode="paged">
+<!-- data-mode: "paged" 多页翻页 | "scroll" 单页长滚动 -->
+
+<header class="topbar">
+  <button id="tocBtn" aria-label="目录">☰</button>
+  <h1>英伟达 GPU × CUDA × 机器人 AI 平台</h1>
+  <button id="modeBtn">切换为长页</button>
+  <button id="themeBtn" aria-label="切换主题">🌓</button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <main id="main">
+
+    <!-- ========== L1 ========== -->
+    <section class="chapter" data-level="1" data-title="GPU：不是更快的 CPU，而是更宽的 CPU">
+      <h2>第 1 章 · GPU：不是更快的 CPU，而是更宽的 CPU</h2>
+      <p class="tldr">GPU 用几千个简单核心换"同时处理海量数据"的吞吐量；深度学习恰好就是这种活。</p>
+
+      <p>很多人第一次看到 GPU 的参数会以为它是一颗"加强版 CPU"：核心更多、频率更高、所以更快。其实恰好相反——<mark>GPU 的每个核心通常比 CPU 核心更简单、更慢</mark>，单看"跑完一件事"的延迟，它往往打不过 CPU。</p>
+
+      <p>真正的区别在目标：CPU 优化的是<strong>延迟</strong>（一件事多快做完），GPU 优化的是<strong>吞吐</strong>（单位时间做完多少件事）。</p>
+
+      <table>
+        <tr><th></th><th>CPU</th><th>GPU</th></tr>
+        <tr><td>核心数量</td><td>几十个，每个都很强</td><td>成千上万个，每个较简单</td></tr>
+        <tr><td>擅长</td><td>复杂分支、前后依赖的逻辑</td><td>同样的操作作用在海量数据上</td></tr>
+        <tr><td>典型任务</td><td>操作系统、数据库、单个请求</td><td>矩阵乘法、卷积、图形渲染</td></tr>
+        <tr><td>优化目标</td><td>延迟（Latency）</td><td>吞吐（Throughput）</td></tr>
+      </table>
+
+      <p>神经网络里 90% 以上的计算是矩阵乘法和卷积。它们的共同点是：<strong>每个输出元素的计算彼此独立</strong>，可以切成几百万份同时做。这正是 GPU 的主场。</p>
+
+      <div class="analogy">餐厅后厨：CPU 是 8 位全能大厨，能独自完成一道复杂菜；GPU 是 2000 个帮厨，只会切菜，但可以同时开切。训练神经网络，本质上是"切十亿刀土豆"。</div>
+
+      <h3>但 GPU 不是万能的</h3>
+      <p>GPU 有两个天生的"软肋"：</p>
+      <ul>
+        <li><strong>启动开销</strong>：把任务从 CPU 交给 GPU、启动成千上万个线程、再同步结果，本身有固定成本。任务太小时，这点开销会吃掉全部收益。</li>
+        <li><strong>怕分支</strong>：GPU 以 32 个线程为一组（warp）执行同一条指令，如果组内线程走不同的 if 分支，就得排队分别执行。</li>
+      </ul>
+
+      <div class="key">英伟达 H100 有 132 个 SM、约 1.7 万个 FP32 运算单元，FP16 张量算力接近 1000 TFLOPS（每秒一千万亿次运算）。同代的顶级 CPU 只有几十个核心、几 TFLOPS。差距来自"宽度"，不是"速度"。</div>
+
+      <div class="widget demo" id="cpuGpu">
+        <div class="widget-title">拖一拖：任务多大时，GPU 才值得出手？</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>并行任务数量（相对值） <span class="val" data-for="k"></span>
+            <input type="range" name="k" min="64" max="8192" step="64" value="1024">
+          </label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="tip">GPU 的强项不是"单线程更快"，而是"把同一件事复制几万份同时做"。任务越规整、越能并行，GPU 越占优；逻辑越复杂、依赖越多，CPU 越合适。</div>
+    </section>
+
+    <section class="chapter" data-level="1" data-title="全景图：从一块芯片到会走路的机器人">
+      <h2>第 2 章 · 全景图：从一块芯片到会走路的机器人</h2>
+      <p class="tldr">英伟达的机器人故事是一条三段式流水线：训练 → 仿真/合成数据 → 边缘部署，再闭环回流。</p>
+
+      <p>如果只记住一个结论，就记住这个：<mark>英伟达卖的不是一块 GPU，而是"让 AI 从数据到机器人"的整条流水线</mark>。GPU 只是这条流水线上的发动机。</p>
+
+      <p>训练一个机器人策略，要回答三个问题：</p>
+      <ol>
+        <li><strong>模型从哪学？</strong> 需要海量数据和算力 → 数据中心 GPU（DGX / HGX / 云上实例）。</li>
+        <li><strong>在哪练、怎么试错？</strong> 真机摔一次很贵 → 仿真环境里并行几万个"平行世界"。</li>
+        <li><strong>练完装在哪？</strong> 机器人身上空间、功耗、散热都有限 → Jetson 这类边缘计算模块。</li>
+      </ol>
+
+      <div class="widget">
+        <div class="widget-title">点击每一层，看看它负责什么</div>
+        <div class="pipe">
+          <button class="pstep active" data-desc="数据中心 GPU（H100、B200、GB200）负责最重的活：预训练、模仿学习、强化学习、世界模型。多卡之间靠 NVLink / NVSwitch 互联，靠 NCCL 做梯度同步。">
+            <b>① 训练</b><small>DGX / HGX + CUDA</small>
+          </button>
+          <button class="pstep" data-desc="Omniverse 用 USD 描述场景，Isaac Sim 提供物理与传感器仿真，Isaac Lab 把几千个环境并行起来做强化学习，Cosmos 生成合成视频数据。">
+            <b>② 仿真与合成数据</b><small>Omniverse / Isaac / Cosmos</small>
+          </button>
+          <button class="pstep" data-desc="Jetson AGX Orin / Thor 装在机器人或车上，TensorRT 把模型压缩加速，Isaac ROS 提供视觉、定位、建图等 ROS 2 软件包。">
+            <b>③ 边缘部署</b><small>Jetson + TensorRT</small>
+          </button>
+          <button class="pstep" data-desc="真机运行会暴露仿真里没遇到的问题：打滑、光照突变、传感器延迟。把这些失败案例采回来，补进训练集，再走一遍流水线——这就是数据飞轮。">
+            <b>④ 数据回流</b><small>真机日志 → 再训练</small>
+          </button>
+        </div>
+        <div class="pipe-desc" id="pipeDesc">数据中心 GPU（H100、B200、GB200）负责最重的活：预训练、模仿学习、强化学习、世界模型。多卡之间靠 NVLink / NVSwitch 互联，靠 NCCL 做梯度同步。</div>
+      </div>
+
+      <div class="analogy">这条流水线像培养运动员：训练场（数据中心）里练体能和战术，模拟器（仿真）里反复打比赛，比赛当天（部署）只能在场上靠自己，赛后看录像（数据回流）再改进。</div>
+
+      <div class="widget order" data-answer="task,train,eval,deploy,loop">
+        <div class="widget-title">把机器人项目的典型流程排成正确顺序</div>
+        <div class="item" data-id="train">在 Isaac Lab 里并行训练策略</div>
+        <div class="item" data-id="deploy">导出模型，部署到 Jetson 上真机验证</div>
+        <div class="item" data-id="task">定义任务、观测、动作与奖励</div>
+        <div class="item" data-id="loop">采集失败案例，回流数据再训练</div>
+        <div class="item" data-id="eval">做域随机化与仿真评测</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <h3>🌱 第一层小测</h3>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">1. 为什么深度学习特别适合用 GPU？</p>
+        <button class="opt" data-fb="GPU 的主频通常比 CPU 低，单线程性能并不占优。">因为 GPU 的主频更高</button>
+        <button class="opt" data-fb="矩阵乘法和卷积包含大量彼此独立的乘加，正好可以切成几百万份并行执行。">因为神经网络的计算可以高度并行</button>
+        <button class="opt" data-fb="网络结构是人设计的，GPU 不会自动设计网络。">因为 GPU 能自动设计网络结构</button>
+        <button class="opt" data-fb="显存通常小于内存，而且容量不是 GPU 适合深度学习的主要原因。">因为 GPU 的存储容量更大</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="2">
+        <p class="q">2. 下面哪件事 GPU 通常<strong>不</strong>擅长？</p>
+        <button class="opt" data-fb="这正是 GPU 的典型强项。">对一百万张图片做同样的卷积</button>
+        <button class="opt" data-fb="大量独立浮点运算正是 GPU 的主场。">处理互不依赖的海量浮点运算</button>
+        <button class="opt" data-fb="warp 内的线程走不同分支时要分组串行执行，复杂的 if/else 会让 GPU 效率大幅下降。">执行大量复杂的 if/else 分支逻辑</button>
+        <button class="opt" data-fb="矩阵乘法是 GPU 最擅长的计算之一。">做大规模矩阵乘法</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">3. Jetson 在机器人系统里的角色是什么？</p>
+        <button class="opt" data-fb="那是 DGX / H100 等数据中心 GPU 的工作。">训练大模型的数据中心 GPU</button>
+        <button class="opt" data-fb="Jetson 是装在机器人本体上的边缘计算模块，负责推理与实时控制。">装在机器人身上的边缘计算模块</button>
+        <button class="opt" data-fb="物理仿真是 Isaac Sim 等软件做的事，不是 Jetson 的定位。">一种物理仿真引擎</button>
+        <button class="opt" data-fb="Jetson 上同样运行 CUDA 与 TensorRT，不是替代品。">CUDA 的替代品</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记住三段式：<strong>训练（数据中心）→ 仿真与合成数据（Omniverse / Isaac）→ 部署（Jetson）→ 数据回流</strong>。后面每一章，都是在放大这条流水线上的一个环节。</div>
+    </section>
+
+    <!-- ========== L2 ========== -->
+    <section class="chapter" data-level="2" data-title="拆开 GPU：车间、班组与仓库">
+      <h2>第 3 章 · 拆开 GPU：车间、班组与仓库</h2>
+      <p class="tldr">GPU = 很多车间（SM），每个车间按 32 人一组（warp）同步干活，工具放手边（寄存器），材料从仓库（显存）搬。</p>
+
+      <p>要理解 CUDA 程序为什么快或慢，得先认识 GPU 的物理结构。下面这套类比会贯穿整门课。</p>
+
+      <div class="analogy">GPU 是一座工业园：<strong>SM</strong> 是一间车间；<strong>warp</strong> 是 32 个动作整齐划一的工人；<strong>寄存器</strong> 是每人手边的小工具盒；<strong>共享内存</strong> 是车间中央的白板；<strong>L2 缓存</strong> 是园区仓库；<strong>HBM 显存</strong> 是城外的大货仓。</div>
+
+      <div class="widget">
+        <div class="widget-title">点击卡片，认识六个关键词</div>
+        <div class="cards">
+          <div class="flip"><div class="inner"><div class="front">SM</div><div class="back">Streaming Multiprocessor，GPU 的基本计算车间。H100 有 132 个，每个含 FP32 单元、Tensor Core、调度器和共享内存。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">CUDA Core</div><div class="back">一个 FP32 运算通道。注意它不是独立处理器，只是 SM 里众多运算单元之一。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">Warp</div><div class="back">32 个线程组成的调度单位。同一 warp 执行同一条指令、处理不同数据（SIMT）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">寄存器</div><div class="back">每个线程私有，速度最快但数量有限。寄存器用得多，SM 能同时驻留的线程就少。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">共享内存</div><div class="back">同一个 block 内的线程共享，需要程序员手动管理，用来做数据复用（tiling）。</div></div></div>
+          <div class="flip"><div class="inner"><div class="front">HBM 显存</div><div class="back">容量大、带宽高（H100 约 80GB、3.35TB/s），但延迟比寄存器高几百倍，是多数 kernel 的瓶颈来源。</div></div></div>
+        </div>
+      </div>
+
+      <h3>一张表看懂"存储金字塔"</h3>
+      <table>
+        <tr><th>层级</th><th>谁可见</th><th>典型容量</th><th>延迟量级</th><th>谁管理</th></tr>
+        <tr><td>寄存器</td><td>单个线程</td><td>每 SM 256KB</td><td>约 1 个周期</td><td>编译器</td></tr>
+        <tr><td>共享内存 / L1</td><td>同一个 block</td><td>每 SM 约 228KB（H100）</td><td>二三十个周期</td><td>程序员 + 硬件</td></tr>
+        <tr><td>L2 缓存</td><td>整张 GPU</td><td>几十 MB</td><td>约 200 个周期</td><td>硬件</td></tr>
+        <tr><td>HBM 显存</td><td>整张 GPU</td><td>40–192GB</td><td>几百个周期</td><td>程序员</td></tr>
+      </table>
+      <p class="ref">以上为 Hopper 一代量级，仅用于建立直觉；不同架构数字有差异。</p>
+
+      <p><strong>占用率（occupancy）</strong>是这里最实用的概念：一个 SM 最多同时驻留 64 个 warp（H100），实际驻留比例就是占用率。占用率太低，车间里工人太少，掩盖不了访问显存的延迟；但盲目堆线程也可能因为寄存器不够而适得其反。</p>
+
+      <div class="key">GPU 性能问题十有八九是两句话：<strong>数据没喂饱</strong>（带宽受限）或<strong>线程没排满</strong>（占用率低）。第 6、7 章会把这两件事量化。</div>
+
+      <div class="tip">先记住层级：线程 → warp（32）→ block → grid；存储：寄存器 → 共享内存 → L2 → HBM。之后看到任何 CUDA 优化技巧，都能归到"减少搬运"或"提高并行"两类。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="CUDA：写一个线程，复制一万份">
+      <h2>第 4 章 · CUDA：写一个线程，复制一万份</h2>
+      <p class="tldr">CUDA 的编程模型只有三个关键词：grid、block、thread。你只写"一个线程做什么"，GPU 负责把它复制到成千上万个线程上。</p>
+
+      <p>CUDA 不是一门新语言，而是 C/C++ 的一套扩展：你写一个普通函数，加上 <code>__global__</code> 标记，它就变成了能在 GPU 上被大量线程同时执行的 <strong>kernel</strong>。</p>
+
+      <pre><code>// 每个线程算一个元素：c[i] = a[i] + b[i]
+__global__ void vecAdd(const float* a, const float* b, float* c, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;  // 全局线程编号
+    if (i &lt; n) c[i] = a[i] + b[i];                  // 边界检查
+}
+
+int main() {
+    int n = 1 &lt;&lt; 20, bytes = n * sizeof(float);
+    float *d_a, *d_b, *d_c;
+    cudaMalloc(&amp;d_a, bytes);                          // 1. 显存分配
+    cudaMemcpy(d_a, h_a, bytes, cudaMemcpyHostToDevice); // 2. 数据搬到 GPU
+    vecAdd&lt;&lt;&lt;(n + 255) / 256, 256&gt;&gt;&gt;(d_a, d_b, d_c, n); // 3. 启动 kernel
+    cudaMemcpy(h_c, d_c, bytes, cudaMemcpyDeviceToHost); // 4. 结果搬回
+}</code></pre>
+
+      <p>几个必须说清的概念：</p>
+      <ul>
+        <li><strong>host / device</strong>：CPU 侧叫 host，GPU 侧叫 device。两者有各自的内存，需要显式拷贝（统一内存可以简化，但不改变物理事实）。</li>
+        <li><strong>grid / block</strong>：启动配置写成 <code>&lt;&lt;&lt;grid, block&gt;&gt;&gt;</code>。block 是线程的集合，grid 是 block 的集合。</li>
+        <li><strong>threadIdx / blockIdx</strong>：线程在 block 内的编号、block 在 grid 内的编号，可以是一维、二维或三维。</li>
+        <li><strong>warp</strong>：硬件实际以 32 个线程为单位调度。block 大小取 32 的倍数，能避免"半个 warp 空转"。</li>
+      </ul>
+
+      <div class="widget steps">
+        <div class="widget-title">一个 CUDA 程序的四步走</div>
+        <div class="step"><strong>第 1 步 · 分配</strong>：用 <code>cudaMalloc</code> 在显存里申请空间。显存和内存是两块独立的物理区域。</div>
+        <div class="step"><strong>第 2 步 · 搬运</strong>：用 <code>cudaMemcpy</code> 把输入数据从内存拷到显存。这一步往往比计算还慢，所以要尽量批量、异步。</div>
+        <div class="step"><strong>第 3 步 · 启动</strong>：写 <code>&lt;&lt;&lt;grid, block&gt;&gt;&gt;</code>。GPU 把 grid 切成一个个 block，分发到空闲的 SM 上执行。</div>
+        <div class="step"><strong>第 4 步 · 回传</strong>：把结果拷回内存。若后续还有 kernel，就让数据留在显存里，别来回搬。</div>
+        <button class="btn primary next-step">下一步</button>
+      </div>
+
+      <h3>block 大小为什么重要？</h3>
+      <p>假设矩阵有 256×256 个元素，每个线程算一个点。block 取 16×16 时，一共需要 16×16 = 256 个 block；block 取 32×32 时只需要 64 个 block。block 太小，warp 装不满；block 太大，调度粒度粗、尾部可能空转。</p>
+
+      <div class="widget demo" id="blockDemo">
+        <div class="widget-title">拖动滑块：block 尺寸如何切开矩阵、如何组成 warp</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls">
+          <label>block 边长（线程） <span class="val" data-for="b"></span>
+            <input type="range" name="b" min="0" max="3" step="1" value="1">
+          </label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="warn">"线程开得越多越快"是错的。线程总数要刚好覆盖数据；多余的线程只做边界判断然后退出，仍然占用调度资源。真正决定速度的是访存模式与占用率。</div>
+
+      <div class="tip">CUDA 的心智模型：<strong>你写的是一份"单线程说明书"，GPU 把它复印几万份并发执行</strong>。grid/block 是逻辑排队，warp 才是物理执行单位。</div>
+    </section>
+
+    <section class="chapter" data-level="2" data-title="软件栈：从驱动到 Isaac，谁站在哪一层">
+      <h2>第 5 章 · 软件栈：从驱动到 Isaac，谁站在哪一层</h2>
+      <p class="tldr">英伟达的护城河不是一块芯片，而是芯片之上二十年攒下来的整栋软件大楼。</p>
+
+      <p>初学者最容易晕的地方，是把 CUDA、TensorRT、Isaac Sim、PyTorch 混在一起。其实它们各站一层，分工很清楚。</p>
+
+      <div class="widget">
+        <div class="widget-title">点击每一层，看它解决什么问题</div>
+        <div class="stack">
+          <button class="srow active" data-desc="最终跑起来的应用：机械臂抓取、四足行走、自动驾驶、质检视觉。它们通常基于 ROS 2 或厂商 SDK 构建。">
+            <span class="lv">应用层</span><b>机器人应用 / 自动驾驶 / 视觉质检</b>
+          </button>
+          <button class="srow" data-desc="面向具体行业的平台：Isaac（机器人仿真与 ROS）、Omniverse（数字孪生）、Cosmos（世界模型）、DRIVE（汽车）、Metropolis（视频分析）、BioNeMo（生物医药）。">
+            <span class="lv">领域平台</span><b>Isaac · Omniverse · Cosmos · DRIVE</b>
+          </button>
+          <button class="srow" data-desc="PyTorch、JAX 等深度学习框架。你在 Python 里写的张量运算，底层会被翻译成 CUDA kernel 或调用 cuBLAS、cuDNN。">
+            <span class="lv">AI 框架</span><b>PyTorch · JAX</b>
+          </button>
+          <button class="srow" data-desc="CUDA-X 是一组高度优化的库：cuBLAS（矩阵乘）、cuDNN（深度学习算子）、TensorRT（推理优化）、NCCL（多卡通信）、cuSPARSE（稀疏矩阵）、Thrust（并行算法）。">
+            <span class="lv">加速库</span><b>cuBLAS · cuDNN · TensorRT · NCCL</b>
+          </button>
+          <button class="srow" data-desc="CUDA Runtime 与驱动：负责显存管理、kernel 启动、流与事件。nvcc 把 .cu 文件编译成 GPU 能执行的指令。">
+            <span class="lv">运行时</span><b>CUDA Runtime · nvcc · 驱动</b>
+          </button>
+          <button class="srow" data-desc="最底下是硬件：数据中心用 H100 / B200 / GB200，工作站用 RTX，机器人和车上用 Jetson Orin / Thor。">
+            <span class="lv">硬件</span><b>H100 · B200 · RTX · Jetson</b>
+          </button>
+        </div>
+        <div class="stack-desc" id="stackDesc">最终跑起来的应用：机械臂抓取、四足行走、自动驾驶、质检视觉。它们通常基于 ROS 2 或厂商 SDK 构建。</div>
+      </div>
+
+      <h3>四个最常被问到的名字</h3>
+      <table>
+        <tr><th>名字</th><th>一句话定位</th><th>典型场景</th></tr>
+        <tr><td>CUDA</td><td>GPU 编程模型 + 运行时 + 编译器</td><td>自己写 kernel、调用底层库</td></tr>
+        <tr><td>cuDNN</td><td>深度学习算子库（卷积、归一化、注意力等）</td><td>PyTorch 训练时自动调用</td></tr>
+        <tr><td>TensorRT</td><td>推理图优化 + 低精度量化 + 引擎生成</td><td>把训练好的模型部署到 Jetson</td></tr>
+        <tr><td>NCCL</td><td>多 GPU 集合通信（all-reduce 等）</td><td>多卡 / 多机训练同步梯度</td></tr>
+      </table>
+
+      <div class="widget fill">
+        <p>多机多卡训练时，负责 GPU 之间集合通信的库是 <input data-answer="NCCL|nccl">；把训练好的模型在 Jetson 上做图优化与低精度推理加速，用的是 <input data-answer="TensorRT|tensorrt">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="analogy">这栋楼像一家餐厅：硬件是厨房设备，CUDA 是水电煤，加速库是预制好的酱料，PyTorch 是菜谱，Isaac 是针对"机器人这道菜"的中央厨房，应用层才是端上桌的菜。</div>
+
+      <h3>🌿 第二层小测</h3>
+
+      <div class="widget quiz" data-answer="0">
+        <p class="q">1. 想在多机多卡之间同步梯度，应该用哪个组件？</p>
+        <button class="opt" data-fb="NCCL 专门负责 GPU 之间的集合通信，all-reduce 就是它最常见的操作。">NCCL</button>
+        <button class="opt" data-fb="cuDNN 是深度学习算子库，不负责卡间通信。">cuDNN</button>
+        <button class="opt" data-fb="TensorRT 面向推理优化，不负责训练时的梯度同步。">TensorRT</button>
+        <button class="opt" data-fb="OpenGL 是图形 API，与分布式训练无关。">OpenGL</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">2. TensorRT 主要解决什么问题？</p>
+        <button class="opt" data-fb="训练由 PyTorch 等框架完成，TensorRT 不负责训练。">让模型训练得更快</button>
+        <button class="opt" data-fb="它做算子融合、显存复用、INT8/FP8 量化，把推理延迟压下来。">推理部署时的图优化与低精度加速</button>
+        <button class="opt" data-fb="物理仿真由 Isaac Sim 等完成。">机器人物理仿真</button>
+        <button class="opt" data-fb="数据标注是另一类工具链。">自动标注训练数据</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">3. Isaac Lab 属于软件栈的哪一层？</p>
+        <button class="opt" data-fb="它是软件，不是芯片。">硬件层</button>
+        <button class="opt" data-fb="Isaac Lab 是机器人领域的仿真训练平台，属于领域平台层。">领域平台层（机器人仿真训练）</button>
+        <button class="opt" data-fb="驱动层负责让系统识别 GPU。">驱动层</button>
+        <button class="opt" data-fb="NCCL 才是通信库。">通信库层</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">4. CUDA 与 PyTorch 的关系是？</p>
+        <button class="opt" data-fb="PyTorch 建立在 CUDA 之上，不是替代关系。">PyTorch 是 CUDA 的替代品</button>
+        <button class="opt" data-fb="PyTorch 的张量运算最终通过 CUDA 运行时和 cuBLAS/cuDNN 等库在 GPU 上执行。">PyTorch 通过 CUDA 及其库调用 GPU</button>
+        <button class="opt" data-fb="CUDA 是通用平台，PyTorch 只是它的使用者之一。">CUDA 只能用来跑 PyTorch</button>
+        <button class="opt" data-fb="两者是上下层关系，联系非常紧密。">两者完全无关</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">记软件栈不需要背全部名字，只要建立"<strong>硬件 → 运行时 → 加速库 → 框架 → 领域平台 → 应用</strong>"的纵向地图。听到任何新名词，先问它在哪一层。</div>
+    </section>
+
+    <!-- ========== L3 ========== -->
+    <section class="chapter" data-level="3" data-title="算力、带宽与 Roofline：为什么 GPU 会“饿”">
+      <h2>第 6 章 · 算力、带宽与 Roofline：为什么 GPU 会"饿"</h2>
+      <p class="tldr">一块卡的实际性能上限由两条线决定：峰值算力（屋顶）和 带宽 × 算术强度（斜坡），取较小者。</p>
+
+      <p>厂商发布会只讲一个数字：TFLOPS。但真实程序很少跑到峰值，因为 GPU 要先<strong>把数据搬到计算单元旁边</strong>。搬得不够快，算力再高也只能干等。</p>
+
+      <h3>第一步：算清"要做多少活"</h3>
+      <p>两个 $N \times N$ 矩阵相乘，每个输出元素要做 $N$ 次乘法和 $N-1$ 次加法，共 $N^2$ 个输出元素，所以总计算量约为：</p>
+      <p>$$\text{FLOPs} \approx 2N^3$$</p>
+      <p>而至少要把两个矩阵读进来，数据量约为 $2N^2$ 个元素。定义<strong>算术强度</strong>（每搬 1 字节能算多少次）：</p>
+      <p>$$\text{AI} = \frac{\text{FLOPs}}{\text{Bytes}} = \frac{2N^3}{2N^2 \times b} = \frac{N}{b}$$</p>
+      <p>其中 $b$ 是每个元素占的字节数：FP32 为 4，FP16 为 2。</p>
+
+      <h3>第二步：画 Roofline</h3>
+      <p>可达性能为：</p>
+      <p>$$P = \min\left(P_{\text{peak}},\; B_{\text{mem}} \times \text{AI}\right)$$</p>
+      <p>$P_{\text{peak}}$ 是峰值算力，$B_{\text{mem}}$ 是显存带宽。算术强度低时被带宽卡住（斜坡段），高时被算力卡住（屋顶段）。</p>
+
+      <div class="key">以 H100 的 FP16 为例：$N=4096$ 时 AI $= 2048$ FLOP/Byte，带宽上限 $= 3.35\text{TB/s} \times 2048 \approx 6.9\text{PFLOPS}$，远高于 989 TFLOPS 的峰值——所以大矩阵乘法是<strong>算力受限</strong>。而逐元素加法这类操作 AI 只有个位数，几乎必然<strong>带宽受限</strong>。</div>
+
+      <p><strong>Tensor Core</strong> 是英伟达从 Volta 开始加入的专用矩阵单元：一条指令完成一个小矩阵的乘加（如 $16\times8\times16$），FP16 输入、FP32 累加，后来扩展到 BF16、FP8，Blackwell 还支持 FP4（主要用于推理）。它把"屋顶"抬高了一个数量级，但也让"喂数据"变得更难。</p>
+
+      <div class="widget demo" id="roof">
+        <div class="widget-title">调矩阵大小与精度，看工作点落在屋顶还是斜坡</div>
+        <canvas width="800" height="340"></canvas>
+        <div class="controls">
+          <label>矩阵维度 N <span class="val" data-for="n"></span>
+            <input type="range" name="n" min="256" max="8192" step="256" value="4096">
+          </label>
+          <label>精度 <span class="val" data-for="p"></span>
+            <input type="range" name="p" min="0" max="2" step="1" value="1">
+          </label>
+        </div>
+        <p class="readout"></p>
+      </div>
+
+      <div class="warn">"峰值 TFLOPS"是理想条件下的数字：往往要求特定精度、特定矩阵形状、甚至开启稀疏加速。真实训练里常用的指标是 MFU（模型算力利用率），大模型训练能到 30%–50% 已属不错。</div>
+
+      <div class="tip">看到任何"这卡多少 TFLOPS"的说法，都追问三件事：<strong>什么精度？带宽多少？我的负载算术强度是多少？</strong> 这三个数决定实际性能，而不是单一峰值。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="写对 kernel 的三件事：索引、合并访存、占用率">
+      <h2>第 7 章 · 写对 kernel 的三件事：索引、合并访存、占用率</h2>
+      <p class="tldr">同样一次矩阵乘，写法不同性能可以差十倍；瓶颈通常不是"算得慢"，而是"等数据"。</p>
+
+      <h3>① 索引：每个线程找对自己的数据</h3>
+      <p>最常见的一维写法是 <code>i = blockIdx.x * blockDim.x + threadIdx.x</code>。二维矩阵则用两个维度分别算行、列。索引错了不会报错，只会算出莫名其妙的结果——所以一定要做边界检查。</p>
+
+      <h3>② 合并访存：让 32 个线程读连续的地址</h3>
+      <p>显存是按"事务"读的。一个 warp 的 32 个线程如果访问连续地址，硬件能用一次 128 字节事务搞定；如果地址乱跳，就可能拆成 32 次事务，带宽利用率掉到几十分之一。</p>
+
+      <div class="analogy">合并访存像快递驿站：32 个包裹在同一个货架上，一次就能全拿；如果散落在 32 个仓库，就得跑 32 趟。计算单元再快，也架不住这样跑腿。</div>
+
+      <h3>③ 占用率：车间里同时有多少工人</h3>
+      <p>占用率 = 一个 SM 上实际驻留的 warp 数 ÷ 上限（H100 为 64）。它由三样东西共同限制：</p>
+      <ul>
+        <li><strong>block 大小</strong>：线程数必须是 32 的倍数，且不超过 1024。</li>
+        <li><strong>每线程寄存器数</strong>：寄存器总量固定，单线程用得越多，能同时驻留的线程越少。</li>
+        <li><strong>每 block 共享内存</strong>：共享内存也是有限资源。</li>
+      </ul>
+
+      <div class="widget demo" id="occDemo">
+        <div class="widget-title">调 block 大小和寄存器用量，看占用率怎么变</div>
+        <label style="display:block">block 线程数 <span class="val" data-for="block"></span>
+          <input type="range" name="block" min="32" max="1024" step="32" value="256" style="width:100%">
+        </label>
+        <label style="display:block;margin-top:10px">每线程寄存器数 <span class="val" data-for="regs"></span>
+          <input type="range" name="regs" min="16" max="128" step="8" value="32" style="width:100%">
+        </label>
+        <div class="meter"><div class="meterfill"></div></div>
+        <p class="readout"></p>
+      </div>
+
+      <h3>共享内存分块：把"重复搬运"变成"搬一次用多次"</h3>
+      <p>矩阵乘法里，每个输出元素都要读一整行和一整列。如果直接读显存，同样的数据会被重复搬运 $N$ 次。经典做法是让一个 block 先把一小块数据搬进共享内存，再在车间里反复使用：</p>
+
+      <pre><code>__shared__ float As[TILE][TILE];
+__shared__ float Bs[TILE][TILE];
+// 每个线程负责搬运一小格，然后 __syncthreads()
+for (int k = 0; k &lt; N; k += TILE) {
+    As[ty][tx] = A[row * N + k + tx];
+    Bs[ty][tx] = B[(k + ty) * N + col];
+    __syncthreads();
+    for (int j = 0; j &lt; TILE; j++)
+        acc += As[ty][j] * Bs[j][tx];
+    __syncthreads();
+}</code></pre>
+
+      <div class="widget fill">
+        <p>一个 warp 包含 <input data-answer="32"> 个线程；一个 block 的线程数上限是 <input data-answer="1024">。</p>
+        <button class="btn check">检查</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">优化 kernel 的顺序：<strong>先保证索引正确 → 再看访存是否合并 → 再调 block 大小与寄存器 → 最后才考虑共享内存分块等高级技巧</strong>。顺序反了，往往是在优化一个不是瓶颈的地方。</div>
+    </section>
+
+    <section class="chapter" data-level="3" data-title="在仿真里练一万次：Isaac Lab 与 sim2real">
+      <h2>第 8 章 · 在仿真里练一万次：Isaac Lab 与 sim2real</h2>
+      <p class="tldr">真实机器人摔一次很贵，仿真里可以同时开几千个"平行世界"，一晚上练完人类几年的经验。</p>
+
+      <p>机器人策略训练本质是一个循环：策略网络看当前<strong>观测</strong>（关节角度、IMU、相机），输出<strong>动作</strong>（目标关节位置或力矩），物理引擎算出下一时刻的状态和<strong>奖励</strong>，然后更新网络。</p>
+
+      <p>如果只有一个环境，这个循环慢得没法用。Isaac Lab 的关键设计是：<mark>把几千个环境同时放在一张 GPU 上跑</mark>，物理计算、观测拼接、策略推理全部留在显存里，避免 CPU 与 GPU 之间来回搬数据。</p>
+
+      <h3>PPO：最常用的"练习方法"</h3>
+      <p>近端策略优化（PPO）通过"采集一批经验 → 计算优势 → 限制每次更新的幅度"来稳定训练。你不需要手写它，Isaac Lab 已集成 RSL-RL、skrl、Stable-Baselines3 等实现。真正花时间的是<strong>奖励设计</strong>：走快了奖励、摔倒了惩罚、偏离方向扣分、抖动扣分……</p>
+
+      <h3>sim2real：仿真里会走，真机上未必</h3>
+      <p>仿真与现实的差距（sim2real gap）主要来自三处：</p>
+      <ul>
+        <li><strong>接触模型</strong>：摩擦、弹性、地面材质难以精确建模。</li>
+        <li><strong>执行器</strong>：真实电机的延迟、死区、温漂，仿真里往往过于理想。</li>
+        <li><strong>感知</strong>：相机噪声、光照变化、传感器延迟。</li>
+      </ul>
+      <p>最常用的对策是<strong>域随机化</strong>：训练时随机改变质量、摩擦系数、电机延迟、光照、纹理，让策略"见过各种世界"，从而对真实世界更鲁棒。代价是仿真内的成绩会下降——这是正常的。</p>
+
+      <div class="widget demo" id="simTrain">
+        <div class="widget-title">调环境数与随机化强度，看仿真成绩和真机迁移</div>
+        <canvas width="800" height="300"></canvas>
+        <div class="controls">
+          <label>并行环境数 <span class="val" data-for="env"></span>
+            <input type="range" name="env" min="256" max="8192" step="256" value="4096">
+          </label>
+          <label>域随机化强度 <span class="val" data-for="dr"></span>
+            <input type="range" name="dr" min="0" max="1" step="0.05" value="0.6">
+          </label>
+        </div>
+        <p class="readout"></p>
+      </div>
+      <p class="ref">上图为教学用示意模型，不是任何产品的实测数据。真实曲线受任务、奖励、算法影响很大。</p>
+
+      <div class="widget order" data-answer="scene,spec,train,dr,real">
+        <div class="widget-title">把一次典型的仿真训练流程排好序</div>
+        <div class="item" data-id="spec">定义观测、动作与奖励函数</div>
+        <div class="item" data-id="dr">加入域随机化与课程学习</div>
+        <div class="item" data-id="scene">搭建 USD 场景、导入机器人模型</div>
+        <div class="item" data-id="real">导出策略，在真机上校准与兜底</div>
+        <div class="item" data-id="train">用 PPO 在数千个并行环境里训练</div>
+        <button class="btn check">检查顺序</button>
+        <div class="feedback"></div>
+      </div>
+
+      <h3>🌳 第三层小测</h3>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">1. 为什么仿真训练要同时开几千个环境？</p>
+        <button class="opt" data-fb="并行环境不是为了画面，而是为了提高样本吞吐。">为了让渲染画面更好看</button>
+        <button class="opt" data-fb="环境并行能让 GPU 始终有活干，单位时间采集的样本量成倍增加。">提高样本吞吐，让 GPU 保持忙碌</button>
+        <button class="opt" data-fb="并行环境反而更吃显存。">为了减少显存占用</button>
+        <button class="opt" data-fb="并行环境与是否使用强化学习无关。">为了避免使用强化学习</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">2. 域随机化强度调得过高，最可能发生什么？</p>
+        <button class="opt" data-fb="真机表现不一定更好，过度随机化会让策略学不到有效行为。">真机表现一定更好</button>
+        <button class="opt" data-fb="训练分布太宽，仿真内成绩下降、收敛更难，但策略对真实差异更鲁棒。">仿真成绩下降，但泛化性可能更好</button>
+        <button class="opt" data-fb="随机化不是无效操作，它直接影响训练分布。">完全没有任何影响</button>
+        <button class="opt" data-fb="随机化维度与仿真速度没有直接关系。">让仿真运行得更快</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">3. sim2real gap 最主要来自哪里？</p>
+        <button class="opt" data-fb="显卡型号不会改变物理规律。">显卡型号不同</button>
+        <button class="opt" data-fb="接触、摩擦、电机延迟、传感器噪声等建模差异，是迁移落差的核心来源。">物理参数与真实世界的差异、传感与执行延迟</button>
+        <button class="opt" data-fb="CUDA 版本影响软件兼容性，不是迁移落差的主因。">CUDA 版本不一致</button>
+        <button class="opt" data-fb="网络结构是策略的一部分，不是环境差异。">策略网络的层数</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">4. Isaac Lab 里能同时跑多少环境，主要受什么限制？</p>
+        <button class="opt" data-fb="显示器分辨率与仿真环境数量无关。">显示器分辨率</button>
+        <button class="opt" data-fb="每个环境都要占显存和算力，环境数最终由 GPU 资源决定。">显存容量与 GPU 算力</button>
+        <button class="opt" data-fb="硬盘只影响场景加载，不影响并行规模。">硬盘读写速度</button>
+        <button class="opt" data-fb="训练在本地 GPU 上完成，不依赖网络带宽。">互联网带宽</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="tip">仿真训练的三件套：<strong>大规模并行</strong>（提高吞吐）、<strong>域随机化</strong>（缩小差距）、<strong>真机微调</strong>（补齐最后一公里）。缺一个，策略都很难稳定落地。</div>
+    </section>
+
+    <!-- ========== L4 ========== -->
+    <section class="chapter" data-level="4" data-title="数字孪生与合成数据：Omniverse、Replicator、Cosmos">
+      <h2>第 9 章 · 数字孪生与合成数据：Omniverse、Replicator、Cosmos</h2>
+      <p class="tldr">当真实数据又贵又少，就用"可编程的世界"造数据——但关键不是数量，而是分布覆盖。</p>
+
+      <p>机器人数据比图像数据更难搞：要有人真的去推、去抓、去摔，还要标注位姿和动作。于是英伟达把重心放在"造世界"上。</p>
+
+      <h3>Omniverse：用 USD 描述世界</h3>
+      <p>OpenUSD 是一种场景描述格式，把几何、材质、光照、物理属性、动画都组织成可组合的图层。Omniverse 基于 USD 做实时协作与渲染，多个工具可以同时编辑同一个场景。机器人仿真需要的"数字孪生"，就是这样一个与真实工厂/房间对应的虚拟场景。</p>
+
+      <h3>Isaac Sim 与 Replicator：带标签地量产图像</h3>
+      <p>Isaac Sim 在 Omniverse 上提供机器人、传感器（RGB 相机、深度相机、激光雷达、IMU）和 PhysX 物理。Replicator 则负责<strong>程序化生成</strong>：随机摆放物体、随机材质与光照、随机相机位姿，同时自动输出分割掩码、深度图、边界框、6D 位姿等标注。这些标注在真实数据里往往要靠人工标几天。</p>
+
+      <h3>Cosmos：世界基础模型</h3>
+      <p>Cosmos 系列世界基础模型（WFM）用大量视频训练，能生成或预测符合物理直觉的视频。用途包括：把仿真画面"翻译"得更像真实相机、生成罕见场景、评估策略在未见过场景下的表现。Cosmos Reason 这类视觉语言模型还能对物理场景做常识推理。</p>
+
+      <h3>数据金字塔</h3>
+      <table>
+        <tr><th>层级</th><th>数据来源</th><th>特点</th></tr>
+        <tr><td>塔尖</td><td>真机遥操作轨迹</td><td>最真实、最贵、最少</td></tr>
+        <tr><td>上层</td><td>仿真合成数据</td><td>量大、标注完美，但存在分布差异</td></tr>
+        <tr><td>中层</td><td>人类第一视角视频</td><td>便宜、海量，但无动作标签</td></tr>
+        <tr><td>塔基</td><td>互联网图文 / 视频</td><td>提供常识与语义，不直接对应控制</td></tr>
+      </table>
+
+      <div class="widget demo" id="synth">
+        <div class="widget-title">随机化越强，合成数据能覆盖多少真实场景？</div>
+        <canvas width="800" height="320"></canvas>
+        <div class="controls">
+          <label>随机化强度 <span class="val" data-for="dr"></span>
+            <input type="range" name="dr" min="0" max="1" step="0.05" value="0.3">
+          </label>
+        </div>
+        <p class="readout"></p>
+      </div>
+      <p class="ref">蓝点为真实场景在特征空间中的分布，橙点为合成数据；覆盖率为示意计算，用于说明"分布覆盖"这一概念。</p>
+
+      <div class="warn">"合成数据越多越好"是典型误区。如果合成数据的分布不覆盖真实情况（比如只在一个固定光照下渲染），数量再多也只是在重复同一种偏差。分布覆盖、物理一致性、标注准确性，比单纯堆量重要得多。</div>
+
+      <details class="reveal">
+        <summary>想一想：如果真实工厂里有一种仿真中从未出现的反光地面，你该怎么办？</summary>
+        <p>三条路可以组合：① 在仿真里加入各向异性材质与随机反射的域随机化；② 用真实相机拍几张该地面，做神经重建（如 NuRec）把真实场景搬进仿真；③ 采集少量该场景的真机数据做微调。单靠"多生成一些数据"解决不了分布缺口。</p>
+      </details>
+
+      <div class="tip">合成数据的价值 = 覆盖度 × 标注质量 × 物理一致性。Omniverse 提供场景，Isaac Sim 提供物理与传感器，Replicator 提供批量标注，Cosmos 提供生成与评估——四者合起来才是一条完整的数据生产线。</div>
+    </section>
+
+    <section class="chapter" data-level="4" data-title="GR00T、Thor 与工程选型">
+      <h2>第 10 章 · GR00T、Thor 与工程选型</h2>
+      <p class="tldr">机器人基础模型把"看懂—想清楚—动起来"塞进一个网络；而它最终要跑在机器人身上一块几十瓦到一百多瓦的芯片上。</p>
+
+      <h3>GR00T：给类人机器人用的基础模型</h3>
+      <p>GR00T N1 是英伟达在 2025 年发布的开放权重机器人基础模型。它采用<strong>双系统</strong>结构：</p>
+      <ul>
+        <li><strong>System 2（慢思考）</strong>：视觉语言模型，理解"把红色积木放进盒子"这类指令和场景，输出中间表示。</li>
+        <li><strong>System 1（快执行）</strong>：扩散 Transformer，根据中间表示和当前观测，一次生成一小段动作序列，频率足以做实时控制。</li>
+      </ul>
+      <p>训练数据来自四类来源：真机遥操作轨迹、人类第一视角视频、Isaac 合成的仿真数据、互联网图文与视频。模型开放权重，目的是让开发者用自己的机器人数据做后训练（post-training），适配不同本体。</p>
+
+      <h3>从训练到部署：模型要"瘦身"</h3>
+      <p>机器人的控制频率常见几十 Hz 到 100+ Hz，意味着每 10–30 毫秒就要出一次动作。部署链条通常是：</p>
+      <ol>
+        <li>在数据中心用多卡训练 / 微调；</li>
+        <li>用 TensorRT 做算子融合、量化（FP16 / FP8 / INT8），生成针对目标芯片的引擎；</li>
+        <li>在 Jetson 上运行推理，配合 Isaac ROS 的视觉、定位、建图模块；</li>
+        <li>加安全层：限位、力矩上限、急停、异常检测。</li>
+      </ol>
+
+      <table>
+        <tr><th>平台</th><th>显存</th><th>大致定位</th></tr>
+        <tr><td>Jetson Orin Nano</td><td>8GB</td><td>轻量视觉、小模型、低成本机器人</td></tr>
+        <tr><td>Jetson AGX Orin</td><td>32 / 64GB</td><td>主流机器人本体，多路相机 + 中等模型</td></tr>
+        <tr><td>Jetson AGX Thor</td><td>128GB</td><td>类人机器人 / 大模型端侧推理</td></tr>
+        <tr><td>RTX 6000 Ada</td><td>48GB</td><td>工作站训练、仿真、小规模微调</td></tr>
+        <tr><td>H100</td><td>80GB</td><td>数据中心训练与大规模仿真</td></tr>
+        <tr><td>B200</td><td>192GB</td><td>更大模型、更高吞吐的训练</td></tr>
+      </table>
+      <p class="ref">显存为常见配置，具体型号有多个版本，选型时以官方规格为准。</p>
+
+      <h3>算一算：这个模型塞得进哪块卡？</h3>
+      <div class="widget" id="devDemo">
+        <div class="widget-title">调参数量与精度，估算显存并匹配硬件</div>
+        <label style="display:block">模型参数量 <span class="val" data-for="params"></span>
+          <input type="range" name="params" min="1" max="70" step="1" value="7" style="width:100%">
+        </label>
+        <label style="display:block;margin-top:10px">权重精度
+          <select name="bits" style="margin-top:6px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+            <option value="4">FP4（约 0.5 字节/参数）</option>
+            <option value="8">FP8 / INT8（1 字节/参数）</option>
+            <option value="16" selected>FP16 / BF16（2 字节/参数）</option>
+          </select>
+        </label>
+        <table class="dev">
+          <thead><tr><th>平台</th><th>显存</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr data-gb="8" data-name="Jetson Orin Nano 8GB"><td>Jetson Orin Nano</td><td>8GB</td><td>轻量部署</td></tr>
+            <tr data-gb="32" data-name="Jetson AGX Orin 32GB"><td>Jetson AGX Orin</td><td>32GB</td><td>机器人本体部署</td></tr>
+            <tr data-gb="48" data-name="RTX 6000 Ada 48GB"><td>RTX 6000 Ada</td><td>48GB</td><td>工作站训练/仿真</td></tr>
+            <tr data-gb="64" data-name="Jetson AGX Orin 64GB"><td>Jetson AGX Orin</td><td>64GB</td><td>机器人本体部署</td></tr>
+            <tr data-gb="80" data-name="H100 80GB"><td>H100</td><td>80GB</td><td>数据中心训练</td></tr>
+            <tr data-gb="128" data-name="Jetson AGX Thor 128GB"><td>Jetson AGX Thor</td><td>128GB</td><td>端侧大模型部署</td></tr>
+            <tr data-gb="192" data-name="B200 192GB"><td>B200</td><td>192GB</td><td>数据中心训练</td></tr>
+          </tbody>
+        </table>
+        <p class="readout"></p>
+        <p class="ref">估算含约 15% 运行时开销，未计激活、KV 缓存与多模型共存；"装得下"不等于"跑得快"。</p>
+      </div>
+
+      <div class="warn">
+        <strong>四个常见误区：</strong><br>
+        ① "GPU 越大越好"——要看带宽、互联、利用率和成本，训练与推理的需求完全不同。<br>
+        ② "Jetson 也能训练大模型"——Jetson 主要做推理，训练仍在数据中心。<br>
+        ③ "仿真做好了就能直接上真机"——仍需真机校准、安全兜底与少量微调。<br>
+        ④ "机器人基础模型拿来即用"——不同本体的关节数、尺寸、动力学差异很大，通常都要后训练。
+      </div>
+
+      <h3>🚀 综合测验</h3>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">1. 训练一个 70B 参数的大模型，最可能需要哪种硬件组合？</p>
+        <button class="opt" data-fb="Orin Nano 只有 8GB 显存，连权重都放不下。">单张 Jetson Orin Nano</button>
+        <button class="opt" data-fb="大模型训练需要多张高显存 GPU，通过 NVLink/NVSwitch 互联，用 NCCL 同步梯度。">多张 H100 / B200 + 高速互联</button>
+        <button class="opt" data-fb="单张消费级卡的显存和互联都不够支撑 70B 训练。">一张 RTX 4090</button>
+        <button class="opt" data-fb="CPU 集群缺乏 GPU 的高吞吐矩阵算力，训练会慢几个数量级。">纯 CPU 集群</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">2. GR00T N1 的双系统中，System 1 和 System 2 的分工是？</p>
+        <button class="opt" data-fb="说反了：慢思考的是 System 2。">System 2 快速出动作，System 1 慢慢理解</button>
+        <button class="opt" data-fb="System 2 用视觉语言模型理解任务，System 1 用扩散 Transformer 快速生成动作。">System 2 负责理解，System 1 负责快速生成动作</button>
+        <button class="opt" data-fb="两者都不是图像分割专用模块。">两者都只做图像分割</button>
+        <button class="opt" data-fb="它们是神经网络，不是物理引擎。">两者都是物理仿真引擎</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">3. 一个 7B 参数模型用 FP16 存权重，大约需要多少显存？</p>
+        <button class="opt" data-fb="7GB 相当于每个参数 1 字节，那是 FP8/INT8 的量级。">约 7GB</button>
+        <button class="opt" data-fb="7B × 2 字节 = 14GB，这是权重本身的下限。">约 14GB</button>
+        <button class="opt" data-fb="28GB 相当于每个参数 4 字节，那是 FP32 的量级。">约 28GB</button>
+        <button class="opt" data-fb="3.5GB 是 FP4 的量级，FP16 装不下。">约 3.5GB</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">4. 评价合成数据质量，最关键的指标是？</p>
+        <button class="opt" data-fb="数量只是规模，分布不对时再多也无效。">数据总量</button>
+        <button class="opt" data-fb="合成数据要覆盖真实世界的分布，并且标签与物理规律一致，才真正有用。">与真实分布的覆盖度和标注一致性</button>
+        <button class="opt" data-fb="文件大小与数据质量没有直接关系。">单个文件的大小</button>
+        <button class="opt" data-fb="分辨率影响观感，但不是决定迁移效果的核心。">渲染分辨率</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">5. 想缩小 sim2real gap，最有效的组合是？</p>
+        <button class="opt" data-fb="分辨率不是迁移落差的主要来源。">只提高仿真渲染分辨率</button>
+        <button class="opt" data-fb="域随机化覆盖参数不确定性，执行器建模补上动力学差异，真机微调修正剩余偏差。">域随机化 + 执行器建模 + 少量真机微调</button>
+        <button class="opt" data-fb="换显卡不会改变物理建模的准确性。">换一块更强的显卡</button>
+        <button class="opt" data-fb="加深网络不能弥补仿真与现实的物理差异。">单纯增加网络层数</button>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="widget quiz" data-answer="1">
+        <p class="q">6. CUDA 在机器人系统里的位置是？</p>
+        <button class="opt" data-fb="ROS 2 才是机器人操作系统框架。">机器人操作系统</button>
+        <button class="opt" data-fb="CUDA 是 GPU 编程模型与运行时，上层框架和库都通过它调用 GPU。">GPU 编程模型与运行时，支撑上层框架和库</button>
+        <button class="opt" data-fb="电机驱动协议是另一套东西，如 CAN、EtherCAT。">一种电机驱动协议</button>
+        <button class="opt" data-fb="仿真引擎是 Isaac Sim 等，CUDA 只是它们依赖的底层能力。">一个物理仿真引擎</button>
+        <div class="feedback"></div>
+      </div>
+
+      <h3>延伸阅读（按名称检索即可）</h3>
+      <ul class="ref">
+        <li>NVIDIA《CUDA C++ Programming Guide》——索引、warp、共享内存的权威定义。</li>
+        <li>NVIDIA GTC 演讲：黄仁勋的主题演讲与 Isaac / GR00T 技术专场。</li>
+        <li>Isaac Lab 官方文档——并行环境、域随机化、训练配置。</li>
+        <li>GR00T 开源仓库与模型卡——双系统结构与后训练方法。</li>
+        <li>《Programming Massively Parallel Processors》——系统学习 GPU 编程的经典教材。</li>
+      </ul>
+
+      <div class="tip">把整门课压缩成一句话：<strong>GPU 提供宽度，CUDA 提供把问题铺满宽度的方法，Isaac / Omniverse / Cosmos 提供练习场与数据，Jetson 把结果装回机器人身上。</strong> 这四件事合起来，才是"英伟达的机器人 AI 平台"。</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="pager" id="pager" style="padding:0 16px 40px">
+  <button id="prevBtn">← 上一章</button>
+  <button id="nextBtn">下一章 →</button>
+</div>
+<div class="score" id="score">测验 0 / 0</div>
+
+<script>
+(() => {
+  const LEVELS = {1:'🌱 直觉',2:'🌿 概念',3:'🌳 机制',4:'🚀 深入'};
+  const KEY = 'course:' + document.title;
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"done":[],"mode":null,"theme":null}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const body = document.body;
+  const chapters = $$('.chapter');
+  let cur = 0;
+
+  // ---- 目录与层级徽章 ----
+  const toc = $('#toc');
+  let lastLv = 0;
+  chapters.forEach((c, i) => {
+    c.id ||= 'ch' + (i + 1);
+    const lv = +c.dataset.level || 1;
+    const badge = document.createElement('span');
+    badge.className = 'badge l' + lv;
+    badge.textContent = LEVELS[lv];
+    c.prepend(badge);
+    if (lv !== lastLv) { toc.insertAdjacentHTML('beforeend', `<div class="lv-head">${LEVELS[lv]}</div>`); lastLv = lv; }
+    const a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = `${i + 1}. ${c.dataset.title || $('h2', c)?.textContent || ''}`;
+    a.addEventListener('click', e => { if (body.dataset.mode === 'paged') { e.preventDefault(); go(i); } toc.classList.remove('open'); });
+    toc.append(a);
+  });
+  const links = $$('a', toc);
+
+  function markDone(i) {
+    if (!state.done.includes(i)) { state.done.push(i); save(); }
+    links[i].classList.add('done');
+  }
+  state.done.forEach(i => links[i]?.classList.add('done'));
+
+  function setActive(i) {
+    cur = i;
+    links.forEach((l, j) => l.classList.toggle('active', j === i));
+    $('#progress').style.width = ((i + 1) / chapters.length * 100) + '%';
+  }
+
+  // ---- 翻页模式 ----
+  function go(i) {
+    if (i < 0 || i >= chapters.length) return;
+    if (i !== cur) markDone(cur);
+    chapters.forEach((c, j) => c.classList.toggle('current', j === i));
+    setActive(i);
+    $('#prevBtn').disabled = i === 0;
+    $('#nextBtn').textContent = i === chapters.length - 1 ? '完成 🎉' : '下一章 →';
+    history.replaceState(null, '', '#' + chapters[i].id);
+    window.scrollTo({ top: 0 });
+  }
+  $('#prevBtn').onclick = () => go(cur - 1);
+  $('#nextBtn').onclick = () => cur === chapters.length - 1 ? (markDone(cur), alert('恭喜完成全部章节！')) : go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.mode !== 'paged' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') go(cur + 1);
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  // ---- 长页模式：滚动同步目录 ----
+  const io = new IntersectionObserver(es => {
+    if (body.dataset.mode !== 'scroll') return;
+    es.forEach(e => { if (e.isIntersecting) { const i = chapters.indexOf(e.target); setActive(i); markDone(i); } });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  chapters.forEach(c => io.observe(c));
+
+  function setMode(m) {
+    body.dataset.mode = m;
+    state.mode = m; save();
+    $('#modeBtn').textContent = m === 'paged' ? '切换为长页' : '切换为翻页';
+    if (m === 'paged') go(cur); else chapters[cur].scrollIntoView();
+  }
+  $('#modeBtn').onclick = () => setMode(body.dataset.mode === 'paged' ? 'scroll' : 'paged');
+  $('#tocBtn').onclick = () => toc.classList.toggle('open');
+
+  // ---- 主题 ----
+  const applyTheme = t => { document.documentElement.dataset.theme = t; state.theme = t; save(); };
+  $('#themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  applyTheme(state.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- 测验 ----
+  const quizzes = $$('.quiz');
+  let right = 0, answered = 0;
+  const updateScore = () => $('#score').textContent = `测验 ${right} / ${quizzes.length}（已答 ${answered}）`;
+  quizzes.forEach(q => {
+    const ans = +q.dataset.answer, opts = $$('.opt', q), fb = $('.feedback', q);
+    opts.forEach((o, i) => o.onclick = () => {
+      opts.forEach(x => x.disabled = true);
+      opts[ans].classList.add('right');
+      if (i !== ans) o.classList.add('wrong'); else right++;
+      answered++;
+      fb.className = 'feedback show ' + (i === ans ? 'ok' : 'bad');
+      fb.textContent = (i === ans ? '✅ 正确！' : '❌ 不太对。') + (o.dataset.fb || '');
+      if (i !== ans && opts[ans].dataset.fb) fb.textContent += ' 正确答案：' + opts[ans].dataset.fb;
+      updateScore();
+    });
+  });
+  updateScore();
+  if (!quizzes.length) $('#score').remove();
+
+  // ---- 翻卡 ----
+  $$('.flip').forEach(f => f.onclick = () => f.classList.toggle('flipped'));
+
+  // ---- 分步揭示 ----
+  $$('.steps').forEach(s => {
+    const steps = $$('.step', s), btn = $('.next-step', s);
+    let k = 0;
+    const show = () => { steps[k++]?.classList.add('shown'); if (k >= steps.length) btn.textContent = '重新开始'; };
+    btn.onclick = () => { if (k >= steps.length) { steps.forEach(x => x.classList.remove('shown')); k = 0; btn.textContent = '下一步'; } show(); };
+    show();
+  });
+
+  // ---- 填空 ----
+  $$('.fill').forEach(f => {
+    const fb = $('.feedback', f);
+    $('.check', f).onclick = () => {
+      let ok = true;
+      $$('input', f).forEach(inp => {
+        const good = inp.dataset.answer.split('|').some(a => a.trim().toLowerCase() === inp.value.trim().toLowerCase());
+        inp.className = good ? 'ok' : 'bad'; ok &&= good;
+      });
+      if (fb) { fb.className = 'feedback show ' + (ok ? 'ok' : 'bad'); fb.textContent = ok ? '✅ 全部正确！' : '❌ 还有错误，再想想。'; }
+    };
+  });
+
+  // ---- 排序 ----
+  $$('.order').forEach(o => {
+    $$('.item', o).forEach(it => {
+      it.innerHTML = `<span>${it.innerHTML}</span><button aria-label="上移">↑</button><button aria-label="下移">↓</button>`;
+      const [up, down] = $$('button', it);
+      up.onclick = () => it.previousElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it, it.previousElementSibling);
+      down.onclick = () => it.nextElementSibling?.classList.contains('item') && it.parentNode.insertBefore(it.nextElementSibling, it);
+    });
+    const fb = $('.feedback', o);
+    $('.check', o).onclick = () => {
+      const ok = $$('.item', o).map(i => i.dataset.id).join(',') === o.dataset.answer;
+      fb.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+      fb.textContent = ok ? '✅ 顺序正确！' : '❌ 顺序不对，再调整一下。';
+    };
+  });
+
+  // ---- 演示通用：滑块值显示 + 回调 ----
+  window.demo = (sel, draw) => {
+    const root = $(sel); if (!root) return;
+    const cv = $('canvas', root), ctx = cv?.getContext('2d');
+    const inputs = $$('input', root);
+    const render = () => {
+      const p = {};
+      inputs.forEach(i => { p[i.name] = i.type === 'checkbox' ? i.checked : +i.value; const v = $(`.val[data-for="${i.name}"]`, root); if (v) v.textContent = i.value; });
+      if (ctx) { ctx.clearRect(0, 0, cv.width, cv.height); }
+      draw(p, ctx, cv, root);
+    };
+    inputs.forEach(i => i.addEventListener('input', render));
+    render();
+    return render;
+  };
+
+  // ---- 初始化 ----
+  const hashIdx = chapters.findIndex(c => '#' + c.id === location.hash);
+  cur = hashIdx >= 0 ? hashIdx : 0;
+  setMode(state.mode || body.dataset.mode);
+})();
+
+/* ================= 课程定制演示 ================= */
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SANS = '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+
+/* 第 1 章：CPU vs GPU 吞吐 */
+demo('#cpuGpu', ({ k }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const cpuT = k / 16;
+  const gpuT = k / 1024 + 30;
+  const maxT = Math.max(cpuT, gpuT) * 1.08;
+  const left = 190, barW = v => (W - left - 60) * v / maxT;
+  const text = cssv('--text'), muted = cssv('--muted');
+
+  ctx.font = '14px ' + SANS;
+  ctx.fillStyle = text;
+  ctx.fillText('CPU：16 个强核心', 20, 96);
+  ctx.fillText('GPU：4096 个弱核心', 20, 176);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(left, 70, barW(cpuT), 44);
+  ctx.fillStyle = cssv('--primary');
+  ctx.fillRect(left, 150, barW(gpuT), 44);
+  ctx.fillStyle = text;
+  ctx.font = '13px ' + SANS;
+  ctx.fillText(cpuT.toFixed(0) + ' 时间单位', left + barW(cpuT) + 10, 98);
+  ctx.fillText(gpuT.toFixed(0) + ' 时间单位', left + barW(gpuT) + 10, 178);
+
+  const speed = cpuT / gpuT;
+  ctx.font = 'bold 20px ' + SANS;
+  ctx.fillStyle = speed >= 1 ? cssv('--primary') : cssv('--bad');
+  ctx.fillText('加速比 ' + speed.toFixed(1) + '×', 20, 248);
+  ctx.font = '13px ' + SANS;
+  ctx.fillStyle = muted;
+  ctx.fillText(speed < 1 ? '任务太小：GPU 的调度与启动开销还没被摊薄。' : '任务越大，GPU 的并行宽度越占优势。', 20, 278);
+
+  root.querySelector('.readout').innerHTML = speed < 1
+    ? '当前规模下 <b>CPU 反而更快</b>，说明 GPU 不是无脑选择。'
+    : '当前规模下 GPU 约为 CPU 的 <b>' + speed.toFixed(1) + ' 倍</b>。';
+});
+
+/* 第 4 章：block 切分与 warp 组成 */
+demo('#blockDemo', ({ b }, ctx, cv, root) => {
+  const sizes = [4, 8, 16, 32], B = sizes[b], N = 256, side = N / B;
+  const text = cssv('--text'), muted = cssv('--muted'), border = cssv('--border');
+  const palette = ['#4f46e5', '#14b8a6', '#f59e0b', '#ec4899', '#3b82f6', '#22c55e'];
+
+  const x0 = 20, y0 = 46, S = 280, cell = S / side;
+  ctx.font = '13px ' + SANS;
+  ctx.fillStyle = text;
+  ctx.fillText('整个矩阵 256 × 256，每个小格是一个 block', x0, 34);
+  ctx.strokeStyle = border; ctx.lineWidth = 1;
+  for (let r = 0; r < side; r++) for (let c = 0; c < side; c++) {
+    if (c === 0 && r === 0) { ctx.fillStyle = cssv('--primary-soft'); ctx.fillRect(x0, y0, cell, cell); }
+    ctx.strokeRect(x0 + c * cell, y0 + r * cell, cell, cell);
+  }
+
+  const zx = 430, zs = 280, zc = zs / B;
+  ctx.fillStyle = text;
+  ctx.fillText('放大左上角一个 block（按 warp 着色）', zx, 34);
+  for (let r = 0; r < B; r++) for (let c = 0; c < B; c++) {
+    const wid = Math.floor((r * B + c) / 32);
+    ctx.fillStyle = palette[wid % palette.length];
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(zx + c * zc, y0 + r * zc, zc - 1, zc - 1);
+    ctx.globalAlpha = 1;
+  }
+  ctx.strokeStyle = border; ctx.strokeRect(zx, y0, zs, zs);
+
+  const threads = B * B, warps = Math.ceil(threads / 32), blocks = side * side;
+  root.querySelector('.readout').innerHTML =
+    `每 block <b>${threads}</b> 个线程 = <b>${warps}</b> 个 warp；共 <b>${blocks}</b> 个 block，总线程 <b>${threads * blocks}</b>。` +
+    (threads % 32 ? ' 线程数不是 32 的倍数，最后一个 warp 会有空转。' : ' 线程数正好是 32 的倍数，warp 排得很整齐。');
+});
+
+/* 第 6 章：Roofline */
+demo('#roof', ({ n, p }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const specs = [
+    { name: 'FP32', peak: 67, bytes: 4, color: '#64748b' },
+    { name: 'FP16 张量', peak: 989, bytes: 2, color: cssv('--primary') },
+    { name: 'FP8 张量', peak: 1979, bytes: 2, color: '#a855f7' }
+  ];
+  const s = specs[p], BW = 3.35e12;
+  const AI = n / s.bytes;
+  const perf = Math.min(s.peak, BW * AI / 1e12);
+  const text = cssv('--text'), muted = cssv('--muted'), border = cssv('--border');
+
+  const L = 64, R = 24, T = 26, Bm = 46;
+  const xmin = 0.5, xmax = 20000, ymin = 1, ymax = 3000;
+  const px = v => L + (Math.log10(v) - Math.log10(xmin)) / (Math.log10(xmax) - Math.log10(xmin)) * (W - L - R);
+  const py = v => H - Bm - (Math.log10(v) - Math.log10(ymin)) / (Math.log10(ymax) - Math.log10(ymin)) * (H - T - Bm);
+
+  ctx.strokeStyle = border; ctx.lineWidth = 1;
+  ctx.font = '12px ' + SANS; ctx.fillStyle = muted;
+  [1, 10, 100, 1000, 10000].forEach(v => {
+    ctx.beginPath(); ctx.moveTo(px(v), T); ctx.lineTo(px(v), H - Bm); ctx.stroke();
+    ctx.fillText(String(v), px(v) - 10, H - Bm + 18);
+  });
+  [1, 10, 100, 1000].forEach(v => {
+    ctx.beginPath(); ctx.moveTo(L, py(v)); ctx.lineTo(W - R, py(v)); ctx.stroke();
+    ctx.fillText(String(v), 24, py(v) + 4);
+  });
+  ctx.fillStyle = muted;
+  ctx.fillText('算术强度 FLOP/Byte', W / 2 - 60, H - 10);
+  ctx.save(); ctx.translate(16, H / 2 + 40); ctx.rotate(-Math.PI / 2); ctx.fillText('TFLOPS', 0, 0); ctx.restore();
+
+  specs.forEach((sp, i) => {
+    ctx.beginPath();
+    for (let x = xmin; x <= xmax; x *= 1.08) {
+      const y = Math.min(sp.peak, BW * x / 1e12);
+      const X = px(x), Y = py(Math.max(y, ymin));
+      x === xmin ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y);
+    }
+    ctx.strokeStyle = sp.color;
+    ctx.globalAlpha = i === p ? 1 : 0.28;
+    ctx.lineWidth = i === p ? 2.5 : 1.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  ctx.fillStyle = cssv('--primary');
+  ctx.beginPath(); ctx.arc(px(AI), py(perf), 6, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = cssv('--card'); ctx.lineWidth = 2; ctx.stroke();
+
+  const bound = perf >= s.peak * 0.999 ? '算力受限（屋顶段）' : '带宽受限（斜坡段）';
+  const ms = 2 * n ** 3 / (perf * 1e12) * 1000;
+  root.querySelector('.readout').innerHTML =
+    `${s.name}：算术强度 <b>${AI.toFixed(0)}</b> FLOP/Byte，可达约 <b>${perf.toFixed(0)}</b> TFLOPS（<b>${bound}</b>）；` +
+    `这个 ${n}×${n} 矩阵乘的理论下限约 <b>${ms.toFixed(3)}</b> ms。`;
+});
+
+/* 第 7 章：占用率 */
+demo('#occDemo', ({ block, regs }, ctx, cv, root) => {
+  const warpsPerBlock = block / 32;
+  const byReg = Math.floor(65536 / (regs * block));
+  const byWarp = Math.floor(64 / warpsPerBlock);
+  const bps = Math.max(0, Math.min(32, byReg, byWarp));
+  const warps = Math.min(64, bps * warpsPerBlock);
+  const occ = warps / 64 * 100;
+
+  root.querySelector('.meterfill').style.width = occ.toFixed(0) + '%';
+  let hint = '';
+  if (byReg <= byWarp && byReg < 32) hint = '寄存器是当前的主要限制：每线程用得越多，能同时驻留的线程越少。';
+  else if (byWarp < 32) hint = 'block 太大，一个 SM 装不下几个 block，warp 上限先被撞到。';
+  else hint = '当前配置没有被单一资源卡死。';
+
+  root.querySelector('.readout').innerHTML =
+    `每个 SM 可驻留 <b>${bps}</b> 个 block、<b>${warps}</b> / 64 个 warp，占用率 <b>${occ.toFixed(0)}%</b>。` +
+    `<br><span style="color:var(--muted)">${hint}</span>`;
+});
+
+/* 第 8 章：仿真训练与 sim2real */
+demo('#simTrain', ({ env, dr }, ctx, cv, root) => {
+  const W = cv.width, H = cv.height;
+  const sim = (0.55 + 0.42 * (1 - Math.exp(-env / 1500))) * (1 - 0.15 * dr);
+  const real = sim * (0.45 + 0.55 * dr);
+  const text = cssv('--text'), muted = cssv('--muted');
+  const items = [
+    { label: '仿真内成功率', v: sim, color: cssv('--primary') },
+    { label: '预估真机成功率', v: real, color: cssv('--ok') }
+  ];
+  const left = 180, maxW = W - left - 90, top = 64, gap = 74;
+  ctx.font = '14px ' + SANS; ctx.fillStyle = text;
+  items.forEach((it, i) => {
+    const y = top + i * gap;
+    ctx.fillStyle = text;
+    ctx.fillText(it.label, 20, y + 26);
+    ctx.fillStyle = cssv('--border');
+    ctx.fillRect(left, y, maxW, 40);
+    ctx.fillStyle = it.color;
+    ctx.fillRect(left, y, maxW * it.v, 40);
+    ctx.fillStyle = text;
+    ctx.font = 'bold 14px ' + SANS;
+    ctx.fillText((it.v * 100).toFixed(0) + '%', left + maxW * it.v + 10, y + 26);
+    ctx.font = '14px ' + SANS;
+  });
+
+  const gapPt = (sim - real) * 100;
+  ctx.fillStyle = muted;
+  ctx.font = '13px ' + SANS;
+  ctx.fillText('迁移落差：' + gapPt.toFixed(0) + ' 个百分点（示意模型，非实测）', 20, 236);
+  root.querySelector('.readout').innerHTML =
+    `环境数 <b>${env}</b>、随机化 <b>${dr.toFixed(2)}</b>：仿真 <b>${(sim * 100).toFixed(0)}%</b>，预估真机 <b>${(real * 100).toFixed(0)}%</b>。` +
+    (dr < 0.2 ? ' 随机化太低，真机容易翻车。' : dr > 0.85 ? ' 随机化很高，仿真成绩被拉低，但更稳。' : ' 处于常见的折中区间。');
+});
+
+/* 第 9 章：合成数据覆盖 */
+demo('#synth', ({ dr }, ctx, cv, root) => {
+  const mulberry32 = a => () => {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+  const gauss = rnd => {
+    const u = Math.max(rnd(), 1e-9), v = Math.max(rnd(), 1e-9);
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  };
+  const rnd = mulberry32(42);
+  const clusters = [[0.22, 0.3], [0.74, 0.24], [0.58, 0.72], [0.2, 0.8]];
+  const reals = [];
+  for (let i = 0; i < 120; i++) {
+    const c = clusters[Math.floor(rnd() * clusters.length)];
+    reals.push([c[0] + gauss(rnd) * 0.035, c[1] + gauss(rnd) * 0.035]);
+  }
+  const sigma = 0.035 + 0.3 * dr;
+  const sims = [];
+  for (let i = 0; i < 1500; i++) sims.push([0.48 + gauss(rnd) * sigma, 0.48 + gauss(rnd) * sigma]);
+
+  const covered = reals.filter(r => sims.some(s => {
+    const dx = s[0] - r[0], dy = s[1] - r[1];
+    return dx * dx + dy * dy < 0.06 * 0.06;
+  })).length;
+  const cov = covered / reals.length * 100;
+
+  const W = cv.width, H = cv.height, pad = 26, size = Math.min(W - pad * 2, H - pad * 2);
+  const ox = (W - size) / 2, oy = (H - size) / 2;
+  const P = v => [ox + v[0] * size, oy + (1 - v[1]) * size];
+
+  ctx.strokeStyle = cssv('--border'); ctx.strokeRect(ox, oy, size, size);
+  ctx.fillStyle = 'rgba(245,158,11,0.35)';
+  sims.forEach(s => { const [x, y] = P(s); ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI * 2); ctx.fill(); });
+  ctx.fillStyle = cssv('--primary');
+  reals.forEach(r => { const [x, y] = P(r); ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill(); });
+
+  root.querySelector('.readout').innerHTML =
+    `随机化强度 <b>${dr.toFixed(2)}</b>：合成数据覆盖了 <b>${cov.toFixed(0)}%</b> 的真实场景。` +
+    (cov < 60 ? ' 分布太窄，很多真实情况模型没见过。' : ' 覆盖度不错，但仍要检查物理一致性。');
+});
+
+/* 第 10 章：显存估算与设备匹配 */
+(() => {
+  const root = document.getElementById('devDemo');
+  if (!root) return;
+  const p = root.querySelector('input[name=params]');
+  const sel = root.querySelector('select[name=bits]');
+  const rows = [...root.querySelectorAll('tbody tr')];
+  const valEl = root.querySelector('.val[data-for=params]');
+  const out = root.querySelector('.readout');
+
+  const render = () => {
+    const B = +p.value, bits = +sel.value;
+    const gb = B * 1e9 * bits / 8 / 1e9 * 1.15;
+    valEl.textContent = B + 'B';
+    let pick = null;
+    rows.forEach(r => {
+      r.classList.remove('pick');
+      if (!pick && +r.dataset.gb >= gb) pick = r;
+    });
+    if (pick) pick.classList.add('pick');
+    out.innerHTML = `权重 + 约 15% 运行时开销 ≈ <b>${gb.toFixed(1)} GB</b>；` +
+      (pick ? `能装下的最小平台是 <b>${pick.dataset.name}</b>。` : `没有单卡能装下，需要多卡或更大显存。`) +
+      `<br><span style="color:var(--muted)">注意：装得下不等于跑得快，还要看带宽、算力与实时性要求。</span>`;
+  };
+  p.addEventListener('input', render);
+  sel.addEventListener('change', render);
+  render();
+})();
+
+/* 第 2 章：流水线说明 */
+(() => {
+  const desc = document.getElementById('pipeDesc');
+  document.querySelectorAll('.pstep').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.pstep').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    desc.textContent = btn.dataset.desc;
+  }));
+})();
+
+/* 第 5 章：软件栈说明 */
+(() => {
+  const desc = document.getElementById('stackDesc');
+  document.querySelectorAll('.srow').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.srow').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    desc.textContent = btn.dataset.desc;
+  }));
+})();
+</script>
+</body>
+</html>
