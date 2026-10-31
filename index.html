@@ -20,6 +20,8 @@ body{margin:0;font:16px/1.7 -apple-system,"Segoe UI","PingFang SC","Microsoft Ya
 .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border)}
 .topbar h1{font-size:17px;margin:0;flex:1}
 .topbar button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+.topbar button.spin .icon{display:inline-block;animation:spin .6s linear}
+@keyframes spin{to{transform:rotate(360deg)}}
 .wrap{max-width:1000px;margin:0 auto;padding:28px 20px 60px}
 .hero{margin-bottom:22px}
 .hero h2{margin:0 0 8px;font-size:26px}
@@ -49,6 +51,7 @@ footer code{background:var(--primary-soft);padding:1px 6px;border-radius:5px}
 
 <header class="topbar">
   <h1>PersonalCourses</h1>
+  <button id="refreshBtn" aria-label="刷新页面"><span class="icon">⟳</span> 刷新</button>
   <button id="themeBtn" aria-label="切换主题">🌓</button>
 </header>
 
@@ -250,6 +253,13 @@ footer code{background:var(--primary-soft);padding:1px 6px;border-radius:5px}
     const next = body.dataset.theme === 'dark' ? 'light' : 'dark';
     body.dataset.theme = next;
     localStorage.setItem(KEY, next);
+  });
+  const refreshBtn = document.getElementById('refreshBtn');
+  refreshBtn.addEventListener('click', () => {
+    refreshBtn.classList.remove('spin');
+    void refreshBtn.offsetWidth;
+    refreshBtn.classList.add('spin');
+    location.reload();
   });
 })();
 </script>
